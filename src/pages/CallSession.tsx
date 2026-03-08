@@ -282,17 +282,12 @@ const CallSession = () => {
                 </div>
               )}
 
-              {/* Always render remote video element (hidden when no video) for audio playback */}
+              {/* Hidden audio element — ensures remote audio plays even when video is hidden */}
               <video
-                ref={remoteVideoRef}
+                ref={remoteAudioRef}
                 autoPlay
                 playsInline
-                className={
-                  webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 &&
-                  webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted)
-                    ? "hidden" : "hidden"
-                }
-                style={{ position: "absolute", width: 0, height: 0 }}
+                style={{ position: "absolute", width: 0, height: 0, opacity: 0 }}
               />
             </div>
 
