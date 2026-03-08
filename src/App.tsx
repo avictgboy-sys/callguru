@@ -40,6 +40,7 @@ import EditAd from "./pages/EditAd";
 import MyAds from "./pages/MyAds";
 import Rewards from "./pages/Rewards";
 import Reels from "./pages/Reels";
+import LiveTV from "./pages/LiveTV";
 import Groups from "./pages/Groups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
