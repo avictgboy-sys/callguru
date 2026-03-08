@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, BarChart3,
-  Video, Shield, LogOut, ChevronLeft, CreditCard, Settings,
+  Video, Shield, LogOut, ChevronLeft, CreditCard, Settings, Disc,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
