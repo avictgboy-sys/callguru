@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, FileText, BarChart3,
-  Video, Shield, LogOut, ChevronLeft, CreditCard, Settings, Disc,
+  Video, Shield, LogOut, ChevronLeft, CreditCard, Settings, Disc, Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,7 @@ const navItems = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "Recordings", href: "/admin/recordings", icon: Disc },
   { label: "Disputes", href: "/admin/disputes", icon: Shield },
+  { label: "Ads", href: "/admin/ads", icon: Megaphone },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {

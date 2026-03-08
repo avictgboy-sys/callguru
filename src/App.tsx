@@ -29,6 +29,8 @@ import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminRecordings from "./pages/admin/AdminRecordings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminAds from "./pages/admin/AdminAds";
+import CreateAd from "./pages/CreateAd";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +62,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CreateService />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-ad"
+              element={
+                <ProtectedRoute>
+                  <CreateAd />
                 </ProtectedRoute>
               }
             />
@@ -113,6 +123,7 @@ const App = () => (
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
             <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
+            <Route path="/admin/ads" element={<AdminRoute><AdminAds /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </IncomingCallProvider>

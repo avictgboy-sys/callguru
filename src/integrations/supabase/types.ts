@@ -534,6 +534,69 @@ export type Database = {
           },
         ]
       }
+      self_ads: {
+        Row: {
+          ad_type: string
+          admin_note: string | null
+          budget: number
+          clicks: number
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          impressions: number
+          link_url: string | null
+          spent: number
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          ad_type?: string
+          admin_note?: string | null
+          budget?: number
+          clicks?: number
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          spent?: number
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          ad_type?: string
+          admin_note?: string | null
+          budget?: number
+          clicks?: number
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          spent?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       service_categories: {
         Row: {
           created_at: string

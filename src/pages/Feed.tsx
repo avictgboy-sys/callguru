@@ -1,15 +1,32 @@
 import { Link } from "react-router-dom";
-import { Video, Home, Compass, MessageCircle, User } from "lucide-react";
+import { Video, Home, Compass, MessageCircle, User, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useFeedPosts } from "@/hooks/useFeed";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
+import SelfServeAdCard from "@/components/ads/SelfServeAdCard";
 
 const Feed = () => {
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
+
+  // Fetch active self-serve ads
+  const { data: selfAds } = useQuery({
+    queryKey: ["active-self-ads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("self_ads" as any)
+        .select("*")
+        .eq("status", "active")
+        .limit(10);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,6 +62,16 @@ const Feed = () => {
           {/* Create post */}
           {user && <CreatePostCard />}
 
+          {/* Create Ad button */}
+          {user && (
+            <Link to="/create-ad" className="block">
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                <Megaphone className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-primary">বিজ্ঞাপন তৈরি করুন — আপনার পণ্য/সার্ভিস প্রমোট করুন</span>
+              </div>
+            </Link>
+          )}
+
           {/* Feed */}
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -62,7 +89,14 @@ const Feed = () => {
                 <PostCard post={post} />
                 {/* Show ad every 3 posts */}
                 {(index + 1) % 3 === 0 && (
-                  <AdBanner slotId={`feed-inline-${index}`} className="mt-4" />
+                  <>
+                    {/* Show self-serve ad if available, otherwise Adsterra */}
+                    {selfAds && selfAds[Math.floor(index / 3) % (selfAds.length || 1)] ? (
+                      <SelfServeAdCard ad={selfAds[Math.floor(index / 3) % selfAds.length]} />
+                    ) : (
+                      <AdBanner slotId={`feed-inline-${index}`} className="mt-4" />
+                    )}
+                  </>
                 )}
               </div>
             ))
