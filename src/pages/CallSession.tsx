@@ -133,8 +133,12 @@ const CallSession = () => {
   const runningCost = durationMinutes * pricePerMin;
   const feeAmount = runningCost * (fees.callFeePercent / 100);
 
+  // Track if call has been ended to prevent double-ending
+  const callEndedRef = useRef(false);
+
   const handleEndCall = useCallback(async () => {
-    if (!callId) return;
+    if (!callId || callEndedRef.current) return;
+    callEndedRef.current = true;
     setIsActive(false);
     setShowEndDialog(false);
 
@@ -164,12 +168,55 @@ const CallSession = () => {
       setShowSummary(true);
     } catch (e: any) {
       toast.error(e.message || "Failed to complete call");
+      callEndedRef.current = false;
       setIsActive(true);
     }
 
     // Disconnect WebRTC
     webrtc.disconnect();
   }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc]);
+
+  // Auto-end call when WebRTC peer disconnects (other side left)
+  useEffect(() => {
+    if (
+      mediaReady &&
+      isActive &&
+      (webrtc.connectionState === "disconnected" || webrtc.connectionState === "failed") &&
+      elapsed > 5 // Only auto-end if call was actually active for a bit
+    ) {
+      const timer = setTimeout(() => {
+        if (!callEndedRef.current) {
+          toast.info("অপর পক্ষ সংযোগ বিচ্ছিন্ন করেছে। কল শেষ হচ্ছে…");
+          handleEndCall();
+        }
+      }, 5000); // Wait 5s for possible reconnection
+      return () => clearTimeout(timer);
+    }
+  }, [webrtc.connectionState, mediaReady, isActive, elapsed, handleEndCall]);
+
+  // Auto-end on page close/navigate away — ensures fee is collected
+  useEffect(() => {
+    if (!callId || !isActive) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!callEndedRef.current && isActive) {
+        // Try to complete the call via sendBeacon for reliability
+        const payload = JSON.stringify({
+          p_call_id: callId,
+          p_duration_minutes: Math.max(Math.ceil(elapsed / 60), 1),
+        });
+        navigator.sendBeacon?.(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/complete_call`,
+          new Blob([payload], { type: "application/json" })
+        );
+        e.preventDefault();
+        e.returnValue = "কল চলছে। আপনি কি নিশ্চিত যে পেজ ছেড়ে যেতে চান?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [callId, isActive, elapsed]);
 
   if (!callId) {
     return (
