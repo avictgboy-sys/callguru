@@ -1,6 +1,6 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminStats } from "@/hooks/useAdmin";
-import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, DollarSign, CreditCard } from "lucide-react";
+import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const statCards = [
