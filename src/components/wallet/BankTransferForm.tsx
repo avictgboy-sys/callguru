@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useMerchantNumbers } from "@/hooks/useAppSettings";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
@@ -9,31 +10,36 @@ interface Props {
   isPending: boolean;
 }
 
-const BANK_INFO = {
-  bankName: "Example Bank Ltd.",
-  accountName: "CallGuru Technologies",
-  accountNumber: "1234567890123",
-  branch: "Dhaka Main Branch",
-  routingNumber: "123456789",
-};
-
 const BankTransferForm = ({ amount, onSubmit, isPending }: Props) => {
   const [senderName, setSenderName] = useState("");
   const [senderBank, setSenderBank] = useState("");
   const [referenceId, setReferenceId] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const merchants = useMerchantNumbers();
+
+  const bankInfo = [
+    { label: "Bank Name", value: merchants.bankName },
+    { label: "Account Name", value: merchants.bankAccountName },
+    { label: "Account Number", value: merchants.bankAccountNumber },
+    { label: "Branch", value: merchants.bankBranch },
+    { label: "Routing Number", value: merchants.bankRouting },
+  ].filter((item) => item.value);
 
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-muted p-4 space-y-1 text-sm">
         <p className="font-semibold text-foreground mb-2">Transfer ৳{amount.toFixed(2)} to:</p>
-        {Object.entries(BANK_INFO).map(([key, val]) => (
-          <div key={key} className="flex justify-between">
-            <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
-            <span className="font-mono font-medium text-foreground">{val}</span>
-          </div>
-        ))}
+        {bankInfo.length > 0 ? (
+          bankInfo.map((item) => (
+            <div key={item.label} className="flex justify-between">
+              <span className="text-muted-foreground">{item.label}</span>
+              <span className="font-mono font-medium text-foreground">{item.value}</span>
+            </div>
+          ))
+        ) : (
+          <p className="text-muted-foreground italic">Bank details not configured yet. Please contact support.</p>
+        )}
       </div>
 
       <div className="space-y-3">
