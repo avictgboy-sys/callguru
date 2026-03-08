@@ -87,9 +87,14 @@ const AdminLiveTV = () => {
             </h1>
             <p className="text-muted-foreground text-sm mt-1">M3U স্ট্রিম লিংক যোগ ও ম্যানেজ করুন</p>
           </div>
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="w-4 h-4" /> চ্যানেল যোগ করুন
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowImportDialog(true)} className="gap-2">
+              <Link className="w-4 h-4" /> M3U লিংক ইমপোর্ট
+            </Button>
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="w-4 h-4" /> চ্যানেল যোগ করুন
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
