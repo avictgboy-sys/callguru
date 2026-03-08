@@ -324,11 +324,13 @@ const Wallet = () => {
             </div>
           )}
 
-          {/* Step 2: Method selection (top-up only) */}
+          {/* Step 2: Method selection */}
           {step === "method" && (
             <div className="space-y-4 py-2">
               <div className="text-center">
-                <Badge variant="secondary" className="text-sm">Amount: ${parseFloat(amount).toFixed(2)}</Badge>
+                <Badge variant="secondary" className="text-sm">
+                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ${parseFloat(amount).toFixed(2)}
+                </Badge>
               </div>
               <PaymentMethodSelector
                 selected={selectedMethod}
