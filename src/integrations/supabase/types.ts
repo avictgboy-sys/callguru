@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_views: {
+        Row: {
+          ad_slot: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          ad_slot: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          ad_slot?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           description: string | null

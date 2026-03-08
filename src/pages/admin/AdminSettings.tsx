@@ -4,7 +4,7 @@ import { useAppSettings, useUpdateSetting } from "@/hooks/useAppSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Save, Smartphone, Building2, Percent } from "lucide-react";
+import { Save, Smartphone, Building2, Percent, Megaphone } from "lucide-react";
 import { toast } from "sonner";
 
 const MERCHANT_FIELDS = [
@@ -26,6 +26,13 @@ const FEE_FIELDS = [
   { key: "min_withdraw", label: "Minimum Withdrawal (৳)", placeholder: "1000" },
   { key: "withdraw_fee_percent", label: "Withdrawal Fee (%)", placeholder: "2" },
   { key: "call_fee_percent", label: "Call Fee (%)", placeholder: "1" },
+];
+
+const AD_FIELDS = [
+  { key: "ad_points_per_view", label: "Points per Ad View", placeholder: "2" },
+  { key: "ad_daily_limit", label: "Daily Ad View Limit", placeholder: "50" },
+  { key: "adsterra_banner_id", label: "Adsterra Banner ID", placeholder: "Adsterra publisher ID" },
+  { key: "adsterra_interstitial_id", label: "Adsterra Interstitial ID", placeholder: "Adsterra interstitial ID" },
 ];
 
 const AdminSettings = () => {
@@ -150,6 +157,32 @@ const AdminSettings = () => {
                 />
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Ad Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Megaphone className="w-5 h-5 text-primary" />
+              Ad Network &amp; Points
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {AD_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="text-sm font-medium text-foreground">{field.label}</label>
+                <Input
+                  value={values[field.key] || ""}
+                  onChange={(e) => handleChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="mt-1 max-w-xs"
+                />
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              Adsterra ID খালি রাখলে placeholder ad দেখাবে। ID সেট করলে Adsterra-র বিজ্ঞাপন লোড হবে।
+            </p>
           </CardContent>
         </Card>
       </div>
