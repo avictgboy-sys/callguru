@@ -34,7 +34,7 @@ const Feed = () => {
 
   const navItems = [
     { icon: Home, label: "Home", href: "/feed", active: true },
-    { icon: PlayCircle, label: "Watch", href: "/feed", active: false },
+    { icon: PlayCircle, label: "Reels", href: "/reels", active: false },
     { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", active: false },
     { icon: Users, label: "Groups", href: "/feed", active: false },
   ];
