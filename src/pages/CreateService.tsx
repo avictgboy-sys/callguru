@@ -78,17 +78,17 @@ const CreateService = () => {
       ? data.tags.split(",").map((t) => t.trim()).filter(Boolean)
       : [];
 
-    const { error } = await supabase.from("services").insert({
+    const { error } = await supabase.from("services").insert([{
       provider_id: user.id,
       title: data.title,
       description: data.description || null,
       category_id: data.category_id,
       price_per_minute: data.price_per_minute,
       tags: tagsArray,
-      availability_schedule: schedule,
+      availability_schedule: schedule as any,
       is_available: true,
       is_active: true,
-    });
+    }]);
 
     setSubmitting(false);
 
