@@ -22,6 +22,9 @@ const PostCard = ({ post }: Props) => {
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [mediaRevealed, setMediaRevealed] = useState(false);
   const toggleLike = useToggleLike();
+  const isOwnPost = user?.id === post.user_id;
+  const { data: isFollowing } = useIsFollowing(isOwnPost ? undefined : post.user_id);
+  const toggleFollow = useToggleFollow();
 
   const handleMediaClick = () => {
     if (mediaRevealed || !user) {
