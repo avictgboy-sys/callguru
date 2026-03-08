@@ -1,42 +1,55 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tv, X, Volume2, VolumeX, Maximize, ChevronRight } from "lucide-react";
+import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw } from "lucide-react";
 import Hls from "hls.js";
 import AdBanner from "@/components/ads/AdBanner";
 
 const LiveTVSection = () => {
   const { data: channels, isLoading } = useLiveChannels();
   const [activeChannel, setActiveChannel] = useState<LiveChannel | null>(null);
+  const [activeUrlIndex, setActiveUrlIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Get all available URLs for current channel
+  const getAllUrls = (ch: LiveChannel) => {
+    const urls = [ch.stream_url];
+    if (ch.alternate_urls?.length) urls.push(...ch.alternate_urls);
+    return urls;
+  };
+
   const playChannel = useCallback((channel: LiveChannel) => {
     setActiveChannel(channel);
+    setActiveUrlIndex(0);
+    setHasError(false);
   }, []);
+
+  const switchUrl = (index: number) => {
+    setActiveUrlIndex(index);
+    setHasError(false);
+  };
 
   useEffect(() => {
     if (!activeChannel || !videoRef.current) return;
 
+    const allUrls = getAllUrls(activeChannel);
+    const url = allUrls[activeUrlIndex] || allUrls[0];
     const video = videoRef.current;
-    const url = activeChannel.stream_url;
+    setHasError(false);
 
-    // Cleanup previous
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
     if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-      });
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
       hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(video);
@@ -46,15 +59,17 @@ const LiveTVSection = () => {
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
           console.error("HLS fatal error:", data);
+          setHasError(true);
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-            hls.startLoad();
-          } else {
-            hls.destroy();
+            // Try next URL automatically
+            if (activeUrlIndex < allUrls.length - 1) {
+              setTimeout(() => setActiveUrlIndex(prev => prev + 1), 2000);
+            }
           }
+          hls.destroy();
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS
       video.src = url;
       video.play().catch(() => {});
     }
@@ -65,7 +80,7 @@ const LiveTVSection = () => {
         hlsRef.current = null;
       }
     };
-  }, [activeChannel]);
+  }, [activeChannel, activeUrlIndex]);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -85,6 +100,8 @@ const LiveTVSection = () => {
   }, []);
 
   if (isLoading || !channels?.length) return null;
+
+  const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
 
   return (
     <div className="space-y-3">
@@ -110,6 +127,18 @@ const LiveTVSection = () => {
             playsInline
             autoPlay
           />
+
+          {/* Error overlay */}
+          {hasError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-2">
+              <RefreshCw className="w-8 h-8 opacity-60" />
+              <p className="text-sm">স্ট্রিম লোড হচ্ছে না</p>
+              {allUrls.length > 1 && (
+                <p className="text-xs text-white/60">অন্য একটি সোর্স ট্রাই করুন ↓</p>
+              )}
+            </div>
+          )}
+
           {/* Controls overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 flex items-end justify-between">
             <div>
@@ -142,7 +171,27 @@ const LiveTVSection = () => {
         </div>
       )}
 
-      {/* Ad between player and channel list */}
+      {/* Source selector — shows when channel has multiple URLs */}
+      {activeChannel && allUrls.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground">সোর্স:</span>
+          {allUrls.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => switchUrl(i)}
+              className={`text-xs px-3 py-1 rounded-full border transition-all ${
+                activeUrlIndex === i
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/50"
+              }`}
+            >
+              সোর্স {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Ad */}
       {activeChannel && (
         <div className="my-2">
           <AdBanner slotId="live-tv" />
