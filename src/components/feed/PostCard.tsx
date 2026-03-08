@@ -96,6 +96,7 @@ const PostCard = ({ post }: Props) => {
             <MoreHorizontal className="w-5 h-5" />
           </Button>
         </div>
+      </div>
 
       {/* Content */}
       {post.content && (
