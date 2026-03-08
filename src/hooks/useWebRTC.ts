@@ -130,9 +130,9 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
       pc.oniceconnectionstatechange = () => {
         console.log("ICE connection state:", pc.iceConnectionState);
-        // Auto-restart ICE if it fails
-        if (pc.iceConnectionState === "failed") {
-          console.log("ICE failed, restarting...");
+        // Auto-restart ICE if it fails or gets temporarily disconnected
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          console.log("ICE issue detected, restarting...");
           pc.restartIce();
         }
       };
