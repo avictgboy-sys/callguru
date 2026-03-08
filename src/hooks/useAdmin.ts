@@ -5,12 +5,13 @@ export const useAdminStats = () =>
   useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [users, services, posts, roles, payments] = await Promise.all([
+      const [users, services, posts, roles, payments, calls] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("services").select("id", { count: "exact", head: true }),
         supabase.from("posts").select("id", { count: "exact", head: true }),
         supabase.from("user_roles").select("role"),
         supabase.from("payment_requests").select("*"),
+        supabase.from("calls").select("id, status, total_cost, platform_fee, duration_minutes, created_at"),
       ]);
 
       const providerCount = (roles.data || []).filter((r: any) => r.role === "provider").length;
@@ -26,6 +27,18 @@ export const useAdminStats = () =>
         .filter((p: any) => p.status === "completed")
         .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
 
+      // Call/revenue stats
+      const callData = calls.data || [];
+      const completedCalls = callData.filter((c: any) => c.status === "completed");
+      const totalCalls = completedCalls.length;
+      const totalRevenue = completedCalls.reduce((s: number, c: any) => s + Number(c.platform_fee || 0), 0);
+      const totalCallVolume = completedCalls.reduce((s: number, c: any) => s + Number(c.total_cost || 0), 0);
+      const totalMinutes = completedCalls.reduce((s: number, c: any) => s + Number(c.duration_minutes || 0), 0);
+      const todayCalls = completedCalls.filter((c: any) => c.created_at?.slice(0, 10) === today).length;
+      const todayRevenue = completedCalls
+        .filter((c: any) => c.created_at?.slice(0, 10) === today)
+        .reduce((s: number, c: any) => s + Number(c.platform_fee || 0), 0);
+
       return {
         totalUsers: users.count || 0,
         totalServices: services.count || 0,
@@ -35,6 +48,12 @@ export const useAdminStats = () =>
         pendingPayments,
         approvedToday,
         totalVolume,
+        totalCalls,
+        totalRevenue,
+        totalCallVolume,
+        totalMinutes,
+        todayCalls,
+        todayRevenue,
       };
     },
   });
