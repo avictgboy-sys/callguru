@@ -151,7 +151,7 @@ const Feed = () => {
                 <SidebarLink icon={Bookmark} label="Saved" href="/feed" />
                 <SidebarLink icon={PlayCircle} label="Watch" href="/feed" />
                 <SidebarLink icon={ShoppingBag} label="Marketplace" href="/marketplace" />
-                <SidebarLink icon={Megaphone} label="Create Ad" href="/create-ad" />
+                <SidebarLink icon={Megaphone} label="My Ads" href="/my-ads" />
                 <SidebarLink icon={TrendingUp} label="Call History" href="/call-history" />
                 <SidebarLink icon={Wrench} label="Home Service" href="/home-services" />
                 <SidebarLink icon={Settings} label="Settings" href="/dashboard" />

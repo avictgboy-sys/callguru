@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToggleLike } from "@/hooks/useFeed";
+import { useToggleLike, useUpdatePost, useDeletePost } from "@/hooks/useFeed";
 import { useIsFollowing, useToggleFollow } from "@/hooks/useFollow";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
@@ -11,6 +12,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   post: PostWithAuthor;
@@ -21,7 +28,11 @@ const PostCard = ({ post }: Props) => {
   const [showComments, setShowComments] = useState(false);
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [mediaRevealed, setMediaRevealed] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content || "");
   const toggleLike = useToggleLike();
+  const updatePost = useUpdatePost();
+  const deletePost = useDeletePost();
   const isOwnPost = user?.id === post.user_id;
   const { data: isFollowing } = useIsFollowing(isOwnPost ? undefined : post.user_id);
   const toggleFollow = useToggleFollow();
@@ -45,6 +56,30 @@ const PostCard = ({ post }: Props) => {
       return;
     }
     await toggleLike.mutateAsync({ postId: post.id, liked: post.liked_by_me });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editContent.trim()) {
+      toast.error("Post content cannot be empty");
+      return;
+    }
+    try {
+      await updatePost.mutateAsync({ postId: post.id, content: editContent.trim() });
+      toast.success("Post updated!");
+      setEditing(false);
+    } catch {
+      toast.error("Failed to update post");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("এই পোস্ট ডিলিট করতে চান?")) return;
+    try {
+      await deletePost.mutateAsync(post.id);
+      toast.success("Post deleted");
+    } catch {
+      toast.error("Failed to delete post");
+    }
   };
 
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
@@ -92,18 +127,54 @@ const PostCard = ({ post }: Props) => {
               {isFollowing ? "Following" : "Follow"}
             </Button>
           )}
-          <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
-            <MoreHorizontal className="w-5 h-5" />
-          </Button>
+          {isOwnPost ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
+                  <MoreHorizontal className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content || ""); }}>
+                  <Pencil className="w-4 h-4 mr-2" /> Edit Post
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete Post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
+              <MoreHorizontal className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      {post.content && (
+      {editing ? (
+        <div className="px-4 pb-3 space-y-2">
+          <Textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            rows={3}
+            className="text-[15px]"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSaveEdit} disabled={updatePost.isPending}>
+              <Check className="w-4 h-4 mr-1" /> Save
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+              <X className="w-4 h-4 mr-1" /> Cancel
+            </Button>
+          </div>
+        </div>
+      ) : post.content ? (
         <p className="px-4 pb-3 text-[15px] text-foreground whitespace-pre-wrap leading-relaxed">
           {post.content}
         </p>
-      )}
+      ) : null}
 
       {/* Image */}
       {post.image_url && (
