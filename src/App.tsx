@@ -46,7 +46,7 @@ const App = () => (
         <AuthProvider>
           <IncomingCallProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Feed />} />
             <Route path="/login" element={<Login />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/marketplace" element={<Marketplace />} />
