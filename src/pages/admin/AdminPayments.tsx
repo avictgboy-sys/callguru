@@ -132,10 +132,10 @@ const AdminPayments = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-heading text-3xl font-bold text-foreground">Payment Requests</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">Payment Requests</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               {pendingCount > 0
                 ? `${pendingCount} pending request${pendingCount > 1 ? "s" : ""} awaiting review`
                 : "No pending requests"}
