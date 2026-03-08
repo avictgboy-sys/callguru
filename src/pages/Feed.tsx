@@ -62,6 +62,16 @@ const Feed = () => {
           {/* Create post */}
           {user && <CreatePostCard />}
 
+          {/* Create Ad button */}
+          {user && (
+            <Link to="/create-ad" className="block">
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
+                <Megaphone className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-primary">বিজ্ঞাপন তৈরি করুন — আপনার পণ্য/সার্ভিস প্রমোট করুন</span>
+              </div>
+            </Link>
+          )}
+
           {/* Feed */}
           {isLoading ? (
             <div className="flex justify-center py-12">
