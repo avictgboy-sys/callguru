@@ -11,6 +11,8 @@ import { formatDistanceToNow } from "date-fns";
 
 const AdminUsers = () => {
   const { data: users, isLoading } = useAdminUsers();
+  const { roles: myRoles } = useAuth();
+  const isSuperAdmin = myRoles.includes("super_admin");
   const verifyUser = useVerifyUser();
   const toggleRole = useToggleUserRole();
   const [search, setSearch] = useState("");
