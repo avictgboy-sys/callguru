@@ -190,13 +190,13 @@ const CreateService = () => {
           {/* Pricing */}
           <section className="bg-card rounded-xl border border-border p-6 space-y-5">
             <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" /> Pricing
+              <span className="text-primary text-lg">৳</span> Pricing
             </h2>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Price Per Minute (USD) *</Label>
+              <Label htmlFor="price">Price Per Minute (৳) *</Label>
               <div className="relative max-w-xs">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
                 <Input
                   id="price"
                   type="number"
@@ -208,7 +208,7 @@ const CreateService = () => {
               </div>
               {errors.price_per_minute && <p className="text-sm text-destructive">{errors.price_per_minute.message}</p>}
               <p className="text-xs text-muted-foreground">
-                A 30-min call at ${watch("price_per_minute") || 0}/min = ${((watch("price_per_minute") || 0) * 30).toFixed(2)}
+                A 30-min call at ৳{watch("price_per_minute") || 0}/min = ৳{((watch("price_per_minute") || 0) * 30).toFixed(2)}
               </p>
             </div>
           </section>
