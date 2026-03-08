@@ -20,10 +20,13 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   const [connectionState, setConnectionState] = useState<string>("new");
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const originalVideoTrackRef = useRef<MediaStreamTrack | null>(null);
 
   const startLocalStream = useCallback(async () => {
     try {
