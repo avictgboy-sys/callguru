@@ -1358,6 +1358,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_super_admin: { Args: { _user_id: string }; Returns: boolean }
       increment_reel_views: { Args: { p_reel_id: string }; Returns: undefined }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       pay_home_booking_advance: {
@@ -1373,7 +1374,7 @@ export type Database = {
       wallet_withdraw: { Args: { p_amount: number }; Returns: undefined }
     }
     Enums: {
-      app_role: "user" | "provider" | "admin"
+      app_role: "user" | "provider" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1501,7 +1502,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "provider", "admin"],
+      app_role: ["user", "provider", "admin", "super_admin"],
     },
   },
 } as const

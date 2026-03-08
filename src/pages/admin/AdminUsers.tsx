@@ -4,12 +4,15 @@ import { useAdminUsers, useVerifyUser, useToggleUserRole } from "@/hooks/useAdmi
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, XCircle, Shield, UserPlus } from "lucide-react";
+import { Search, CheckCircle, XCircle, Shield, UserPlus, Crown } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 
 const AdminUsers = () => {
   const { data: users, isLoading } = useAdminUsers();
+  const { roles: myRoles } = useAuth();
+  const isSuperAdmin = myRoles.includes("super_admin");
   const verifyUser = useVerifyUser();
   const toggleRole = useToggleUserRole();
   const [search, setSearch] = useState("");
@@ -98,10 +101,10 @@ const AdminUsers = () => {
                           {user.roles.map((r) => (
                             <Badge
                               key={r}
-                              variant={r === "admin" ? "destructive" : r === "provider" ? "default" : "secondary"}
+                              variant={r === "super_admin" ? "destructive" : r === "admin" ? "destructive" : r === "provider" ? "default" : "secondary"}
                               className="text-[10px]"
                             >
-                              {r}
+                              {r === "super_admin" ? "👑 Super Admin" : r}
                             </Badge>
                           ))}
                         </div>
@@ -150,6 +153,17 @@ const AdminUsers = () => {
                           >
                             <Shield className="w-4 h-4" />
                           </Button>
+                          {isSuperAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleToggle(user.user_id, "super_admin", user.roles)}
+                              title={user.roles.includes("super_admin") ? "Remove Super Admin" : "Make Super Admin"}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Crown className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
