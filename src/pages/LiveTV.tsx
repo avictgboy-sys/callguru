@@ -186,8 +186,8 @@ const LiveTV = () => {
         {/* Player */}
         {activeChannel && (
           <div className="mt-3">
-            <div ref={containerRef} className="relative rounded-xl overflow-hidden bg-black">
-              <div className="w-full aspect-video overflow-hidden flex items-center justify-center bg-black">
+            <div ref={containerRef} className={`relative rounded-xl overflow-hidden bg-black ${isFullscreen ? "w-screen h-screen" : ""}`}>
+              <div className={`overflow-hidden flex items-center justify-center bg-black ${isFullscreen ? "w-full h-full" : "w-full aspect-video"}`}>
                 <video
                   ref={videoRef}
                   className="transition-transform duration-200 ease-out"
