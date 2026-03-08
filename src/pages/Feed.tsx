@@ -57,7 +57,15 @@ const Feed = () => {
               <p className="text-sm text-muted-foreground mt-1">Be the first to share something!</p>
             </div>
           ) : (
-            posts?.map((post) => <PostCard key={post.id} post={post} />)
+            posts?.map((post, index) => (
+              <div key={post.id}>
+                <PostCard post={post} />
+                {/* Show ad every 3 posts */}
+                {(index + 1) % 3 === 0 && (
+                  <AdBanner slotId={`feed-inline-${index}`} className="mt-4" />
+                )}
+              </div>
+            ))
           )}
         </div>
       </div>
