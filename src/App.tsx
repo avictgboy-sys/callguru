@@ -178,6 +178,7 @@ const App = () => (
             <Route path="/pages/:pageId" element={<PageDetail />} />
             <Route path="/create-page" element={<ProtectedRoute><CreatePage /></ProtectedRoute>} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/live-tv" element={<LiveTV />} />
             <Route path="/home-services" element={<HomeServices />} />
             <Route path="/home-service/:serviceId" element={<HomeServiceDetail />} />
             <Route path="/create-home-service" element={<ProtectedRoute><CreateHomeService /></ProtectedRoute>} />
