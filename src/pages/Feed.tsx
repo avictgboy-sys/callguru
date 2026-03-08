@@ -40,7 +40,8 @@ const Feed = () => {
     { icon: Home, label: "Home", href: "/feed", active: true },
     { icon: PlayCircle, label: "Reels", href: "/reels", active: false },
     { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", active: false },
-    { icon: Users, label: "Groups", href: "/feed", active: false },
+    { icon: Users, label: "Groups", href: "/groups", active: false },
+    { icon: Compass, label: "Discover", href: "/discover", active: false },
   ];
 
   return (
