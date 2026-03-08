@@ -80,10 +80,12 @@ const Wallet = () => {
       await createPayment.mutateAsync({
         amount: parseFloat(amount),
         method: selectedMethod!,
-        type: "topup",
+        type: dialogType as "topup" | "withdraw",
         reference_id: referenceId,
       });
-      toast.success("Payment submitted! Your balance will update after verification.");
+      toast.success(dialogType === "topup"
+        ? "Payment submitted! Your balance will update after verification."
+        : "Withdrawal request submitted! You'll be paid after admin approval.");
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Submission failed");
@@ -99,15 +101,33 @@ const Wallet = () => {
       await createPayment.mutateAsync({
         amount: parseFloat(amount),
         method: "bank_transfer",
-        type: "topup",
+        type: dialogType as "topup" | "withdraw",
         bank_details: bankDetails,
         reference_id: bankDetails.referenceId,
         proof_url: proofUrl,
       });
-      toast.success("Bank transfer details submitted! Your balance will update after verification.");
+      toast.success(dialogType === "topup"
+        ? "Bank transfer details submitted! Your balance will update after verification."
+        : "Withdrawal request submitted! Funds will be transferred after approval.");
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Submission failed");
+    }
+  };
+
+  const handleWithdrawMethodSubmit = async (details: Record<string, string>) => {
+    try {
+      await withdraw.mutateAsync(parseFloat(amount));
+      await createPayment.mutateAsync({
+        amount: parseFloat(amount),
+        method: selectedMethod!,
+        type: "withdraw",
+        bank_details: details,
+      });
+      toast.success("Withdrawal request submitted! Funds will be sent after verification.");
+      resetDialog();
+    } catch (e: any) {
+      toast.error(e.message || "Withdrawal failed");
     }
   };
 
