@@ -171,7 +171,54 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsVideoEnabled((prev) => !prev);
   }, []);
 
+  const toggleScreenShare = useCallback(async () => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    if (isScreenSharing) {
+      // Stop screen share, restore camera
+      screenStreamRef.current?.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+      const camTrack = originalVideoTrackRef.current;
+      if (camTrack) {
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (sender) await sender.replaceTrack(camTrack);
+      }
+      setIsScreenSharing(false);
+    } else {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        screenStreamRef.current = screenStream;
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        // Save original camera track
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (sender) {
+          if (!originalVideoTrackRef.current) {
+            originalVideoTrackRef.current = sender.track;
+          }
+          await sender.replaceTrack(screenTrack);
+        }
+
+        // When user stops sharing via browser UI
+        screenTrack.onended = () => {
+          const camTrack = originalVideoTrackRef.current;
+          if (camTrack && sender) {
+            sender.replaceTrack(camTrack);
+          }
+          screenStreamRef.current = null;
+          setIsScreenSharing(false);
+        };
+
+        setIsScreenSharing(true);
+      } catch (err) {
+        console.error("Screen share failed:", err);
+      }
+    }
+  }, [isScreenSharing]);
+
   const disconnect = useCallback(() => {
+    screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     pcRef.current?.close();
     if (channelRef.current) {
@@ -180,6 +227,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setLocalStream(null);
     setRemoteStream(null);
     setConnectionState("closed");
+    setIsScreenSharing(false);
   }, []);
 
   useEffect(() => {
