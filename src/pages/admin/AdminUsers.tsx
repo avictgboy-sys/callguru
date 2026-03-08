@@ -45,10 +45,10 @@ const AdminUsers = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-heading text-3xl font-bold text-foreground">User Management</h1>
-            <p className="text-muted-foreground mt-1">{users?.length || 0} registered users</p>
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">User Management</h1>
+            <p className="text-sm text-muted-foreground mt-1 break-words">{users?.length || 0} registered users</p>
           </div>
         </div>
 

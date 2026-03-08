@@ -148,66 +148,68 @@ const AdminDisputes = () => {
             ) : !disputes || disputes.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No disputes yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Complainant</TableHead>
-                    <TableHead>Against</TableHead>
-                    <TableHead>Reason</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Recording</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {disputes.map((d: any) => {
-                    const call = calls?.[d.call_id];
-                    return (
-                      <TableRow key={d.id}>
-                        <TableCell className="text-sm">
-                          {format(new Date(d.created_at), "MMM d, yyyy HH:mm")}
-                        </TableCell>
-                        <TableCell className="text-sm font-medium">
-                          {profiles?.[d.complainant_id] || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm font-medium">
-                          {profiles?.[d.against_id] || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm max-w-[200px] truncate">{d.reason}</TableCell>
-                        <TableCell>{statusBadge(d.status)}</TableCell>
-                        <TableCell>
-                          {call?.recording_url ? (
+              <div className="overflow-x-auto">
+                <Table className="min-w-[860px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Complainant</TableHead>
+                      <TableHead>Against</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Recording</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {disputes.map((d: any) => {
+                      const call = calls?.[d.call_id];
+                      return (
+                        <TableRow key={d.id}>
+                          <TableCell className="text-sm">
+                            {format(new Date(d.created_at), "MMM d, yyyy HH:mm")}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {profiles?.[d.complainant_id] || "—"}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {profiles?.[d.against_id] || "—"}
+                          </TableCell>
+                          <TableCell className="text-sm max-w-[200px] truncate">{d.reason}</TableCell>
+                          <TableCell>{statusBadge(d.status)}</TableCell>
+                          <TableCell>
+                            {call?.recording_url ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewRecording(call.recording_url!)}
+                              >
+                                <Video className="w-4 h-4 mr-1" />
+                                Watch
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">No recording</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              onClick={() => handleViewRecording(call.recording_url!)}
+                              onClick={() => {
+                                setSelectedDispute(d);
+                                setAdminNote(d.admin_note || "");
+                              }}
                             >
-                              <Video className="w-4 h-4 mr-1" />
-                              Watch
+                              <Eye className="w-4 h-4 mr-1" />
+                              Review
                             </Button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">No recording</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedDispute(d);
-                              setAdminNote(d.admin_note || "");
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Review
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
