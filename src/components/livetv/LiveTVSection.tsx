@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
-import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw } from "lucide-react";
 import Hls from "hls.js";
@@ -29,6 +28,7 @@ const LiveTVSection = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("all");
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -138,11 +138,33 @@ const LiveTVSection = () => {
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  if (isLoading || !channels?.length) return null;
+  const baseChannels = sortedChannels.length ? sortedChannels : channels || [];
+  
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(baseChannels.map(ch => ch.category || "general"));
+    return ["all", ...Array.from(cats)];
+  }, [baseChannels]);
 
-  const displayChannels = sortedChannels.length ? sortedChannels : channels || [];
+  const categoryLabels: Record<string, string> = {
+    all: "সব",
+    general: "সাধারণ",
+    news: "নিউজ",
+    entertainment: "এন্টারটেইনমেন্ট",
+    movies: "মুভিজ",
+    sports: "স্পোর্টস",
+    music: "মিউজিক",
+    kids: "কিডস",
+    religious: "ধর্মীয়",
+  };
+
+  const displayChannels = activeCategory === "all"
+    ? baseChannels
+    : baseChannels.filter(ch => (ch.category || "general") === activeCategory);
 
   const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
+
+  if (isLoading || !channels?.length) return null;
 
   return (
     <div className="space-y-3">
@@ -238,6 +260,28 @@ const LiveTVSection = () => {
         <div className="my-2">
           <AdBanner slotId="live-tv" />
         </div>
+      )}
+
+      {/* Category tabs */}
+      {categories.length > 2 && (
+        <ScrollArea className="w-full">
+          <div className="flex gap-1.5 pb-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
+                  activeCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary text-secondary-foreground border-border hover:border-primary/50"
+                }`}
+              >
+                {categoryLabels[cat] || cat}
+              </button>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       )}
 
       {/* Channel list */}
