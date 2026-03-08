@@ -43,6 +43,22 @@ export const useMerchantNumbers = () => {
   };
 };
 
+export const useFeeSettings = () => {
+  const { data: settings, isLoading } = useAppSettings();
+  const getNum = (key: string, fallback: number) => {
+    const val = settings?.find((s) => s.key === key)?.value;
+    const num = val ? parseFloat(val) : NaN;
+    return isNaN(num) ? fallback : num;
+  };
+  return {
+    isLoading,
+    minDeposit: getNum("min_deposit", 100),
+    minWithdraw: getNum("min_withdraw", 1000),
+    withdrawFeePercent: getNum("withdraw_fee_percent", 2),
+    callFeePercent: getNum("call_fee_percent", 1),
+  };
+};
+
 export const useUpdateSetting = () => {
   const qc = useQueryClient();
   return useMutation({

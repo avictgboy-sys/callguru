@@ -128,6 +128,30 @@ const AdminSettings = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Fees & Limits */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Percent className="w-5 h-5 text-primary" />
+              Fees &amp; Limits
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {FEE_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="text-sm font-medium text-foreground">{field.label}</label>
+                <Input
+                  type="number"
+                  value={values[field.key] || ""}
+                  onChange={(e) => handleChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="mt-1 max-w-xs"
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
