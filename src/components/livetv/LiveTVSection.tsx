@@ -138,8 +138,6 @@ const LiveTVSection = () => {
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  if (isLoading || !channels?.length) return null;
-
   const baseChannels = sortedChannels.length ? sortedChannels : channels || [];
   
   // Extract unique categories
@@ -165,6 +163,8 @@ const LiveTVSection = () => {
     : baseChannels.filter(ch => (ch.category || "general") === activeCategory);
 
   const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
+
+  if (isLoading || !channels?.length) return null;
 
   return (
     <div className="space-y-3">
