@@ -39,6 +39,7 @@ const EmailOtpLogin = () => {
     } else {
       toast.success("আপনার ইমেইলে ৬ সংখ্যার কোড পাঠানো হয়েছে!");
       setStep("otp");
+      setCountdown(OTP_EXPIRY_SECONDS);
     }
   };
 
