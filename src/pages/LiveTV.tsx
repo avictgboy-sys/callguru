@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw, Home, ShoppingBag, PlayCircle, MessageCircle, User, ArrowLeft } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Tv, X, Volume2, VolumeX, Maximize, Minimize, RefreshCw, Home, PlayCircle, MessageCircle, User, ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
 import Hls from "hls.js";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -42,6 +43,7 @@ const LiveTV = () => {
   const [hasError, setHasError] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [videoScale, setVideoScale] = useState(100); // 50-200%
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -178,13 +180,20 @@ const LiveTV = () => {
         {activeChannel && (
           <div className="mt-3">
             <div ref={containerRef} className="relative rounded-xl overflow-hidden bg-black">
-              <video
-                ref={videoRef}
-                className="w-full aspect-video"
-                muted={isMuted}
-                playsInline
-                autoPlay
-              />
+              <div className="w-full aspect-video overflow-hidden flex items-center justify-center bg-black">
+                <video
+                  ref={videoRef}
+                  className="transition-transform duration-200 ease-out"
+                  style={{
+                    width: `${videoScale}%`,
+                    height: `${videoScale}%`,
+                    objectFit: "contain",
+                  }}
+                  muted={isMuted}
+                  playsInline
+                  autoPlay
+                />
+              </div>
               {hasError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-2">
                   <RefreshCw className="w-8 h-8 opacity-60" />
@@ -194,35 +203,59 @@ const LiveTV = () => {
                   )}
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 flex items-end justify-between">
-                <div>
-                  <p className="text-white text-sm font-medium">{activeChannel.name}</p>
-                  <p className="text-white/60 text-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-destructive inline-block" /> LIVE
-                  </p>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 space-y-2">
+                {/* Zoom slider */}
+                <div className="flex items-center gap-2 px-1">
+                  <ZoomOut className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <Slider
+                    value={[videoScale]}
+                    onValueChange={(v) => setVideoScale(v[0])}
+                    min={50}
+                    max={200}
+                    step={5}
+                    className="flex-1 [&_[data-radix-slider-track]]:h-1 [&_[data-radix-slider-track]]:bg-white/20 [&_[data-radix-slider-range]]:bg-white/70 [&_[data-radix-slider-thumb]]:w-3.5 [&_[data-radix-slider-thumb]]:h-3.5 [&_[data-radix-slider-thumb]]:bg-white [&_[data-radix-slider-thumb]]:border-0"
+                  />
+                  <ZoomIn className="w-3.5 h-3.5 text-white/70 shrink-0" />
+                  <span className="text-[10px] text-white/60 min-w-[32px] text-right">{videoScale}%</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsMuted(!isMuted)}
-                    className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={toggleFullscreen}
-                    className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
-                  >
-                    <Maximize className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveChannel(null);
-                      hlsRef.current?.destroy();
-                    }}
-                    className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                {/* Bottom controls */}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-white text-sm font-medium">{activeChannel.name}</p>
+                    <p className="text-white/60 text-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-destructive inline-block" /> LIVE
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setVideoScale(100)}
+                      className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition text-[10px] font-bold"
+                      title="রিসেট"
+                    >
+                      1:1
+                    </button>
+                    <button
+                      onClick={() => setIsMuted(!isMuted)}
+                      className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
+                    >
+                      {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveChannel(null);
+                        hlsRef.current?.destroy();
+                      }}
+                      className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
