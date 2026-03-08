@@ -1,11 +1,31 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Using multiple STUN + free TURN relay servers for NAT traversal.
+ * This ensures connections work on mobile networks, corporate firewalls, etc.
+ */
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+    {
+      urls: "turn:openrelay.metered.ca:443?transport=tcp",
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 interface UseWebRTCOptions {
@@ -27,21 +47,26 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const originalVideoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const remoteStreamRef = useRef<MediaStream>(new MediaStream());
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const hasRemoteDescRef = useRef(false);
 
+  // ── Get local camera + mic ──
   const startLocalStream = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
-        audio: { echoCancellation: true, noiseSuppression: true },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
       localStreamRef.current = stream;
       setLocalStream(stream);
       return stream;
     } catch (err) {
-      console.error("Failed to get media:", err);
-      // Fallback to audio only
+      console.error("Failed to get video+audio:", err);
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+        });
         localStreamRef.current = stream;
         setLocalStream(stream);
         setIsVideoEnabled(false);
@@ -53,24 +78,63 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, []);
 
+  // ── Flush queued ICE candidates once remote description is set ──
+  const flushCandidates = useCallback(async (pc: RTCPeerConnection) => {
+    const queued = pendingCandidatesRef.current.splice(0);
+    for (const c of queued) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(c));
+      } catch (e) {
+        console.warn("Failed to add queued ICE candidate:", e);
+      }
+    }
+  }, []);
+
+  // ── Create peer connection ──
   const setupPeerConnection = useCallback(
     (stream: MediaStream) => {
       const pc = new RTCPeerConnection(ICE_SERVERS);
       pcRef.current = pc;
+      hasRemoteDescRef.current = false;
+      pendingCandidatesRef.current = [];
 
       // Add local tracks
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Handle remote tracks
-      const remote = new MediaStream();
-      setRemoteStream(remote);
+      // Handle remote tracks — accumulate into a single persistent MediaStream
+      const remote = remoteStreamRef.current;
+      // Clear any stale tracks
+      remote.getTracks().forEach((t) => remote.removeTrack(t));
+
       pc.ontrack = (event) => {
-        event.streams[0]?.getTracks().forEach((track) => remote.addTrack(track));
+        const incomingTrack = event.track;
+        // Avoid duplicates
+        const existing = remote.getTracks().find((t) => t.id === incomingTrack.id);
+        if (!existing) {
+          remote.addTrack(incomingTrack);
+        }
+        // Trigger React re-render with a new reference
         setRemoteStream(new MediaStream(remote.getTracks()));
+
+        // Handle track ending (remote user toggled off)
+        incomingTrack.onended = () => {
+          remote.removeTrack(incomingTrack);
+          setRemoteStream(new MediaStream(remote.getTracks()));
+        };
       };
 
       pc.onconnectionstatechange = () => {
+        console.log("WebRTC connection state:", pc.connectionState);
         setConnectionState(pc.connectionState);
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log("ICE connection state:", pc.iceConnectionState);
+        // Auto-restart ICE if it fails
+        if (pc.iceConnectionState === "failed") {
+          console.log("ICE failed, restarting...");
+          pc.restartIce();
+        }
       };
 
       return pc;
@@ -78,17 +142,18 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     []
   );
 
+  // ── Main connect function ──
   const connect = useCallback(async () => {
     const stream = await startLocalStream();
     const pc = setupPeerConnection(stream);
 
-    // Signaling channel
+    // Signaling channel via Supabase Realtime broadcast
     const channel = supabase.channel(`call-signal-${callId}`, {
       config: { broadcast: { self: false } },
     });
     channelRef.current = channel;
 
-    // ICE candidate exchange
+    // ── ICE candidate exchange ──
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         channel.send({
@@ -100,48 +165,58 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     };
 
     channel.on("broadcast", { event: "ice-candidate" }, async ({ payload }) => {
-      if (payload.from !== userId && pc.remoteDescription) {
+      if (payload.from === userId) return;
+      const candidate = payload.candidate as RTCIceCandidateInit;
+
+      if (hasRemoteDescRef.current) {
         try {
-          await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (e) {
-          console.error("Error adding ICE candidate:", e);
+          console.warn("Error adding ICE candidate:", e);
         }
+      } else {
+        // Queue candidates until remote description is set
+        pendingCandidatesRef.current.push(candidate);
       }
     });
 
+    // ── Offer handling (receiver side) ──
     channel.on("broadcast", { event: "offer" }, async ({ payload }) => {
-      if (payload.from !== userId) {
-        try {
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          channel.send({
-            type: "broadcast",
-            event: "answer",
-            payload: { sdp: answer, from: userId },
-          });
-        } catch (e) {
-          console.error("Error handling offer:", e);
-        }
+      if (payload.from === userId) return;
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+        hasRemoteDescRef.current = true;
+        await flushCandidates(pc);
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        channel.send({
+          type: "broadcast",
+          event: "answer",
+          payload: { sdp: answer, from: userId },
+        });
+      } catch (e) {
+        console.error("Error handling offer:", e);
       }
     });
 
+    // ── Answer handling (caller side) ──
     channel.on("broadcast", { event: "answer" }, async ({ payload }) => {
-      if (payload.from !== userId) {
-        try {
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-        } catch (e) {
-          console.error("Error handling answer:", e);
-        }
+      if (payload.from === userId) return;
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+        hasRemoteDescRef.current = true;
+        await flushCandidates(pc);
+      } catch (e) {
+        console.error("Error handling answer:", e);
       }
     });
 
-    await channel.subscribe();
-
-    // Caller creates offer
-    if (isCaller) {
-      // Small delay for the other party to join
-      setTimeout(async () => {
+    // ── "ready" handshake — ensures both sides are subscribed before offer ──
+    channel.on("broadcast", { event: "ready" }, async ({ payload }) => {
+      if (payload.from === userId) return;
+      // The other side is ready; if we're the caller, send the offer now
+      if (isCaller && pc.signalingState === "stable" && !hasRemoteDescRef.current) {
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
@@ -153,10 +228,77 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
         } catch (e) {
           console.error("Error creating offer:", e);
         }
-      }, 2000);
-    }
-  }, [callId, userId, isCaller, startLocalStream, setupPeerConnection]);
+      }
+    });
 
+    // ── Renegotiation: if caller needs to resend offer (e.g. track changes) ──
+    pc.onnegotiationneeded = async () => {
+      if (!isCaller || pc.signalingState !== "stable") return;
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        channel.send({
+          type: "broadcast",
+          event: "offer",
+          payload: { sdp: offer, from: userId },
+        });
+      } catch (e) {
+        console.error("Error during renegotiation:", e);
+      }
+    };
+
+    await channel.subscribe();
+
+    // Announce "I'm ready" — both sides do this
+    // Small delay to ensure subscription is fully active
+    setTimeout(() => {
+      channel.send({
+        type: "broadcast",
+        event: "ready",
+        payload: { from: userId },
+      });
+    }, 500);
+
+    // Caller: also send offer after a longer delay as fallback
+    // (in case "ready" messages crossed)
+    if (isCaller) {
+      setTimeout(async () => {
+        if (pc.signalingState === "stable" && !hasRemoteDescRef.current) {
+          try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            channel.send({
+              type: "broadcast",
+              event: "offer",
+              payload: { sdp: offer, from: userId },
+            });
+          } catch (e) {
+            console.error("Error creating fallback offer:", e);
+          }
+        }
+      }, 3000);
+
+      // Retry offer if still not connected after 8s
+      setTimeout(async () => {
+        if (pc.connectionState !== "connected" && pc.signalingState === "stable") {
+          console.log("Retrying offer after timeout...");
+          try {
+            const offer = await pc.createOffer({ iceRestart: true });
+            await pc.setLocalDescription(offer);
+            channel.send({
+              type: "broadcast",
+              event: "offer",
+              payload: { sdp: offer, from: userId },
+            });
+          } catch (e) {
+            console.error("Error retrying offer:", e);
+          }
+        }
+      }, 8000);
+    }
+  }, [callId, userId, isCaller, startLocalStream, setupPeerConnection, flushCandidates]);
+
+  // ── Toggle audio ──
   const toggleAudio = useCallback(() => {
     localStreamRef.current?.getAudioTracks().forEach((t) => {
       t.enabled = !t.enabled;
@@ -164,6 +306,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsAudioEnabled((prev) => !prev);
   }, []);
 
+  // ── Toggle video ──
   const toggleVideo = useCallback(() => {
     localStreamRef.current?.getVideoTracks().forEach((t) => {
       t.enabled = !t.enabled;
@@ -171,12 +314,12 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsVideoEnabled((prev) => !prev);
   }, []);
 
+  // ── Screen sharing ──
   const toggleScreenShare = useCallback(async () => {
     const pc = pcRef.current;
     if (!pc) return;
 
     if (isScreenSharing) {
-      // Stop screen share, restore camera
       screenStreamRef.current?.getTracks().forEach((t) => t.stop());
       screenStreamRef.current = null;
       const camTrack = originalVideoTrackRef.current;
@@ -191,7 +334,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
         screenStreamRef.current = screenStream;
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // Save original camera track
         const sender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (sender) {
           if (!originalVideoTrackRef.current) {
@@ -200,7 +342,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
           await sender.replaceTrack(screenTrack);
         }
 
-        // When user stops sharing via browser UI
         screenTrack.onended = () => {
           const camTrack = originalVideoTrackRef.current;
           if (camTrack && sender) {
@@ -217,12 +358,15 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, [isScreenSharing]);
 
+  // ── Disconnect ──
   const disconnect = useCallback(() => {
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     pcRef.current?.close();
+    pcRef.current = null;
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
     setLocalStream(null);
     setRemoteStream(null);
@@ -230,6 +374,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsScreenSharing(false);
   }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       screenStreamRef.current?.getTracks().forEach((t) => t.stop());
