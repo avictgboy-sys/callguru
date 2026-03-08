@@ -28,6 +28,7 @@ const LiveTVSection = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("all");
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
