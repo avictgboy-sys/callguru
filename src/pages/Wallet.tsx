@@ -355,21 +355,44 @@ const Wallet = () => {
                 </Badge>
               </div>
 
-              {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
-                <MobilePaymentForm
-                  method={selectedMethod}
-                  amount={parseFloat(amount)}
-                  onSubmit={handleMobileSubmit}
-                  isPending={isPending}
-                />
+              {dialogType === "topup" && (
+                <>
+                  {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
+                    <MobilePaymentForm
+                      method={selectedMethod}
+                      amount={parseFloat(amount)}
+                      onSubmit={handleMobileSubmit}
+                      isPending={isPending}
+                    />
+                  )}
+                  {selectedMethod === "bank_transfer" && (
+                    <BankTransferForm
+                      amount={parseFloat(amount)}
+                      onSubmit={handleBankSubmit}
+                      isPending={isPending}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedMethod === "bank_transfer" && (
-                <BankTransferForm
-                  amount={parseFloat(amount)}
-                  onSubmit={handleBankSubmit}
-                  isPending={isPending}
-                />
+              {dialogType === "withdraw" && (
+                <>
+                  {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
+                    <MobileWithdrawForm
+                      method={selectedMethod}
+                      amount={parseFloat(amount)}
+                      onSubmit={handleWithdrawMethodSubmit}
+                      isPending={isPending || withdraw.isPending}
+                    />
+                  )}
+                  {selectedMethod === "bank_transfer" && (
+                    <BankWithdrawForm
+                      amount={parseFloat(amount)}
+                      onSubmit={handleWithdrawMethodSubmit}
+                      isPending={isPending || withdraw.isPending}
+                    />
+                  )}
+                </>
               )}
 
               {selectedMethod === "stripe" && (
