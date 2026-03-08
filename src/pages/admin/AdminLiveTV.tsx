@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAllLiveChannels, useCreateChannel, useUpdateChannel, useDeleteChannel, LiveChannel } from "@/hooks/useLiveChannels";
-import { Plus, Pencil, Trash2, Tv, Radio } from "lucide-react";
+import { Plus, Pencil, Trash2, Tv, Radio, Link, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLiveTV = () => {
   const { data: channels, isLoading } = useAllLiveChannels();
@@ -20,6 +21,13 @@ const AdminLiveTV = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<LiveChannel | null>(null);
   const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
+
+  // M3U import state
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [m3uUrl, setM3uUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [parsedChannels, setParsedChannels] = useState<any[]>([]);
+  const [selectedImports, setSelectedImports] = useState<Set<number>>(new Set());
 
   const openCreate = () => {
     setEditing(null);
