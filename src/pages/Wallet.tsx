@@ -260,7 +260,7 @@ const Wallet = () => {
                       </div>
                       <div className="text-right">
                         <p className={`text-sm font-semibold ${cfg.color}`}>
-                          {cfg.sign}${Number(tx.amount).toFixed(2)}
+                          {cfg.sign}৳{Number(tx.amount).toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(tx.created_at), "MMM d, h:mm a")}
