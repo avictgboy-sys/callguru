@@ -150,6 +150,10 @@ const App = () => (
             <Route path="/pages/:pageId" element={<PageDetail />} />
             <Route path="/create-page" element={<ProtectedRoute><CreatePage /></ProtectedRoute>} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/home-services" element={<HomeServices />} />
+            <Route path="/home-service/:serviceId" element={<HomeServiceDetail />} />
+            <Route path="/create-home-service" element={<ProtectedRoute><CreateHomeService /></ProtectedRoute>} />
+            <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
             <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
