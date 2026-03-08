@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeeSettings } from "@/hooks/useAppSettings";
 import { useWalletTransactions, useTopUp, useWithdraw } from "@/hooks/useWallet";
 import {
   usePaymentRequests,
