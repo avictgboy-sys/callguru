@@ -12,7 +12,7 @@ import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
 import SelfServeAdCard from "@/components/ads/SelfServeAdCard";
 import NotificationBell from "@/components/notifications/NotificationBell";
-import LiveTVSection from "@/components/livetv/LiveTVSection";
+// LiveTVSection removed from feed — available at /live-tv
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Feed = () => {
@@ -211,8 +211,7 @@ const Feed = () => {
               </div>
             )}
 
-            {/* Live TV */}
-            <LiveTVSection />
+            {/* Live TV moved to dedicated /live-tv page */}
 
             {/* Create post */}
             {user && <CreatePostCard />}
@@ -367,8 +366,15 @@ const Feed = () => {
               <Home className="w-6 h-6 text-primary" />
               <div className="w-5 h-[3px] bg-primary rounded-full" />
             </Link>
-            <Link to="/live-tv" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
-              <Tv className="w-6 h-6" />
+            <Link to="/live-tv" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground relative">
+              <div className="relative">
+                <Tv className="w-6 h-6" />
+                <span className="absolute -top-1 -right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+                </span>
+              </div>
+              <span className="text-[10px] font-medium">Live</span>
             </Link>
             <Link to="/reels" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <PlayCircle className="w-6 h-6" />
