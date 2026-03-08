@@ -105,6 +105,22 @@ const App = () => (
               }
             />
             <Route
+              path="/edit-ad/:id"
+              element={
+                <ProtectedRoute>
+                  <EditAd />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-ads"
+              element={
+                <ProtectedRoute>
+                  <MyAds />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/chat"
               element={
                 <ProtectedRoute>
