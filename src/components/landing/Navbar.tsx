@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 
 const navLinks = [
+  { label: "Feed", href: "/feed" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Categories", href: "#categories" },
   { label: "Marketplace", href: "/marketplace" },

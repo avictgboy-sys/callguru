@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home } from "lucide-react";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
@@ -26,6 +26,11 @@ const Dashboard = () => {
             <span className="font-heading font-bold text-xl text-foreground">CallGuru</span>
           </Link>
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/feed">
+                <Home className="w-4 h-4 mr-1" /> Feed
+              </Link>
+            </Button>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/marketplace">
                 <Store className="w-4 h-4 mr-1" /> Marketplace
