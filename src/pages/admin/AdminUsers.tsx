@@ -4,8 +4,9 @@ import { useAdminUsers, useVerifyUser, useToggleUserRole } from "@/hooks/useAdmi
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, XCircle, Shield, UserPlus } from "lucide-react";
+import { Search, CheckCircle, XCircle, Shield, UserPlus, Crown } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 
 const AdminUsers = () => {
