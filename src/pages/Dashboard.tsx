@@ -37,6 +37,13 @@ const Dashboard = () => {
                 <Store className="w-4 h-4 mr-1" /> Marketplace
               </Link>
             </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/admin">
+                  <Shield className="w-4 h-4 mr-1" /> Admin
+                </Link>
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
