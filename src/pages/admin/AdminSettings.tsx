@@ -28,6 +28,13 @@ const FEE_FIELDS = [
   { key: "call_fee_percent", label: "Call Fee (%)", placeholder: "1" },
 ];
 
+const AD_FIELDS = [
+  { key: "ad_points_per_view", label: "Points per Ad View", placeholder: "2" },
+  { key: "ad_daily_limit", label: "Daily Ad View Limit", placeholder: "50" },
+  { key: "adsterra_banner_id", label: "Adsterra Banner ID", placeholder: "Adsterra publisher ID" },
+  { key: "adsterra_interstitial_id", label: "Adsterra Interstitial ID", placeholder: "Adsterra interstitial ID" },
+];
+
 const AdminSettings = () => {
   const { data: settings, isLoading } = useAppSettings();
   const updateSetting = useUpdateSetting();
