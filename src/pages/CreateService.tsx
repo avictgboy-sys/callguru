@@ -156,7 +156,7 @@ const CreateService = () => {
 
             <div className="space-y-2">
               <Label>Category *</Label>
-              <Select onValueChange={(val) => setValue("category_id", val)} defaultValue="">
+              <Select onValueChange={(val) => setValue("category_id", val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
