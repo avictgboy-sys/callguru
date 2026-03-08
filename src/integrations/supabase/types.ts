@@ -156,6 +156,56 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          admin_note: string | null
+          against_id: string
+          call_id: string
+          complainant_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          against_id: string
+          call_id: string
+          complainant_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          against_id?: string
+          call_id?: string
+          complainant_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
