@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Play } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleLike } from "@/hooks/useFeed";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
 import InterstitialAd from "@/components/ads/InterstitialAd";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -20,8 +21,6 @@ const PostCard = ({ post }: Props) => {
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [mediaRevealed, setMediaRevealed] = useState(false);
   const toggleLike = useToggleLike();
-
-  const hasMedia = !!(post.video_url || post.image_url);
 
   const handleMediaClick = () => {
     if (mediaRevealed || !user) {
@@ -45,46 +44,59 @@ const PostCard = ({ post }: Props) => {
   };
 
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
+  const authorInitial = (post.author?.full_name || "U")[0].toUpperCase();
 
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden">
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-2">
-        <Link to={`/profile/${post.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-bold text-primary">
-              {(post.author?.full_name || "U")[0].toUpperCase()}
-            </span>
-          </div>
+      <div className="flex items-start justify-between p-4 pb-2">
+        <Link
+          to={`/profile/${post.user_id}`}
+          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+        >
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={post.author?.avatar_url || ""} />
+            <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+              {authorInitial}
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <p className="text-sm font-semibold text-foreground">
-              {post.author?.full_name || "Anonymous"}
+            <div className="flex items-center gap-1">
+              <span className="text-[15px] font-semibold text-foreground hover:underline">
+                {post.author?.full_name || "Anonymous"}
+              </span>
               {post.author?.is_verified && (
-                <span className="ml-1 text-primary text-xs">✓</span>
+                <span className="text-primary text-xs">✓</span>
               )}
-            </p>
-            <p className="text-xs text-muted-foreground">{timeAgo}</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>{timeAgo}</span>
+              <span>·</span>
+              <Globe className="w-3 h-3" />
+            </div>
           </div>
         </Link>
-        <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8">
-          <MoreHorizontal className="w-4 h-4" />
+        <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
+          <MoreHorizontal className="w-5 h-5" />
         </Button>
       </div>
 
       {/* Content */}
       {post.content && (
-        <p className="px-4 pb-3 text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
+        <p className="px-4 pb-3 text-[15px] text-foreground whitespace-pre-wrap leading-relaxed">
+          {post.content}
+        </p>
       )}
 
       {/* Image */}
       {post.image_url && (
         <div className="w-full relative cursor-pointer" onClick={handleMediaClick}>
           {!mediaRevealed && user ? (
-            <div className="w-full h-[300px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <Play className="w-6 h-6 text-primary" />
+            <div className="w-full h-[350px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                <Play className="w-7 h-7 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground">Ad দেখে কন্টেন্ট দেখুন</p>
+              <p className="text-sm text-muted-foreground font-medium">Ad দেখে কন্টেন্ট দেখুন</p>
             </div>
           ) : (
             <img
@@ -101,11 +113,11 @@ const PostCard = ({ post }: Props) => {
       {post.video_url && (
         <div className="w-full relative cursor-pointer" onClick={handleMediaClick}>
           {!mediaRevealed && user ? (
-            <div className="w-full h-[300px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <Play className="w-6 h-6 text-primary" />
+            <div className="w-full h-[350px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
+              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                <Play className="w-7 h-7 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground">Ad দেখে ভিডিও দেখুন</p>
+              <p className="text-sm text-muted-foreground font-medium">Ad দেখে ভিডিও দেখুন</p>
             </div>
           ) : (
             <video src={post.video_url} controls className="w-full max-h-[500px]" />
@@ -113,38 +125,64 @@ const PostCard = ({ post }: Props) => {
         </div>
       )}
 
-      {/* Stats */}
-      {(post.likes_count > 0 || post.comments_count > 0) && (
-        <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
-          <span>{post.likes_count > 0 ? `${post.likes_count} like${post.likes_count !== 1 ? "s" : ""}` : ""}</span>
-          <span>
-            {post.comments_count > 0 ? `${post.comments_count} comment${post.comments_count !== 1 ? "s" : ""}` : ""}
-          </span>
+      {/* Reaction Stats */}
+      {(post.likes_count > 0 || post.comments_count > 0 || post.shares_count > 0) && (
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-1.5">
+            {post.likes_count > 0 && (
+              <>
+                <div className="flex -space-x-1">
+                  <div className="w-[18px] h-[18px] rounded-full bg-primary flex items-center justify-center">
+                    <ThumbsUp className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
+                  <div className="w-[18px] h-[18px] rounded-full bg-destructive flex items-center justify-center">
+                    <Heart className="w-2.5 h-2.5 text-destructive-foreground fill-current" />
+                  </div>
+                </div>
+                <span className="text-[13px] text-muted-foreground">
+                  {post.likes_count}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+            {post.comments_count > 0 && (
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className="hover:underline"
+              >
+                {post.comments_count} comment{post.comments_count !== 1 ? "s" : ""}
+              </button>
+            )}
+            {post.shares_count > 0 && (
+              <span>{post.shares_count} share{post.shares_count !== 1 ? "s" : ""}</span>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center border-t border-border">
+      {/* Actions Bar */}
+      <div className="flex items-center border-t border-border mx-4">
         <button
           onClick={handleLike}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold rounded-md my-1 transition-colors ${
             post.liked_by_me
-              ? "text-destructive"
-              : "text-muted-foreground hover:text-foreground"
+              ? "text-primary"
+              : "text-muted-foreground hover:bg-secondary"
           }`}
         >
-          <Heart className={`w-4 h-4 ${post.liked_by_me ? "fill-current" : ""}`} />
+          <ThumbsUp className={`w-5 h-5 ${post.liked_by_me ? "fill-primary" : ""}`} />
           Like
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary rounded-md my-1 transition-colors"
         >
-          <MessageCircle className="w-4 h-4" />
+          <MessageCircle className="w-5 h-5" />
           Comment
         </button>
-        <button className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          <Share2 className="w-4 h-4" />
+        <button className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-semibold text-muted-foreground hover:bg-secondary rounded-md my-1 transition-colors">
+          <Share2 className="w-5 h-5" />
           Share
         </button>
       </div>
