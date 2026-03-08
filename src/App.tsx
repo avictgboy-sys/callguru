@@ -34,6 +34,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminRecordings from "./pages/admin/AdminRecordings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAds from "./pages/admin/AdminAds";
+import AdminLiveTV from "./pages/admin/AdminLiveTV";
 import CreateAd from "./pages/CreateAd";
 import EditAd from "./pages/EditAd";
 import MyAds from "./pages/MyAds";
@@ -190,6 +191,7 @@ const App = () => (
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
             <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
             <Route path="/admin/ads" element={<AdminRoute><AdminAds /></AdminRoute>} />
+            <Route path="/admin/live-tv" element={<AdminRoute><AdminLiveTV /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </IncomingCallProvider>

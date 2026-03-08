@@ -12,6 +12,7 @@ import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
 import SelfServeAdCard from "@/components/ads/SelfServeAdCard";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import LiveTVSection from "@/components/livetv/LiveTVSection";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Feed = () => {
@@ -209,6 +210,9 @@ const Feed = () => {
                 ))}
               </div>
             )}
+
+            {/* Live TV */}
+            <LiveTVSection />
 
             {/* Create post */}
             {user && <CreatePostCard />}
