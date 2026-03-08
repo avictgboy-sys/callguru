@@ -101,10 +101,10 @@ const AdminUsers = () => {
                           {user.roles.map((r) => (
                             <Badge
                               key={r}
-                              variant={r === "admin" ? "destructive" : r === "provider" ? "default" : "secondary"}
+                              variant={r === "super_admin" ? "destructive" : r === "admin" ? "destructive" : r === "provider" ? "default" : "secondary"}
                               className="text-[10px]"
                             >
-                              {r}
+                              {r === "super_admin" ? "👑 Super Admin" : r}
                             </Badge>
                           ))}
                         </div>
