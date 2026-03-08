@@ -221,7 +221,7 @@ const Wallet = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">${Number(p.amount).toFixed(2)}</p>
+                        <p className="text-sm font-semibold text-foreground">৳{Number(p.amount).toFixed(2)}</p>
                         <Badge variant="secondary" className="text-[10px]">Pending</Badge>
                       </div>
                     </div>
