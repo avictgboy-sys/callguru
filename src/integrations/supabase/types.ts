@@ -614,21 +614,30 @@ export type Database = {
           chat_id: string
           content: string
           created_at: string
+          file_name: string | null
+          file_url: string | null
           id: string
+          image_url: string | null
           sender_id: string
         }
         Insert: {
           chat_id: string
           content: string
           created_at?: string
+          file_name?: string | null
+          file_url?: string | null
           id?: string
+          image_url?: string | null
           sender_id: string
         }
         Update: {
           chat_id?: string
           content?: string
           created_at?: string
+          file_name?: string | null
+          file_url?: string | null
           id?: string
+          image_url?: string | null
           sender_id?: string
         }
         Relationships: [
