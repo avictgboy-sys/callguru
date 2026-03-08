@@ -33,7 +33,8 @@ export const useMyChats = (userId: string | undefined) =>
       const { data, error } = await supabase
         .from("chats")
         .select("*")
-        .order("last_message_at", { ascending: false });
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+        .order("last_message_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
 
       // Get other user profiles
