@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompleteCall } from "@/hooks/useCalls";
 import { useFeeSettings } from "@/hooks/useAppSettings";
+import { useWebRTC } from "@/hooks/useWebRTC";
+import { useCallRecorder } from "@/hooks/useCallRecorder";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Video, PhoneOff, Clock, Star } from "lucide-react";
+import {
+  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, Circle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -28,29 +32,70 @@ const CallSession = () => {
   const completeCall = useCompleteCall();
   const fees = useFeeSettings();
 
-  const callId = params.get("id");
+  const callId = params.get("id") || "";
   const providerId = params.get("providerId") || "";
   const providerName = params.get("provider") || "Expert";
   const providerAvatar = params.get("avatar") || "";
   const serviceId = params.get("serviceId") || "";
   const serviceName = params.get("service") || "Consultation";
   const pricePerMin = parseFloat(params.get("rate") || "0");
+  const isCaller = params.get("role") !== "provider";
 
   const [elapsed, setElapsed] = useState(0);
   const [isActive, setIsActive] = useState(true);
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState<{
-    duration: number;
-    totalCost: number;
-    fee: number;
-    net: number;
+    duration: number; totalCost: number; fee: number; net: number;
   } | null>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [callConnected, setCallConnected] = useState(false);
+
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  const webrtc = useWebRTC({
+    callId,
+    userId: user?.id || "",
+    isCaller,
+  });
+
+  const recorder = useCallRecorder();
+
+  // Connect WebRTC on mount
+  useEffect(() => {
+    if (callId && user?.id) {
+      webrtc.connect().catch((err) => {
+        console.error("WebRTC connect failed:", err);
+        toast.error("Could not access camera/microphone. The call will continue without video.");
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callId, user?.id]);
+
+  // Attach streams to video elements
+  useEffect(() => {
+    if (localVideoRef.current && webrtc.localStream) {
+      localVideoRef.current.srcObject = webrtc.localStream;
+    }
+  }, [webrtc.localStream]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && webrtc.remoteStream) {
+      remoteVideoRef.current.srcObject = webrtc.remoteStream;
+    }
+  }, [webrtc.remoteStream]);
+
+  // Track connection state
+  useEffect(() => {
+    if (webrtc.connectionState === "connected") {
+      setCallConnected(true);
+    }
+  }, [webrtc.connectionState]);
 
   // Timer
   useEffect(() => {
@@ -63,10 +108,24 @@ const CallSession = () => {
   const runningCost = durationMinutes * pricePerMin;
   const feeAmount = runningCost * (fees.callFeePercent / 100);
 
+  // Start recording
+  const handleStartRecording = useCallback(() => {
+    if (webrtc.localStream) {
+      recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+      toast.success("Recording started");
+    }
+  }, [webrtc.localStream, webrtc.remoteStream, recorder]);
+
   const handleEndCall = useCallback(async () => {
     if (!callId) return;
     setIsActive(false);
     setShowEndDialog(false);
+
+    // Stop recording if active
+    let recordingBlob: Blob | null = null;
+    if (recorder.isRecording) {
+      recordingBlob = await recorder.stopRecording();
+    }
 
     const mins = Math.max(Math.ceil(elapsed / 60), 1);
     const total = mins * pricePerMin;
@@ -78,18 +137,24 @@ const CallSession = () => {
         duration_minutes: mins,
       });
       await refreshProfile();
-      setSummary({
-        duration: mins,
-        totalCost: total,
-        fee,
-        net: total - fee,
-      });
+
+      // Upload recording if we have one
+      if (recordingBlob && recordingBlob.size > 0) {
+        toast.info("Uploading recording...");
+        await recorder.uploadRecording(recordingBlob, callId);
+        toast.success("Recording saved!");
+      }
+
+      setSummary({ duration: mins, totalCost: total, fee, net: total - fee });
       setShowSummary(true);
     } catch (e: any) {
       toast.error(e.message || "Failed to complete call");
       setIsActive(true);
     }
-  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile]);
+
+    // Disconnect WebRTC
+    webrtc.disconnect();
+  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc]);
 
   if (!callId) {
     return (
@@ -114,9 +179,9 @@ const CallSession = () => {
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Minimal nav */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm">
+      <nav className="border-b border-border bg-card/80 backdrop-blur-sm z-10">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
@@ -124,8 +189,16 @@ const CallSession = () => {
             </div>
             <span className="font-heading font-bold text-lg text-foreground">CallGuru</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Session active</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-card border border-border rounded-lg px-3 py-1.5 flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-heading font-bold text-foreground tabular-nums text-sm">
+                {formatTime(elapsed)}
+              </span>
+            </div>
+            <div className="bg-card border border-border rounded-lg px-3 py-1.5">
+              <span className="text-sm font-medium text-primary">৳{runningCost.toFixed(2)}</span>
+            </div>
             <motion.div
               className="w-2.5 h-2.5 rounded-full bg-accent"
               animate={{ opacity: [1, 0.3, 1] }}
@@ -135,81 +208,129 @@ const CallSession = () => {
         </div>
       </nav>
 
-      {/* Main call area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-        {/* Provider info */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center mb-8"
-        >
-          <Avatar className="w-28 h-28 mx-auto mb-4 ring-4 ring-primary/20">
-            <AvatarImage src={providerAvatar || undefined} />
-            <AvatarFallback className="text-3xl bg-primary/10 text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <h2 className="font-heading text-2xl font-bold text-foreground">{providerName}</h2>
-          <p className="text-muted-foreground text-sm mt-1">{serviceName}</p>
-        </motion.div>
-
-        {/* Timer */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-8"
-        >
-          <div className="bg-card rounded-2xl border border-border shadow-elevated px-10 py-6 inline-block">
-            <div className="flex items-center gap-2 justify-center mb-2">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">Duration</span>
+      {/* Video area */}
+      <div className="flex-1 relative bg-muted/30">
+        {/* Remote video (full screen) */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 ? (
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="w-32 h-32 ring-4 ring-primary/20">
+                <AvatarImage src={providerAvatar || undefined} />
+                <AvatarFallback className="text-4xl bg-primary/10 text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center">
+                <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
+                <p className="text-muted-foreground text-sm">{serviceName}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {callConnected ? "Connected — waiting for video" : "Connecting…"}
+                </p>
+              </div>
             </div>
-            <p className="font-heading text-5xl font-bold text-foreground tabular-nums">
-              {formatTime(elapsed)}
-            </p>
-          </div>
-        </motion.div>
+          )}
+        </div>
 
-        {/* Running cost */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-3 gap-4 mb-10 w-full max-w-sm"
-        >
-          <div className="bg-card rounded-xl border border-border p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Rate</p>
-            <p className="font-heading font-bold text-foreground">৳{pricePerMin}</p>
-            <p className="text-xs text-muted-foreground">/min</p>
+        {/* Local video (picture-in-picture) */}
+        {webrtc.localStream && (
+          <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
+            {webrtc.isVideoEnabled ? (
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover mirror"
+                style={{ transform: "scaleX(-1)" }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <VideoOff className="w-8 h-8 text-muted-foreground" />
+              </div>
+            )}
           </div>
-          <div className="bg-card rounded-xl border border-border p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Running Cost</p>
-            <p className="font-heading font-bold text-primary">৳{runningCost.toFixed(2)}</p>
-          </div>
-          <div className="bg-card rounded-xl border border-border p-3 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Fee ({fees.callFeePercent}%)</p>
-            <p className="font-heading font-bold text-muted-foreground">৳{feeAmount.toFixed(2)}</p>
-          </div>
-        </motion.div>
+        )}
 
-        {/* End call button */}
-        {isActive && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, type: "spring" }}
-          >
-            <button
-              onClick={() => setShowEndDialog(true)}
-              className="w-20 h-20 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
+        {/* Recording indicator */}
+        {recorder.isRecording && (
+          <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-3 py-1.5 rounded-lg">
+            <motion.div
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ repeat: Infinity, duration: 1 }}
             >
-              <PhoneOff className="w-8 h-8" />
-            </button>
-            <p className="text-xs text-muted-foreground text-center mt-3">End Call</p>
-          </motion.div>
+              <Circle className="w-3 h-3 fill-current" />
+            </motion.div>
+            <span className="text-xs font-medium">REC</span>
+          </div>
         )}
       </div>
+
+      {/* Controls bar */}
+      {isActive && (
+        <div className="border-t border-border bg-card p-4">
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={webrtc.toggleAudio}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                webrtc.isAudioEnabled
+                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  : "bg-destructive/20 text-destructive"
+              }`}
+            >
+              {webrtc.isAudioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+            </button>
+
+            <button
+              onClick={webrtc.toggleVideo}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                webrtc.isVideoEnabled
+                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  : "bg-destructive/20 text-destructive"
+              }`}
+            >
+              {webrtc.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+            </button>
+
+            <button
+              onClick={() => {
+                if (recorder.isRecording) {
+                  recorder.stopRecording();
+                  toast.info("Recording stopped");
+                } else {
+                  handleStartRecording();
+                }
+              }}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                recorder.isRecording
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <Circle className={`w-6 h-6 ${recorder.isRecording ? "fill-current" : ""}`} />
+            </button>
+
+            <button
+              onClick={() => setShowEndDialog(true)}
+              className="w-16 h-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
+            >
+              <PhoneOff className="w-7 h-7" />
+            </button>
+          </div>
+          <div className="flex justify-center gap-8 mt-2 text-xs text-muted-foreground">
+            <span>Mic</span>
+            <span>Camera</span>
+            <span>{recorder.isRecording ? "Stop Rec" : "Record"}</span>
+            <span>End</span>
+          </div>
+        </div>
+      )}
 
       {/* Confirm end dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
@@ -232,6 +353,9 @@ const CallSession = () => {
                 <span className="text-muted-foreground">৳{feeAmount.toFixed(2)}</span>
               </div>
             </div>
+            {recorder.isRecording && (
+              <p className="text-xs text-primary">Recording will be saved automatically.</p>
+            )}
             <p className="text-xs text-muted-foreground">
               ৳{runningCost.toFixed(2)} will be deducted from your wallet.
             </p>
@@ -284,8 +408,8 @@ const CallSession = () => {
                 </div>
               </div>
 
-              {/* Rating section */}
-              {!reviewSubmitted ? (
+              {/* Rating */}
+              {isCaller && !reviewSubmitted ? (
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-foreground text-center">Rate your experience</p>
                   <div className="flex justify-center gap-1">
@@ -318,15 +442,15 @@ const CallSession = () => {
                     />
                   )}
                 </div>
-              ) : (
+              ) : reviewSubmitted ? (
                 <div className="text-center py-2">
                   <p className="text-sm text-primary font-medium">Thanks for your review! ⭐</p>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
           <DialogFooter className="gap-2">
-            {!reviewSubmitted && rating > 0 && (
+            {isCaller && !reviewSubmitted && rating > 0 && (
               <Button
                 variant="default"
                 disabled={submittingReview}
