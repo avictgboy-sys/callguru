@@ -1,0 +1,1 @@
+UPDATE calls SET status = 'cancelled', ended_at = now() WHERE status = 'active' AND started_at < now() - interval '1 hour'
