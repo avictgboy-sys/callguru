@@ -151,6 +151,13 @@ const PostCard = ({ post }: Props) => {
 
       {/* Comments */}
       {showComments && <CommentsSection postId={post.id} />}
+
+      {/* Interstitial Ad */}
+      <InterstitialAd
+        open={showInterstitial}
+        onClose={handleAdClose}
+        slotId={`post-media-${post.id}`}
+      />
     </div>
   );
 };
