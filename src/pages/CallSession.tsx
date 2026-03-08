@@ -29,8 +29,10 @@ const CallSession = () => {
   const fees = useFeeSettings();
 
   const callId = params.get("id");
+  const providerId = params.get("providerId") || "";
   const providerName = params.get("provider") || "Expert";
   const providerAvatar = params.get("avatar") || "";
+  const serviceId = params.get("serviceId") || "";
   const serviceName = params.get("service") || "Consultation";
   const pricePerMin = parseFloat(params.get("rate") || "0");
 
