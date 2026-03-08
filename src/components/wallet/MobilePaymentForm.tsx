@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { PaymentMethod } from "@/hooks/usePayment";
+import { useMerchantNumbers } from "@/hooks/useAppSettings";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const MOBILE_INFO: Record<string, { merchant: string; type: string; color: string }> = {
-  bkash: { merchant: "01XXXXXXXXX", type: "Payment", color: "text-orange-500" },
-  nagad: { merchant: "01XXXXXXXXX", type: "Payment", color: "text-red-500" },
-  rocket: { merchant: "01XXXXXXXXXXX", type: "Payment", color: "text-purple-500" },
+const METHOD_CONFIG: Record<string, { label: string; type: string; color: string }> = {
+  bkash: { label: "bKash", type: "Payment", color: "text-orange-500" },
+  nagad: { label: "Nagad", type: "Payment", color: "text-red-500" },
+  rocket: { label: "Rocket", type: "Payment", color: "text-purple-500" },
 };
 
 interface Props {
@@ -18,18 +19,24 @@ interface Props {
 
 const MobilePaymentForm = ({ method, amount, onSubmit, isPending }: Props) => {
   const [txnId, setTxnId] = useState("");
-  const info = MOBILE_INFO[method];
+  const merchants = useMerchantNumbers();
+  const config = METHOD_CONFIG[method];
 
-  if (!info) return null;
+  if (!config) return null;
+
+  const merchantNumber =
+    method === "bkash" ? merchants.bkash :
+    method === "nagad" ? merchants.nagad :
+    merchants.rocket;
 
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
-        <p className="font-semibold text-foreground">How to pay via {method === "bkash" ? "bKash" : method === "nagad" ? "Nagad" : "Rocket"}:</p>
+        <p className="font-semibold text-foreground">How to pay via {config.label}:</p>
         <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-          <li>Open your {method === "bkash" ? "bKash" : method === "nagad" ? "Nagad" : "Rocket"} app</li>
-          <li>Go to <span className="font-medium text-foreground">{info.type}</span></li>
-          <li>Send <span className={`font-bold ${info.color}`}>৳{amount.toFixed(2)}</span> to <span className="font-mono font-bold text-foreground">{info.merchant}</span></li>
+          <li>Open your {config.label} app</li>
+          <li>Go to <span className="font-medium text-foreground">{config.type}</span></li>
+          <li>Send <span className={`font-bold ${config.color}`}>৳{amount.toFixed(2)}</span> to <span className="font-mono font-bold text-foreground">{merchantNumber || "Not configured"}</span></li>
           <li>Enter the <span className="font-medium text-foreground">Transaction ID</span> below</li>
         </ol>
       </div>
