@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Star, Clock, Video, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCall } from "@/hooks/useCalls";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ServiceWithProvider } from "@/hooks/useServices";
 
@@ -14,6 +16,7 @@ const ServiceCard = ({ service }: Props) => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const startCall = useStartCall();
+  const [ringing, setRinging] = useState(false);
   const providerName = service.profiles?.full_name || "Expert";
   const isVerified = service.profiles?.is_verified;
   const avatarUrl = service.profiles?.avatar_url;
@@ -40,17 +43,52 @@ const ServiceCard = ({ service }: Props) => {
         service_id: service.id,
         price_per_minute: service.price_per_minute,
       });
-      const params = new URLSearchParams({
-        id: call.id,
-        providerId: service.provider_id,
-        provider: providerName,
-        avatar: avatarUrl || "",
-        serviceId: service.id,
-        service: service.title,
-        rate: String(service.price_per_minute),
-      });
-      navigate(`/call?${params.toString()}`);
+
+      setRinging(true);
+      toast.info("Ringing provider...");
+
+      // Listen for provider's response
+      const statusChannel = supabase.channel(`call-status-${call.id}`);
+      let responded = false;
+
+      statusChannel
+        .on("broadcast", { event: "call-accepted" }, () => {
+          responded = true;
+          setRinging(false);
+          supabase.removeChannel(statusChannel);
+          const params = new URLSearchParams({
+            id: call.id,
+            providerId: service.provider_id,
+            provider: providerName,
+            avatar: avatarUrl || "",
+            serviceId: service.id,
+            service: service.title,
+            rate: String(service.price_per_minute),
+          });
+          navigate(`/call?${params.toString()}`);
+        })
+        .on("broadcast", { event: "call-declined" }, ({ payload }) => {
+          responded = true;
+          setRinging(false);
+          supabase.removeChannel(statusChannel);
+          toast.error(
+            payload?.reason === "timeout"
+              ? "Provider didn't answer. Try again later."
+              : "Provider declined the call."
+          );
+        })
+        .subscribe();
+
+      // Timeout after 35s if no response
+      setTimeout(() => {
+        if (!responded) {
+          setRinging(false);
+          supabase.removeChannel(statusChannel);
+          toast.error("No response from provider. Try again later.");
+        }
+      }, 35000);
     } catch (e: any) {
+      setRinging(false);
       toast.error(e.message || "Failed to start call");
     }
   };
@@ -129,15 +167,17 @@ const ServiceCard = ({ service }: Props) => {
           variant="hero"
           className="w-full"
           size="sm"
-          disabled={!service.is_available || startCall.isPending}
+          disabled={!service.is_available || startCall.isPending || ringing}
           onClick={handleBookCall}
         >
           <Video className="w-4 h-4 mr-1" />
-          {startCall.isPending
-            ? "Starting…"
-            : service.is_available
-              ? "Book Consultation"
-              : "Currently Unavailable"}
+          {ringing
+            ? "Ringing…"
+            : startCall.isPending
+              ? "Starting…"
+              : service.is_available
+                ? "Book Consultation"
+                : "Currently Unavailable"}
         </Button>
       </div>
     </div>
