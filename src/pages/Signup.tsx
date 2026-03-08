@@ -142,7 +142,21 @@ const Signup = () => {
               </div>
             </div>
 
-            <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading}>
+            <div className="space-y-2">
+              <Label htmlFor="referral">Referral Code (optional)</Label>
+              <div className="relative">
+                <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="referral"
+                  type="text"
+                  placeholder="CG-XXXXXXXX"
+                  className="pl-10"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                />
+              </div>
+            </div>
+
               {loading ? "Creating account..." : "Create Account"}
               {!loading && <ArrowRight className="w-4 h-4 ml-1" />}
             </Button>
