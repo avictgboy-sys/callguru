@@ -46,6 +46,11 @@ const CallSession = () => {
     fee: number;
     net: number;
   } | null>(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   // Timer
   useEffect(() => {
