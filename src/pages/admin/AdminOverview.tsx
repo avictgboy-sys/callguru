@@ -51,6 +51,34 @@ const AdminOverview = () => {
           </div>
         )}
 
+        {/* Payment Stats */}
+        {!isLoading && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading text-lg font-semibold text-foreground">Payment Overview</h2>
+              <Link to="/admin/payments" className="text-sm text-primary hover:underline flex items-center gap-1">
+                <CreditCard className="w-4 h-4" /> View All
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {paymentStatCards.map((card) => (
+                <div
+                  key={card.key}
+                  className="bg-card rounded-xl border border-border p-6 shadow-card"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <card.icon className={`w-5 h-5 ${card.color}`} />
+                  </div>
+                  <p className="font-heading text-3xl font-bold text-foreground">
+                    {card.format((stats as any)?.[card.key] ?? 0)}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+
         {/* Quick actions */}
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="font-heading text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
