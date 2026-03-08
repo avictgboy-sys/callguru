@@ -159,6 +159,32 @@ const AdminSettings = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Ad Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Megaphone className="w-5 h-5 text-primary" />
+              Ad Network &amp; Points
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {AD_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="text-sm font-medium text-foreground">{field.label}</label>
+                <Input
+                  value={values[field.key] || ""}
+                  onChange={(e) => handleChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="mt-1 max-w-xs"
+                />
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">
+              Adsterra ID খালি রাখলে placeholder ad দেখাবে। ID সেট করলে Adsterra-র বিজ্ঞাপন লোড হবে।
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
