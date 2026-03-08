@@ -21,6 +21,13 @@ const BANK_FIELDS = [
   { key: "bank_routing", label: "Routing Number" },
 ];
 
+const FEE_FIELDS = [
+  { key: "min_deposit", label: "Minimum Deposit (৳)", placeholder: "100" },
+  { key: "min_withdraw", label: "Minimum Withdrawal (৳)", placeholder: "1000" },
+  { key: "withdraw_fee_percent", label: "Withdrawal Fee (%)", placeholder: "2" },
+  { key: "call_fee_percent", label: "Call Fee (%)", placeholder: "1" },
+];
+
 const AdminSettings = () => {
   const { data: settings, isLoading } = useAppSettings();
   const updateSetting = useUpdateSetting();
