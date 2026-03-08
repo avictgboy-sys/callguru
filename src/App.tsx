@@ -33,6 +33,13 @@ import AdminAds from "./pages/admin/AdminAds";
 import CreateAd from "./pages/CreateAd";
 import Rewards from "./pages/Rewards";
 import Reels from "./pages/Reels";
+import Groups from "./pages/Groups";
+import CreateGroup from "./pages/CreateGroup";
+import GroupDetail from "./pages/GroupDetail";
+import Pages from "./pages/Pages";
+import CreatePage from "./pages/CreatePage";
+import PageDetail from "./pages/PageDetail";
+import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
