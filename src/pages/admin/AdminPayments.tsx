@@ -216,7 +216,7 @@ const AdminPayments = () => {
                               <span className="text-sm text-foreground">{methodInfo?.name || req.method}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm font-semibold text-foreground">${Number(req.amount).toFixed(2)}</td>
+                          <td className="px-4 py-3 text-sm font-semibold text-foreground">৳{Number(req.amount).toFixed(2)}</td>
                           <td className="px-4 py-3 text-sm text-muted-foreground font-mono">
                             {req.reference_id || "—"}
                           </td>
