@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
@@ -44,6 +45,7 @@ const Dashboard = () => {
                 </Link>
               </Button>
             )}
+            <NotificationBell />
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
@@ -93,14 +95,14 @@ const Dashboard = () => {
         {/* Quick links */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {menuItems.map((item) => (
-            <a
+            <Link
               key={item.label}
-              href={item.href}
+              to={item.href}
               className="flex flex-col items-center gap-2 p-5 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all"
             >
               <item.icon className="w-6 h-6 text-primary" />
               <span className="text-sm font-medium text-foreground">{item.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
