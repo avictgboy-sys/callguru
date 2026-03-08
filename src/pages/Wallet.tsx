@@ -171,7 +171,7 @@ const Wallet = () => {
           <CardContent className="pt-6 pb-6 text-center">
             <WalletIcon className="w-10 h-10 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-            <p className="font-heading text-4xl font-bold text-foreground">${Number(balance).toFixed(2)}</p>
+            <p className="font-heading text-4xl font-bold text-foreground">৳{Number(balance).toFixed(2)}</p>
             <div className="flex gap-3 justify-center mt-5">
               <Button variant="hero" onClick={() => { setDialogType("topup"); setStep("amount"); }}>
                 <Plus className="w-4 h-4 mr-1" /> Top Up
