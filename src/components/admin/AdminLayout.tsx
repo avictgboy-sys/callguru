@@ -17,6 +17,7 @@ const navItems = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "Recordings", href: "/admin/recordings", icon: Disc },
   { label: "Disputes", href: "/admin/disputes", icon: Shield },
+  { label: "Ads", href: "/admin/ads", icon: Megaphone },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
