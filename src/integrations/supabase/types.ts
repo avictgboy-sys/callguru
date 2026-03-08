@@ -14,11 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          comments_count: number
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          likes_count: number
+          post_type: string
+          shares_count: number
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          post_type?: string
+          shares_count?: number
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          post_type?: string
+          shares_count?: number
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          followers_count: number
+          following_count: number
           full_name: string | null
           id: string
           is_verified: boolean | null
@@ -34,6 +160,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          followers_count?: number
+          following_count?: number
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
@@ -49,6 +177,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          followers_count?: number
+          following_count?: number
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
