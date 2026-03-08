@@ -74,7 +74,7 @@ const ServiceCard = ({ service }: Props) => {
         </div>
         <div className="text-right">
           <span className="font-heading font-bold text-primary text-lg">
-            ${service.price_per_minute}
+            ৳{service.price_per_minute}
           </span>
           <span className="text-xs text-muted-foreground">/min</span>
         </div>

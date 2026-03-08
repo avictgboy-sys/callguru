@@ -1,6 +1,6 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminStats } from "@/hooks/useAdmin";
-import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, DollarSign, CreditCard } from "lucide-react";
+import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const statCards = [
@@ -14,7 +14,7 @@ const statCards = [
 const paymentStatCards = [
   { key: "pendingPayments", label: "Pending Payments", icon: Clock, color: "text-yellow-500", format: (v: number) => String(v) },
   { key: "approvedToday", label: "Approved Today", icon: CheckCircle2, color: "text-green-500", format: (v: number) => String(v) },
-  { key: "totalVolume", label: "Total Volume", icon: DollarSign, color: "text-primary", format: (v: number) => `৳${v.toFixed(2)}` },
+  { key: "totalVolume", label: "Total Volume", icon: CreditCard, color: "text-primary", format: (v: number) => `৳${v.toFixed(2)}` },
 ] as const;
 
 const AdminOverview = () => {

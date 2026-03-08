@@ -38,7 +38,7 @@ const ForExperts = () => {
           <div className="bg-secondary/60 rounded-2xl p-8 space-y-6">
             <div className="bg-card rounded-xl p-5 shadow-card">
               <p className="text-sm text-muted-foreground mb-1">Average Earnings</p>
-              <p className="font-heading text-3xl font-bold text-foreground">$2,400<span className="text-lg text-muted-foreground font-normal">/mo</span></p>
+              <p className="font-heading text-3xl font-bold text-foreground">৳24,000<span className="text-lg text-muted-foreground font-normal">/mo</span></p>
             </div>
             <div className="bg-card rounded-xl p-5 shadow-card">
               <p className="text-sm text-muted-foreground mb-1">Top Provider Rating</p>

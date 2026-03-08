@@ -60,7 +60,7 @@ const AdminServices = () => {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-foreground font-medium">
-                        ${Number(s.price_per_minute).toFixed(2)}
+                        ৳{Number(s.price_per_minute).toFixed(2)}
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={s.is_active ? "default" : "destructive"} className="text-xs">
