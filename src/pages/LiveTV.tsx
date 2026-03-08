@@ -32,7 +32,7 @@ const categoryLabels: Record<string, string> = {
   religious: "ধর্মীয়",
 };
 
-const LiveTV = () => {
+const LiveTV = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user } = useAuth();
   const { data: channels, isLoading } = useLiveChannels();
   const [sortedChannels, setSortedChannels] = useState<LiveChannel[]>([]);
