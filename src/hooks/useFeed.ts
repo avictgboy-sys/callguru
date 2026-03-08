@@ -94,6 +94,36 @@ export const useCreatePost = () => {
   });
 };
 
+export const useUpdatePost = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase
+        .from("posts")
+        .update({ content, updated_at: new Date().toISOString() })
+        .eq("id", postId)
+        .eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["feed-posts"] }),
+  });
+};
+
+export const useDeletePost = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (postId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("posts").delete().eq("id", postId).eq("user_id", user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["feed-posts"] }),
+  });
+};
+
 export const useToggleLike = () => {
   const qc = useQueryClient();
   return useMutation({
