@@ -56,8 +56,7 @@ export const useServices = (categorySlug?: string, search?: string) =>
         .from("services")
         .select(`
           *,
-          service_categories!inner(id, name, slug, icon),
-          profiles!services_provider_id_fkey(full_name, avatar_url, is_verified)
+          service_categories!inner(id, name, slug, icon)
         `)
         .eq("is_active", true)
         .order("rating", { ascending: false });
@@ -72,6 +71,21 @@ export const useServices = (categorySlug?: string, search?: string) =>
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as unknown as ServiceWithProvider[];
+
+      // Fetch provider profiles separately
+      const providerIds = [...new Set((data || []).map((s: any) => s.provider_id))];
+      let profilesMap: Record<string, any> = {};
+      if (providerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, is_verified")
+          .in("user_id", providerIds);
+        profilesMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p]));
+      }
+
+      return (data || []).map((s: any) => ({
+        ...s,
+        profiles: profilesMap[s.provider_id] || null,
+      })) as unknown as ServiceWithProvider[];
     },
   });
