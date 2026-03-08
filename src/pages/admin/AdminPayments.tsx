@@ -264,7 +264,7 @@ const AdminPayments = () => {
                   </div>
                   <div>
                     <p className="text-muted-foreground">Amount</p>
-                    <p className="font-semibold text-foreground text-lg">${Number(selectedRequest.amount).toFixed(2)}</p>
+                    <p className="font-semibold text-foreground text-lg">৳{Number(selectedRequest.amount).toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Type</p>

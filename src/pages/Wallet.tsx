@@ -351,7 +351,7 @@ const Wallet = () => {
               <div className="text-center">
                 <Badge variant="secondary" className="text-sm">
                   {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.icon}{" "}
-                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name} — ${parseFloat(amount).toFixed(2)}
+                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name} — ৳{parseFloat(amount).toFixed(2)}
                 </Badge>
               </div>
 
