@@ -157,6 +157,7 @@ const Signup = () => {
               </div>
             </div>
 
+            <Button type="submit" variant="hero" className="w-full" size="lg" disabled={loading}>
               {loading ? "Creating account..." : "Create Account"}
               {!loading && <ArrowRight className="w-4 h-4 ml-1" />}
             </Button>
