@@ -175,7 +175,7 @@ const ServiceCard = ({ service }: Props) => {
           variant="hero"
           className="w-full"
           size="sm"
-          disabled={!service.is_available || startCall.isPending || ringing}
+          disabled={!isBookable || startCall.isPending || ringing}
           onClick={handleBookCall}
         >
           <Video className="w-4 h-4 mr-1" />
@@ -183,9 +183,11 @@ const ServiceCard = ({ service }: Props) => {
             ? "Ringing…"
             : startCall.isPending
               ? "Starting…"
-              : service.is_available
+              : isBookable
                 ? "Book Consultation"
-                : "Currently Unavailable"}
+                : !service.is_available
+                  ? "Provider Offline"
+                  : "Outside Schedule"}
         </Button>
       </div>
     </div>
