@@ -1,7 +1,8 @@
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminStats } from "@/hooks/useAdmin";
-import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard, Phone, Banknote, Timer } from "lucide-react";
+import { useAdminStats, useRecentActivity, type ActivityItem } from "@/hooks/useAdmin";
+import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard, Phone, Banknote, Timer, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
 
 const statCards = [
   { key: "totalUsers", label: "Total Users", icon: Users, color: "text-primary" },
@@ -26,8 +27,17 @@ const revenueStatCards = [
   { key: "totalMinutes", label: "Total Minutes", icon: Timer, color: "text-muted-foreground", format: (v: number) => `${v.toFixed(0)} min` },
 ] as const;
 
+const activityTypeConfig: Record<ActivityItem["type"], { icon: typeof Users; color: string }> = {
+  payment: { icon: CreditCard, color: "text-primary" },
+  call: { icon: Phone, color: "text-accent" },
+  dispute: { icon: Shield, color: "text-destructive" },
+  user: { icon: Users, color: "text-green-500" },
+  post: { icon: FileText, color: "text-muted-foreground" },
+};
+
 const AdminOverview = () => {
   const { data: stats, isLoading } = useAdminStats();
+  const { data: activities, isLoading: actLoading } = useRecentActivity();
 
   return (
     <AdminLayout>
@@ -101,6 +111,41 @@ const AdminOverview = () => {
             </div>
           </>
         )}
+
+        {/* Recent Activity Log */}
+        <div className="bg-card rounded-xl border border-border p-6">
+          <h2 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" /> Recent Activity
+          </h2>
+          {actLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : !activities?.length ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No recent activity</p>
+          ) : (
+            <div className="space-y-1">
+              {activities.map((item) => {
+                const cfg = activityTypeConfig[item.type];
+                const Icon = cfg.icon;
+                return (
+                  <div key={item.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/50 transition-colors">
+                    <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center`}>
+                      <Icon className={`w-4 h-4 ${cfg.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{item.detail}</p>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                      {formatDistanceToNow(new Date(item.time), { addSuffix: true })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Quick actions */}
         <div className="bg-card rounded-xl border border-border p-6">
