@@ -110,53 +110,55 @@ const AdminRecordings = () => {
             ) : !calls || calls.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No recordings yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Caller</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Cost</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {calls.map((call) => (
-                    <TableRow key={call.id}>
-                      <TableCell className="text-sm">
-                        {format(new Date(call.created_at), "MMM d, yyyy HH:mm")}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {profiles?.[call.caller_id] || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {profiles?.[call.provider_id] || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {call.duration_minutes != null ? `${call.duration_minutes} min` : "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        ৳{call.total_cost?.toFixed(2) ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="default" className="text-xs capitalize">{call.status}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(call.recording_url!, call.id)}
-                        >
-                          <Download className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[720px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Caller</TableHead>
+                      <TableHead>Provider</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Cost</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {calls.map((call) => (
+                      <TableRow key={call.id}>
+                        <TableCell className="text-sm">
+                          {format(new Date(call.created_at), "MMM d, yyyy HH:mm")}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">
+                          {profiles?.[call.caller_id] || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">
+                          {profiles?.[call.provider_id] || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {call.duration_minutes != null ? `${call.duration_minutes} min` : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          ৳{call.total_cost?.toFixed(2) ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="default" className="text-xs capitalize">{call.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(call.recording_url!, call.id)}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

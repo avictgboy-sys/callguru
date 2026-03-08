@@ -151,44 +151,46 @@ const AdminAds = () => {
             ) : !ads || ads.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No ads yet.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Advertiser</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Budget</TableHead>
-                    <TableHead>Impressions</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ads.map((ad: any) => (
-                    <TableRow key={ad.id}>
-                      <TableCell className="text-sm">
-                        {format(new Date(ad.created_at), "MMM d, yyyy")}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {profiles?.[ad.user_id] || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm max-w-[200px] truncate">{ad.title}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs capitalize">{ad.ad_type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">৳{ad.budget}</TableCell>
-                      <TableCell className="text-sm">{ad.impressions}</TableCell>
-                      <TableCell>{statusBadge(ad.status)}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" onClick={() => { setSelected(ad); setAdminNote(ad.admin_note || ""); }}>
-                          <Eye className="w-4 h-4 mr-1" /> Review
-                        </Button>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[760px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Advertiser</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Budget</TableHead>
+                      <TableHead>Impressions</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {ads.map((ad: any) => (
+                      <TableRow key={ad.id}>
+                        <TableCell className="text-sm">
+                          {format(new Date(ad.created_at), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">
+                          {profiles?.[ad.user_id] || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm max-w-[200px] truncate">{ad.title}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs capitalize">{ad.ad_type}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">৳{ad.budget}</TableCell>
+                        <TableCell className="text-sm">{ad.impressions}</TableCell>
+                        <TableCell>{statusBadge(ad.status)}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => { setSelected(ad); setAdminNote(ad.admin_note || ""); }}>
+                            <Eye className="w-4 h-4 mr-1" /> Review
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
