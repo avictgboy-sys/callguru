@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff,
+  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, MonitorUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
