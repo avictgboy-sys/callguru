@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Heart, MessageCircle, UserPlus, MessageSquare, Check } from "lucide-react";
+import { Bell, Heart, MessageCircle, UserPlus, MessageSquare, Check, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +12,7 @@ const typeIcons: Record<string, typeof Heart> = {
   comment: MessageCircle,
   follow: UserPlus,
   message: MessageSquare,
+  payment: CreditCard,
 };
 
 const typeLinks: Record<string, (resourceId: string | null) => string> = {
@@ -19,6 +20,7 @@ const typeLinks: Record<string, (resourceId: string | null) => string> = {
   comment: () => "/feed",
   follow: (id) => id ? `/profile/${id}` : "/feed",
   message: () => "/chat",
+  payment: () => "/wallet",
 };
 
 const NotificationBell = () => {
