@@ -188,7 +188,7 @@ const Wallet = () => {
           <Card>
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground">Total In</p>
-              <p className="font-heading text-xl font-bold text-green-500">+${totalIn.toFixed(2)}</p>
+              <p className="font-heading text-xl font-bold text-green-500">+৳{totalIn.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card>
