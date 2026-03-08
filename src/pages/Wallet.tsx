@@ -319,14 +319,35 @@ const Wallet = () => {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dialogType === "topup"
+                    ? `Minimum deposit: ৳${fees.minDeposit}`
+                    : `Minimum withdrawal: ৳${fees.minWithdraw} • Fee: ${fees.withdrawFeePercent}%`}
+                </p>
               </div>
               {dialogType === "topup" && (
                 <div className="flex gap-2">
-                  {[50, 100, 500, 1000].map((v) => (
+                  {[100, 500, 1000, 5000].map((v) => (
                     <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
                       ৳{v}
                     </Button>
                   ))}
+                </div>
+              )}
+              {dialogType === "withdraw" && parseFloat(amount) > 0 && (
+                <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="text-foreground">৳{parseFloat(amount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fee ({fees.withdrawFeePercent}%)</span>
+                    <span className="text-destructive">-৳{withdrawFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t border-border pt-1">
+                    <span className="text-foreground">You receive</span>
+                    <span className="text-foreground">৳{withdrawNet.toFixed(2)}</span>
+                  </div>
                 </div>
               )}
               <DialogFooter>
