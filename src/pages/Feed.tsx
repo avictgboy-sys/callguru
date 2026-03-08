@@ -34,7 +34,7 @@ const Feed = () => {
 
   const navItems = [
     { icon: Home, label: "Home", href: "/feed", active: true },
-    { icon: PlayCircle, label: "Watch", href: "/feed", active: false },
+    { icon: PlayCircle, label: "Reels", href: "/reels", active: false },
     { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", active: false },
     { icon: Users, label: "Groups", href: "/feed", active: false },
   ];
@@ -342,7 +342,7 @@ const Feed = () => {
             <Link to="/marketplace" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <ShoppingBag className="w-6 h-6" />
             </Link>
-            <Link to="/feed" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
+            <Link to="/reels" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <PlayCircle className="w-6 h-6" />
             </Link>
             <Link to="/chat" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">

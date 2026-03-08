@@ -32,6 +32,7 @@ import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAds from "./pages/admin/AdminAds";
 import CreateAd from "./pages/CreateAd";
 import Rewards from "./pages/Rewards";
+import Reels from "./pages/Reels";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -119,6 +120,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CallHistory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reels"
+              element={
+                <ProtectedRoute>
+                  <Reels />
                 </ProtectedRoute>
               }
             />
