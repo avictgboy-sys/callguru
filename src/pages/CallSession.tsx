@@ -54,6 +54,7 @@ const CallSession = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [callConnected, setCallConnected] = useState(false);
+  const [mediaReady, setMediaReady] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,16 +67,17 @@ const CallSession = () => {
 
   const recorder = useCallRecorder();
 
-  // Connect WebRTC on mount
-  useEffect(() => {
-    if (callId && user?.id) {
-      webrtc.connect().catch((err) => {
-        console.error("WebRTC connect failed:", err);
-        toast.error("Could not access camera/microphone. The call will continue without video.");
-      });
+  // CRITICAL: getUserMedia must be called directly from a user click handler
+  const handleJoinCall = useCallback(async () => {
+    if (!callId || !user?.id) return;
+    try {
+      await webrtc.connect();
+      setMediaReady(true);
+    } catch (err) {
+      console.error("WebRTC connect failed:", err);
+      toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন চেক করুন।");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callId, user?.id]);
+  }, [callId, user?.id, webrtc]);
 
   // Attach streams to video elements
   useEffect(() => {
@@ -217,58 +219,82 @@ const CallSession = () => {
 
       {/* Video area */}
       <div className="flex-1 relative bg-muted/30">
-        {/* Remote video (full screen) */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 ? (
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <Avatar className="w-32 h-32 ring-4 ring-primary/20">
-                <AvatarImage src={providerAvatar || undefined} />
-                <AvatarFallback className="text-4xl bg-primary/10 text-primary">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
-                <p className="text-muted-foreground text-sm">{serviceName}</p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {callConnected ? "Connected — waiting for video" : "Connecting…"}
-                </p>
-              </div>
+        {!mediaReady ? (
+          /* Join Call screen — getUserMedia runs on this button click */
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+            <Avatar className="w-28 h-28 ring-4 ring-primary/20">
+              <AvatarImage src={providerAvatar || undefined} />
+              <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-center">
+              <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
+              <p className="text-muted-foreground text-sm">{serviceName}</p>
             </div>
-          )}
-        </div>
+            <Button variant="hero" size="lg" onClick={handleJoinCall} className="gap-2">
+              <Video className="w-5 h-5" />
+              কলে যোগ দিন
+            </Button>
+            <p className="text-xs text-muted-foreground max-w-xs text-center">
+              বাটনে ক্লিক করলে আপনার ক্যামেরা ও মাইক্রোফোন চালু হবে
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Remote video (full screen) */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 ? (
+                <video
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <Avatar className="w-32 h-32 ring-4 ring-primary/20">
+                    <AvatarImage src={providerAvatar || undefined} />
+                    <AvatarFallback className="text-4xl bg-primary/10 text-primary">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
+                    <p className="text-muted-foreground text-sm">{serviceName}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {callConnected ? "Connected — waiting for video" : "Connecting…"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
-        {/* Local video (picture-in-picture) */}
-        {webrtc.localStream && (
-          <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
-            {webrtc.isVideoEnabled ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover mirror"
-                style={{ transform: "scaleX(-1)" }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <VideoOff className="w-8 h-8 text-muted-foreground" />
+            {/* Local video (picture-in-picture) */}
+            {webrtc.localStream && (
+              <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
+                {webrtc.isVideoEnabled ? (
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover mirror"
+                    style={{ transform: "scaleX(-1)" }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <VideoOff className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
-
       </div>
 
       {/* Controls bar */}
-      {isActive && (
+      {isActive && mediaReady && (
         <div className="border-t border-border bg-card p-4">
           <div className="flex items-center justify-center gap-4">
             <button
