@@ -4,7 +4,7 @@ import { useAppSettings, useUpdateSetting } from "@/hooks/useAppSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Save, Smartphone, Building2 } from "lucide-react";
+import { Save, Smartphone, Building2, Percent } from "lucide-react";
 import { toast } from "sonner";
 
 const MERCHANT_FIELDS = [
@@ -19,6 +19,13 @@ const BANK_FIELDS = [
   { key: "bank_account_number", label: "Account Number" },
   { key: "bank_branch", label: "Branch" },
   { key: "bank_routing", label: "Routing Number" },
+];
+
+const FEE_FIELDS = [
+  { key: "min_deposit", label: "Minimum Deposit (৳)", placeholder: "100" },
+  { key: "min_withdraw", label: "Minimum Withdrawal (৳)", placeholder: "1000" },
+  { key: "withdraw_fee_percent", label: "Withdrawal Fee (%)", placeholder: "2" },
+  { key: "call_fee_percent", label: "Call Fee (%)", placeholder: "1" },
 ];
 
 const AdminSettings = () => {
@@ -116,6 +123,30 @@ const AdminSettings = () => {
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={`Enter ${field.label.toLowerCase()}`}
                   className="mt-1"
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Fees & Limits */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Percent className="w-5 h-5 text-primary" />
+              Fees &amp; Limits
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {FEE_FIELDS.map((field) => (
+              <div key={field.key}>
+                <label className="text-sm font-medium text-foreground">{field.label}</label>
+                <Input
+                  type="number"
+                  value={values[field.key] || ""}
+                  onChange={(e) => handleChange(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="mt-1 max-w-xs"
                 />
               </div>
             ))}
