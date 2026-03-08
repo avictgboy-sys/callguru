@@ -5,15 +5,26 @@ export const useAdminStats = () =>
   useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [users, services, posts, roles] = await Promise.all([
+      const [users, services, posts, roles, payments] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("services").select("id", { count: "exact", head: true }),
         supabase.from("posts").select("id", { count: "exact", head: true }),
         supabase.from("user_roles").select("role"),
+        supabase.from("payment_requests").select("*"),
       ]);
 
       const providerCount = (roles.data || []).filter((r: any) => r.role === "provider").length;
       const adminCount = (roles.data || []).filter((r: any) => r.role === "admin").length;
+
+      const paymentData = payments.data || [];
+      const pendingPayments = paymentData.filter((p: any) => p.status === "pending").length;
+      const today = new Date().toISOString().slice(0, 10);
+      const approvedToday = paymentData.filter(
+        (p: any) => p.status === "completed" && p.updated_at?.slice(0, 10) === today
+      ).length;
+      const totalVolume = paymentData
+        .filter((p: any) => p.status === "completed")
+        .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
 
       return {
         totalUsers: users.count || 0,
@@ -21,6 +32,9 @@ export const useAdminStats = () =>
         totalPosts: posts.count || 0,
         totalProviders: providerCount,
         totalAdmins: adminCount,
+        pendingPayments,
+        approvedToday,
+        totalVolume,
       };
     },
   });
