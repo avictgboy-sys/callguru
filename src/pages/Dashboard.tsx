@@ -45,6 +45,7 @@ const Dashboard = () => {
                 </Link>
               </Button>
             )}
+            <NotificationBell />
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
