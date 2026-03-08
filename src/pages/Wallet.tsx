@@ -68,7 +68,7 @@ const Wallet = () => {
   const handleWithdraw = async (val: number) => {
     try {
       await withdraw.mutateAsync(val);
-      toast.success(`$${val.toFixed(2)} withdrawn`);
+      toast.success(`৳${val.toFixed(2)} withdrawn`);
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Withdrawal failed");
@@ -171,7 +171,7 @@ const Wallet = () => {
           <CardContent className="pt-6 pb-6 text-center">
             <WalletIcon className="w-10 h-10 text-primary mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-            <p className="font-heading text-4xl font-bold text-foreground">${Number(balance).toFixed(2)}</p>
+            <p className="font-heading text-4xl font-bold text-foreground">৳{Number(balance).toFixed(2)}</p>
             <div className="flex gap-3 justify-center mt-5">
               <Button variant="hero" onClick={() => { setDialogType("topup"); setStep("amount"); }}>
                 <Plus className="w-4 h-4 mr-1" /> Top Up
@@ -188,13 +188,13 @@ const Wallet = () => {
           <Card>
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground">Total In</p>
-              <p className="font-heading text-xl font-bold text-green-500">+${totalIn.toFixed(2)}</p>
+              <p className="font-heading text-xl font-bold text-green-500">+৳{totalIn.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground">Total Out</p>
-              <p className="font-heading text-xl font-bold text-red-500">-${totalOut.toFixed(2)}</p>
+              <p className="font-heading text-xl font-bold text-red-500">-৳{totalOut.toFixed(2)}</p>
             </CardContent>
           </Card>
         </div>
@@ -221,7 +221,7 @@ const Wallet = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">${Number(p.amount).toFixed(2)}</p>
+                        <p className="text-sm font-semibold text-foreground">৳{Number(p.amount).toFixed(2)}</p>
                         <Badge variant="secondary" className="text-[10px]">Pending</Badge>
                       </div>
                     </div>
@@ -260,7 +260,7 @@ const Wallet = () => {
                       </div>
                       <div className="text-right">
                         <p className={`text-sm font-semibold ${cfg.color}`}>
-                          {cfg.sign}${Number(tx.amount).toFixed(2)}
+                          {cfg.sign}৳{Number(tx.amount).toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(tx.created_at), "MMM d, h:mm a")}
@@ -293,7 +293,7 @@ const Wallet = () => {
           {step === "amount" && (
             <div className="space-y-4 py-2">
               <div>
-                <label className="text-sm font-medium text-foreground">Amount ($)</label>
+                <label className="text-sm font-medium text-foreground">Amount (৳)</label>
                 <Input
                   type="number"
                   min="1"
@@ -305,9 +305,9 @@ const Wallet = () => {
               </div>
               {dialogType === "topup" && (
                 <div className="flex gap-2">
-                  {[5, 10, 25, 50].map((v) => (
+                  {[50, 100, 500, 1000].map((v) => (
                     <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
-                      ${v}
+                      ৳{v}
                     </Button>
                   ))}
                 </div>
@@ -329,7 +329,7 @@ const Wallet = () => {
             <div className="space-y-4 py-2">
               <div className="text-center">
                 <Badge variant="secondary" className="text-sm">
-                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ${parseFloat(amount).toFixed(2)}
+                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ৳{parseFloat(amount).toFixed(2)}
                 </Badge>
               </div>
               <PaymentMethodSelector
@@ -351,7 +351,7 @@ const Wallet = () => {
               <div className="text-center">
                 <Badge variant="secondary" className="text-sm">
                   {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.icon}{" "}
-                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name} — ${parseFloat(amount).toFixed(2)}
+                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name} — ৳{parseFloat(amount).toFixed(2)}
                 </Badge>
               </div>
 
