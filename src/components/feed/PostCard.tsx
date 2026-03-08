@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe } f
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleLike } from "@/hooks/useFeed";
+import { useIsFollowing, useToggleFollow } from "@/hooks/useFollow";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
 import InterstitialAd from "@/components/ads/InterstitialAd";
@@ -21,6 +22,9 @@ const PostCard = ({ post }: Props) => {
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [mediaRevealed, setMediaRevealed] = useState(false);
   const toggleLike = useToggleLike();
+  const isOwnPost = user?.id === post.user_id;
+  const { data: isFollowing } = useIsFollowing(isOwnPost ? undefined : post.user_id);
+  const toggleFollow = useToggleFollow();
 
   const handleMediaClick = () => {
     if (mediaRevealed || !user) {
@@ -76,9 +80,22 @@ const PostCard = ({ post }: Props) => {
             </div>
           </div>
         </Link>
-        <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
-          <MoreHorizontal className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {!isOwnPost && user && (
+            <Button
+              variant={isFollowing ? "outline" : "default"}
+              size="sm"
+              className="h-7 text-xs rounded-full px-3"
+              onClick={() => toggleFollow.mutate({ targetUserId: post.user_id, isFollowing: !!isFollowing })}
+              disabled={toggleFollow.isPending}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
+            <MoreHorizontal className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
