@@ -27,12 +27,23 @@ import { cn } from "@/lib/utils";
 
 const Chat = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: chats, isLoading: chatsLoading } = useMyChats(user?.id);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { data: searchResults } = useSearchUsers(searchQuery);
   const startChat = useStartChat();
+
+  // Auto-open chat from query param (e.g. from profile page)
+  useEffect(() => {
+    const openChatId = searchParams.get("open");
+    if (openChatId && !activeChatId) {
+      setActiveChatId(openChatId);
+      searchParams.delete("open");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, activeChatId, setSearchParams]);
 
   const handleStartChat = async (otherUserId: string) => {
     try {
