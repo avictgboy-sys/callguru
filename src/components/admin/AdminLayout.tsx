@@ -19,6 +19,7 @@ const navItems = [
   { label: "Recordings", href: "/admin/recordings", icon: Disc },
   { label: "Disputes", href: "/admin/disputes", icon: Shield },
   { label: "Ads", href: "/admin/ads", icon: Megaphone },
+  { label: "Live TV", href: "/admin/live-tv", icon: Tv },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {

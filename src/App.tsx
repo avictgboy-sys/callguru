@@ -191,6 +191,7 @@ const App = () => (
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
             <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
             <Route path="/admin/ads" element={<AdminRoute><AdminAds /></AdminRoute>} />
+            <Route path="/admin/live-tv" element={<AdminRoute><AdminLiveTV /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </IncomingCallProvider>
