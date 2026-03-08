@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -32,7 +32,7 @@ const categoryLabels: Record<string, string> = {
   religious: "ধর্মীয়",
 };
 
-const LiveTV = () => {
+const LiveTV = forwardRef<HTMLDivElement>((_, _ref) => {
   const { user } = useAuth();
   const { data: channels, isLoading } = useLiveChannels();
   const [sortedChannels, setSortedChannels] = useState<LiveChannel[]>([]);
@@ -386,6 +386,8 @@ const LiveTV = () => {
       )}
     </div>
   );
-};
+});
+
+LiveTV.displayName = "LiveTV";
 
 export default LiveTV;
