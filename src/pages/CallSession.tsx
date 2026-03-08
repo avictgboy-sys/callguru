@@ -54,6 +54,7 @@ const CallSession = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [callConnected, setCallConnected] = useState(false);
+  const [mediaReady, setMediaReady] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,16 +67,17 @@ const CallSession = () => {
 
   const recorder = useCallRecorder();
 
-  // Connect WebRTC on mount
-  useEffect(() => {
-    if (callId && user?.id) {
-      webrtc.connect().catch((err) => {
-        console.error("WebRTC connect failed:", err);
-        toast.error("Could not access camera/microphone. The call will continue without video.");
-      });
+  // CRITICAL: getUserMedia must be called directly from a user click handler
+  const handleJoinCall = useCallback(async () => {
+    if (!callId || !user?.id) return;
+    try {
+      await webrtc.connect();
+      setMediaReady(true);
+    } catch (err) {
+      console.error("WebRTC connect failed:", err);
+      toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন চেক করুন।");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callId, user?.id]);
+  }, [callId, user?.id, webrtc]);
 
   // Attach streams to video elements
   useEffect(() => {
