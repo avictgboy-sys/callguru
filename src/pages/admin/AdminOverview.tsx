@@ -106,27 +106,27 @@ const AdminOverview = () => {
         <div className="bg-card rounded-xl border border-border p-6">
           <h2 className="font-heading text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <a href="/admin/users" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+            <Link to="/admin/users" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <Users className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Manage Users</p>
                 <p className="text-xs text-muted-foreground">Verify, roles & moderation</p>
               </div>
-            </a>
-            <a href="/admin/content" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+            </Link>
+            <Link to="/admin/content" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <FileText className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Moderate Content</p>
                 <p className="text-xs text-muted-foreground">Review posts & comments</p>
               </div>
-            </a>
-            <a href="/admin/services" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
+            </Link>
+            <Link to="/admin/services" className="flex items-center gap-3 p-4 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <Video className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Manage Services</p>
                 <p className="text-xs text-muted-foreground">Approve, disable listings</p>
               </div>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
