@@ -14,6 +14,7 @@ const navItems = [
   { label: "Services", href: "/admin/services", icon: Video },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
