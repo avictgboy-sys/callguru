@@ -362,29 +362,35 @@ const Feed = () => {
       {user && (
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden z-50">
           <div className="flex items-center justify-around h-14">
-            <Link to="/feed" className="flex flex-col items-center gap-0.5 py-1">
-              <Home className="w-6 h-6 text-primary" />
-              <div className="w-5 h-[3px] bg-primary rounded-full" />
-            </Link>
-            <Link to="/live-tv" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground relative">
-              <div className="relative">
-                <Tv className="w-6 h-6" />
-                <span className="absolute -top-1 -right-1.5 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
-                </span>
-              </div>
-              <span className="text-[10px] font-medium">Live</span>
-            </Link>
-            <Link to="/reels" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
-              <PlayCircle className="w-6 h-6" />
-            </Link>
-            <Link to="/chat" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
-              <MessageCircle className="w-6 h-6" />
-            </Link>
-            <Link to="/dashboard" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
-              <User className="w-6 h-6" />
-            </Link>
+            {[
+              { to: "/feed", icon: Home, label: "", match: ["/feed", "/"] },
+              { to: "/live-tv", icon: Tv, label: "Live", match: ["/live-tv"], live: true },
+              { to: "/reels", icon: PlayCircle, label: "", match: ["/reels"] },
+              { to: "/chat", icon: MessageCircle, label: "", match: ["/chat"] },
+              { to: "/dashboard", icon: User, label: "", match: ["/dashboard"] },
+            ].map((item) => {
+              const isActive = item.match.includes(location.pathname);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex flex-col items-center gap-0.5 py-1 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  <div className="relative">
+                    <Icon className="w-6 h-6" />
+                    {item.live && !isActive && (
+                      <span className="absolute -top-1 -right-1.5 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+                      </span>
+                    )}
+                  </div>
+                  {item.label && <span className="text-[10px] font-medium">{item.label}</span>}
+                  {isActive && <div className="w-5 h-[3px] bg-primary rounded-full" />}
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
