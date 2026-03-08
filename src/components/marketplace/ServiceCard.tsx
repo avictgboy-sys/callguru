@@ -117,8 +117,13 @@ const ServiceCard = ({ service }: Props) => {
             </div>
             <span className="text-xs text-muted-foreground">{categoryName}</span>
           </div>
-          <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${service.is_available ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"}`}>
-            {service.is_available ? "Available" : "Busy"}
+          <div className="text-right">
+            <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${isBookable ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"}`}>
+              {!service.is_available ? "Offline" : scheduleStatus.available ? "Live" : "Scheduled"}
+            </div>
+            {!scheduleStatus.available && service.is_available && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">{scheduleStatus.message}</p>
+            )}
           </div>
         </div>
 
