@@ -232,6 +232,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
   useEffect(() => {
     return () => {
+      screenStreamRef.current?.getTracks().forEach((t) => t.stop());
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       pcRef.current?.close();
       if (channelRef.current) {
@@ -246,9 +247,11 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     connectionState,
     isAudioEnabled,
     isVideoEnabled,
+    isScreenSharing,
     connect,
     toggleAudio,
     toggleVideo,
+    toggleScreenShare,
     disconnect,
   };
 };
