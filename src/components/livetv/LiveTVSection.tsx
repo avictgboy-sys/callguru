@@ -1,10 +1,24 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw } from "lucide-react";
 import Hls from "hls.js";
 import AdBanner from "@/components/ads/AdBanner";
+
+// Check channel reachability by fetching first few bytes
+const checkChannelSpeed = async (url: string): Promise<number> => {
+  const start = performance.now();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    await fetch(url, { method: "HEAD", mode: "no-cors", signal: controller.signal });
+    clearTimeout(timeout);
+    return performance.now() - start;
+  } catch {
+    return 99999; // unreachable = very slow
+  }
+};
 
 const LiveTVSection = () => {
   const { data: channels, isLoading } = useLiveChannels();
