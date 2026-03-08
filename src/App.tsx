@@ -34,6 +34,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminRecordings from "./pages/admin/AdminRecordings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAds from "./pages/admin/AdminAds";
+import AdminLiveTV from "./pages/admin/AdminLiveTV";
 import CreateAd from "./pages/CreateAd";
 import EditAd from "./pages/EditAd";
 import MyAds from "./pages/MyAds";
