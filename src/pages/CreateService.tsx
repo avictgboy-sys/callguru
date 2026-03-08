@@ -7,9 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Video, ArrowLeft, Clock, Tag, Info,
-} from "lucide-react";
+import { Video, ArrowLeft, Clock, Tag, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +66,6 @@ const CreateService = () => {
     if (!user) return;
     setSubmitting(true);
 
-    // Add provider role if not already
     await supabase.from("user_roles").upsert(
       { user_id: user.id, role: "provider" as const },
       { onConflict: "user_id,role" }
@@ -103,14 +100,13 @@ const CreateService = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Nav */}
       <nav className="border-b border-border bg-card">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-14 px-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Video className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-heading font-bold text-xl text-foreground">CallGuru</span>
+            <span className="font-heading font-bold text-lg text-foreground hidden sm:inline">CallGuru</span>
           </Link>
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -118,39 +114,30 @@ const CreateService = () => {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="font-heading text-3xl font-bold text-foreground">Create Your Service</h1>
-          <p className="text-muted-foreground mt-1">
-            Set up your expert profile and start earning through video consultations.
+      <div className="px-4 py-6 max-w-2xl mx-auto">
+        <div className="mb-6">
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">Create Your Service</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Set up your expert profile and start earning.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Info */}
-          <section className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+          <section className="bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4">
+            <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
               <Info className="w-5 h-5 text-primary" /> Service Details
             </h2>
 
             <div className="space-y-2">
               <Label htmlFor="title">Service Title *</Label>
-              <Input
-                id="title"
-                placeholder="e.g. React & TypeScript Tutoring"
-                {...register("title")}
-              />
+              <Input id="title" placeholder="e.g. React & TypeScript Tutoring" {...register("title")} />
               {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your expertise and what clients can expect..."
-                rows={4}
-                {...register("description")}
-              />
+              <Textarea id="description" placeholder="Describe your expertise..." rows={3} {...register("description")} />
               {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
             </div>
 
@@ -158,14 +145,10 @@ const CreateService = () => {
               <Label>Category *</Label>
               {categories.length > 0 ? (
                 <Select onValueChange={(val) => setValue("category_id", val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -179,51 +162,38 @@ const CreateService = () => {
               <Label htmlFor="tags">
                 <Tag className="w-4 h-4 inline mr-1" /> Tags (comma-separated)
               </Label>
-              <Input
-                id="tags"
-                placeholder="e.g. React, JavaScript, Mentoring"
-                {...register("tags")}
-              />
+              <Input id="tags" placeholder="e.g. React, JavaScript" {...register("tags")} />
             </div>
           </section>
 
           {/* Pricing */}
-          <section className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+          <section className="bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4">
+            <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
               <span className="text-primary text-lg">৳</span> Pricing
             </h2>
-
             <div className="space-y-2">
               <Label htmlFor="price">Price Per Minute (৳) *</Label>
-              <div className="relative max-w-xs">
+              <div className="relative max-w-[200px]">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">৳</span>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="pl-10"
-                  {...register("price_per_minute")}
-                />
+                <Input id="price" type="number" step="0.01" min="0.01" className="pl-10" {...register("price_per_minute")} />
               </div>
               {errors.price_per_minute && <p className="text-sm text-destructive">{errors.price_per_minute.message}</p>}
               <p className="text-xs text-muted-foreground">
-                A 30-min call at ৳{watch("price_per_minute") || 0}/min = ৳{((watch("price_per_minute") || 0) * 30).toFixed(2)}
+                30-min call = ৳{((watch("price_per_minute") || 0) * 30).toFixed(2)}
               </p>
             </div>
           </section>
 
           {/* Availability */}
-          <section className="bg-card rounded-xl border border-border p-6 space-y-5">
-            <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" /> Availability Schedule
+          <section className="bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4">
+            <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
+              <Clock className="w-5 h-5 text-primary" /> Availability
             </h2>
-            <p className="text-sm text-muted-foreground">Set when you're available for consultations.</p>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {DAYS.map((day) => (
-                <div key={day} className="flex items-center gap-4 py-2 border-b border-border last:border-0">
-                  <div className="w-28 flex items-center gap-2">
+                <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-b border-border last:border-0">
+                  <div className="flex items-center gap-2 min-w-[100px]">
                     <Switch
                       checked={schedule[day].enabled}
                       onCheckedChange={(checked) => updateDay(day, "enabled", checked)}
@@ -233,30 +203,29 @@ const CreateService = () => {
                     </span>
                   </div>
                   {schedule[day].enabled ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-8 sm:ml-0">
                       <Input
                         type="time"
-                        className="w-32"
+                        className="w-[110px] text-sm"
                         value={schedule[day].start}
                         onChange={(e) => updateDay(day, "start", e.target.value)}
                       />
-                      <span className="text-muted-foreground text-sm">to</span>
+                      <span className="text-muted-foreground text-xs">to</span>
                       <Input
                         type="time"
-                        className="w-32"
+                        className="w-[110px] text-sm"
                         value={schedule[day].end}
                         onChange={(e) => updateDay(day, "end", e.target.value)}
                       />
                     </div>
                   ) : (
-                    <span className="text-sm text-muted-foreground">Unavailable</span>
+                    <span className="text-xs text-muted-foreground ml-8 sm:ml-0">Unavailable</span>
                   )}
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Submit */}
           <Button type="submit" variant="hero" size="lg" className="w-full" disabled={submitting}>
             {submitting ? "Creating..." : "Create Service & Become a Provider"}
           </Button>
