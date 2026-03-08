@@ -219,3 +219,80 @@ export const useToggleService = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-services"] }),
   });
 };
+
+export interface ActivityItem {
+  id: string;
+  type: "payment" | "call" | "dispute" | "user" | "post";
+  title: string;
+  detail: string;
+  time: string;
+}
+
+export const useRecentActivity = () =>
+  useQuery({
+    queryKey: ["admin-recent-activity"],
+    queryFn: async () => {
+      const [payments, calls, disputes, users, posts] = await Promise.all([
+        supabase.from("payment_requests").select("id, type, method, amount, status, created_at, user_id").order("created_at", { ascending: false }).limit(5),
+        supabase.from("calls").select("id, status, total_cost, duration_minutes, created_at, caller_id").order("created_at", { ascending: false }).limit(5),
+        supabase.from("disputes").select("id, reason, status, created_at, complainant_id").order("created_at", { ascending: false }).limit(5),
+        supabase.from("profiles").select("user_id, full_name, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("posts").select("id, content, created_at, user_id").order("created_at", { ascending: false }).limit(5),
+      ]);
+
+      const activities: ActivityItem[] = [];
+
+      (payments.data || []).forEach((p: any) => {
+        activities.push({
+          id: `pay-${p.id}`,
+          type: "payment",
+          title: `${p.type === "topup" ? "Top-up" : "Withdrawal"} request`,
+          detail: `৳${p.amount} via ${p.method} — ${p.status}`,
+          time: p.created_at,
+        });
+      });
+
+      (calls.data || []).forEach((c: any) => {
+        activities.push({
+          id: `call-${c.id}`,
+          type: "call",
+          title: `Call ${c.status}`,
+          detail: c.total_cost ? `৳${Number(c.total_cost).toFixed(2)} • ${Number(c.duration_minutes || 0).toFixed(0)} min` : "In progress",
+          time: c.created_at,
+        });
+      });
+
+      (disputes.data || []).forEach((d: any) => {
+        activities.push({
+          id: `disp-${d.id}`,
+          type: "dispute",
+          title: `Dispute: ${d.reason}`,
+          detail: d.status,
+          time: d.created_at,
+        });
+      });
+
+      (users.data || []).forEach((u: any) => {
+        activities.push({
+          id: `user-${u.user_id}`,
+          type: "user",
+          title: "New user joined",
+          detail: u.full_name || "Unknown",
+          time: u.created_at,
+        });
+      });
+
+      (posts.data || []).forEach((p: any) => {
+        activities.push({
+          id: `post-${p.id}`,
+          type: "post",
+          title: "New post",
+          detail: (p.content || "").slice(0, 60) || "—",
+          time: p.created_at,
+        });
+      });
+
+      activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      return activities.slice(0, 15);
+    },
+  });
