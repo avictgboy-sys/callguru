@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
+import CreateService from "./pages/CreateService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-service"
+              element={
+                <ProtectedRoute>
+                  <CreateService />
                 </ProtectedRoute>
               }
             />
