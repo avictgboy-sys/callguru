@@ -62,6 +62,95 @@ export type Database = {
         }
         Relationships: []
       }
+      service_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          availability_schedule: Json | null
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_available: boolean | null
+          price_per_minute: number
+          provider_id: string
+          rating: number | null
+          tags: string[] | null
+          title: string
+          total_reviews: number | null
+          total_sessions: number | null
+          updated_at: string
+        }
+        Insert: {
+          availability_schedule?: Json | null
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_available?: boolean | null
+          price_per_minute: number
+          provider_id: string
+          rating?: number | null
+          tags?: string[] | null
+          title: string
+          total_reviews?: number | null
+          total_sessions?: number | null
+          updated_at?: string
+        }
+        Update: {
+          availability_schedule?: Json | null
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_available?: boolean | null
+          price_per_minute?: number
+          provider_id?: string
+          rating?: number | null
+          tags?: string[] | null
+          title?: string
+          total_reviews?: number | null
+          total_sessions?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
