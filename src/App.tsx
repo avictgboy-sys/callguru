@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { IncomingCallProvider } from "@/components/call/IncomingCallProvider";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/admin/AdminRoute";
-import Index from "./pages/Index";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
