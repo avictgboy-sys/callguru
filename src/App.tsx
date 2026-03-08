@@ -35,6 +35,8 @@ import AdminRecordings from "./pages/admin/AdminRecordings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAds from "./pages/admin/AdminAds";
 import CreateAd from "./pages/CreateAd";
+import EditAd from "./pages/EditAd";
+import MyAds from "./pages/MyAds";
 import Rewards from "./pages/Rewards";
 import Reels from "./pages/Reels";
 import Groups from "./pages/Groups";
@@ -99,6 +101,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <CreateAd />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-ad/:id"
+              element={
+                <ProtectedRoute>
+                  <EditAd />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-ads"
+              element={
+                <ProtectedRoute>
+                  <MyAds />
                 </ProtectedRoute>
               }
             />

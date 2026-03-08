@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X, Megaphone } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LiveToggle from "@/components/provider/LiveToggle";
 import { useState, useEffect } from "react";
@@ -19,6 +19,7 @@ const Dashboard = () => {
   const menuItems = [
     { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
+    { icon: Megaphone, label: "My Ads", href: "/my-ads" },
     { icon: Gift, label: "Rewards", href: "/rewards" },
     { icon: Calendar, label: "My Sessions", href: "/call-history" },
     { icon: MessageSquare, label: "Messages", href: "/chat" },
