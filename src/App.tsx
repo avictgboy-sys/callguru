@@ -73,6 +73,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/edit-profile"
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
+                </ProtectedRoute>
+              }
             <Route path="/profile/:userId" element={<UserProfile />} />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
