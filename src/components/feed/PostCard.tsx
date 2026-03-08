@@ -6,6 +6,7 @@ import { useToggleLike } from "@/hooks/useFeed";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 interface Props {
