@@ -8,7 +8,7 @@ import { useCategories } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Video, ArrowLeft, DollarSign, Clock, Tag, Info,
+  Video, ArrowLeft, Clock, Tag, Info,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
