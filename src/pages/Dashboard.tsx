@@ -19,6 +19,7 @@ const Dashboard = () => {
   const menuItems = [
     { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
+    { icon: Megaphone, label: "My Ads", href: "/my-ads" },
     { icon: Gift, label: "Rewards", href: "/rewards" },
     { icon: Calendar, label: "My Sessions", href: "/call-history" },
     { icon: MessageSquare, label: "Messages", href: "/chat" },
