@@ -18,6 +18,7 @@ const Feed = () => {
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
   const { data: suggestedServices } = useSuggestedServices();
+  const { data: suggestedUsers } = useSuggestedUsers();
   const location = useLocation();
 
   const { data: selfAds } = useQuery({
