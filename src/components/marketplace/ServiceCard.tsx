@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Star, Clock, Video, BadgeCheck } from "lucide-react";
+import { getScheduleStatus } from "@/lib/schedule";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
