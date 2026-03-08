@@ -64,8 +64,23 @@ const Wallet = () => {
       toast.error("Enter a valid amount");
       return;
     }
+    if (dialogType === "topup" && val < fees.minDeposit) {
+      toast.error(`Minimum deposit is ৳${fees.minDeposit}`);
+      return;
+    }
+    if (dialogType === "withdraw" && val < fees.minWithdraw) {
+      toast.error(`Minimum withdrawal is ৳${fees.minWithdraw}`);
+      return;
+    }
+    if (dialogType === "withdraw" && val > balance) {
+      toast.error("Insufficient balance");
+      return;
+    }
     setStep("method");
   };
+
+  const withdrawFee = dialogType === "withdraw" ? parseFloat(amount || "0") * (fees.withdrawFeePercent / 100) : 0;
+  const withdrawNet = parseFloat(amount || "0") - withdrawFee;
 
   const handleWithdraw = async (val: number) => {
     try {
