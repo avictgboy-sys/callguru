@@ -42,8 +42,10 @@ const ServiceCard = ({ service }: Props) => {
       });
       const params = new URLSearchParams({
         id: call.id,
+        providerId: service.provider_id,
         provider: providerName,
         avatar: avatarUrl || "",
+        serviceId: service.id,
         service: service.title,
         rate: String(service.price_per_minute),
       });
