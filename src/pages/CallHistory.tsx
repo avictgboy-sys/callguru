@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Clock, Banknote } from "lucide-react";
+import { ArrowLeft, Phone, Clock, Banknote, AlertTriangle } from "lucide-react";
+import FileDisputeDialog from "@/components/disputes/FileDisputeDialog";
 import { format } from "date-fns";
 
 const CallHistory = () => {
