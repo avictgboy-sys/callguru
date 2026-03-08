@@ -112,6 +112,7 @@ const App = () => (
             <Route path="/admin/payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
+            <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </IncomingCallProvider>

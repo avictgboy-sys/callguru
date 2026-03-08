@@ -168,6 +168,14 @@ const CallHistory = () => {
                         <TableCell className="text-sm font-medium">৳{call.provider_earning?.toFixed(2) ?? "—"}</TableCell>
                         <TableCell><Badge variant={statusColor(call.status)} className="text-xs capitalize">{call.status}</Badge></TableCell>
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(call.created_at), "MMM d, HH:mm")}</TableCell>
+                        <TableCell>
+                          {call.status === "completed" && (
+                            <FileDisputeDialog
+                              callId={call.id}
+                              againstId={call.caller_id === user?.id ? call.provider_id : call.caller_id}
+                            />
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
