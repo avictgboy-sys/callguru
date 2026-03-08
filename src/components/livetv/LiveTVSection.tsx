@@ -155,6 +155,7 @@ const LiveTVSection = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
           </span>
+          {isSorting && <span className="text-[10px] text-muted-foreground font-normal ml-1">⚡ সর্টিং...</span>}
         </h2>
       </div>
 
