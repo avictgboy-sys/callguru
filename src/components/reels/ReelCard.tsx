@@ -25,6 +25,9 @@ const ReelCard = ({ reel, isActive, isOwner, onLike, onComment, onDelete, onView
   const [progress, setProgress] = useState(0);
   const viewedRef = useRef(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { data: isFollowing } = useIsFollowing(reel.user_id);
+  const toggleFollow = useToggleFollow();
 
   useEffect(() => {
     if (!videoRef.current) return;
