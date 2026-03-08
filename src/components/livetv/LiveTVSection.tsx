@@ -242,7 +242,7 @@ const LiveTVSection = () => {
       {/* Channel list */}
       <ScrollArea className="w-full">
         <div className="flex gap-2 pb-2">
-          {channels.map((ch) => (
+          {displayChannels.map((ch) => (
             <button
               key={ch.id}
               onClick={() => playChannel(ch)}
