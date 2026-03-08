@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff,
+  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, MonitorUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -320,15 +320,27 @@ const CallSession = () => {
             </button>
 
             <button
+              onClick={webrtc.toggleScreenShare}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                webrtc.isScreenSharing
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <MonitorUp className="w-6 h-6" />
+            </button>
+
+            <button
               onClick={() => setShowEndDialog(true)}
               className="w-16 h-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
             >
               <PhoneOff className="w-7 h-7" />
             </button>
           </div>
-          <div className="flex justify-center gap-6 mt-2 text-xs text-muted-foreground">
+          <div className="flex justify-center gap-5 mt-2 text-xs text-muted-foreground">
             <span>Mic</span>
             <span>Camera</span>
+            <span>Screen</span>
             <span>End</span>
           </div>
         </div>
