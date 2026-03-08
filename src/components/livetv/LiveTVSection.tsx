@@ -262,6 +262,28 @@ const LiveTVSection = () => {
         </div>
       )}
 
+      {/* Category tabs */}
+      {categories.length > 2 && (
+        <ScrollArea className="w-full">
+          <div className="flex gap-1.5 pb-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
+                  activeCategory === cat
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary text-secondary-foreground border-border hover:border-primary/50"
+                }`}
+              >
+                {categoryLabels[cat] || cat}
+              </button>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      )}
+
       {/* Channel list */}
       <ScrollArea className="w-full">
         <div className="flex gap-2 pb-2">
