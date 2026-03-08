@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
+export interface DaySchedule {
+  enabled: boolean;
+  start: string;
+  end: string;
+}
+
 export interface ServiceWithProvider {
   id: string;
   title: string;
@@ -14,6 +20,7 @@ export interface ServiceWithProvider {
   category_id: string;
   provider_id: string;
   created_at: string;
+  availability_schedule: Record<string, DaySchedule> | null;
   service_categories: {
     id: string;
     name: string;
