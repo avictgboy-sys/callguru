@@ -73,6 +73,13 @@ const Dashboard = () => {
           </Button>
         </div>
 
+        {/* Live Toggle for providers */}
+        {isProvider && (
+          <div className="mb-6">
+            <LiveToggle />
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-card rounded-xl p-6 border border-border shadow-card">
