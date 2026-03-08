@@ -91,6 +91,14 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/call-history"
+              element={
+                <ProtectedRoute>
+                  <CallHistory />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/profile/:userId" element={<UserProfile />} />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
