@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Video, Home, Compass, Bell, User } from "lucide-react";
+import { Video, Home, Compass, MessageCircle, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPosts } from "@/hooks/useFeed";
