@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -6,16 +6,55 @@ import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw } from "lucide-react";
 import Hls from "hls.js";
 import AdBanner from "@/components/ads/AdBanner";
 
+// Check channel reachability by fetching first few bytes
+const checkChannelSpeed = async (url: string): Promise<number> => {
+  const start = performance.now();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    await fetch(url, { method: "HEAD", mode: "no-cors", signal: controller.signal });
+    clearTimeout(timeout);
+    return performance.now() - start;
+  } catch {
+    return 99999; // unreachable = very slow
+  }
+};
+
 const LiveTVSection = () => {
   const { data: channels, isLoading } = useLiveChannels();
+  const [sortedChannels, setSortedChannels] = useState<LiveChannel[]>([]);
   const [activeChannel, setActiveChannel] = useState<LiveChannel | null>(null);
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isSorting, setIsSorting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-sort channels by network speed
+  useEffect(() => {
+    if (!channels?.length) return;
+    
+    // Show channels immediately (unsorted)
+    setSortedChannels(channels);
+    
+    // Then speed-test in background and re-sort
+    setIsSorting(true);
+    const testChannels = async () => {
+      const speeds = await Promise.all(
+        channels.map(async (ch) => ({
+          channel: ch,
+          latency: await checkChannelSpeed(ch.stream_url),
+        }))
+      );
+      speeds.sort((a, b) => a.latency - b.latency);
+      setSortedChannels(speeds.map(s => s.channel));
+      setIsSorting(false);
+    };
+    testChannels();
+  }, [channels]);
 
   // Get all available URLs for current channel
   const getAllUrls = (ch: LiveChannel) => {
@@ -101,6 +140,8 @@ const LiveTVSection = () => {
 
   if (isLoading || !channels?.length) return null;
 
+  const displayChannels = sortedChannels.length ? sortedChannels : channels || [];
+
   const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
 
   return (
@@ -114,6 +155,7 @@ const LiveTVSection = () => {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
           </span>
+          {isSorting && <span className="text-[10px] text-muted-foreground font-normal ml-1">⚡ সর্টিং...</span>}
         </h2>
       </div>
 
@@ -201,7 +243,7 @@ const LiveTVSection = () => {
       {/* Channel list */}
       <ScrollArea className="w-full">
         <div className="flex gap-2 pb-2">
-          {channels.map((ch) => (
+          {displayChannels.map((ch) => (
             <button
               key={ch.id}
               onClick={() => playChannel(ch)}

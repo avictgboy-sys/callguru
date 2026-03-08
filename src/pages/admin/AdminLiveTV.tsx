@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAllLiveChannels, useCreateChannel, useUpdateChannel, useDeleteChannel, LiveChannel } from "@/hooks/useLiveChannels";
-import { Plus, Pencil, Trash2, Tv, Radio } from "lucide-react";
+import { Plus, Pencil, Trash2, Tv, Radio, Link, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLiveTV = () => {
   const { data: channels, isLoading } = useAllLiveChannels();
@@ -20,6 +21,13 @@ const AdminLiveTV = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<LiveChannel | null>(null);
   const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
+
+  // M3U import state
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [m3uUrl, setM3uUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [parsedChannels, setParsedChannels] = useState<any[]>([]);
+  const [selectedImports, setSelectedImports] = useState<Set<number>>(new Set());
 
   const openCreate = () => {
     setEditing(null);
@@ -79,9 +87,14 @@ const AdminLiveTV = () => {
             </h1>
             <p className="text-muted-foreground text-sm mt-1">M3U স্ট্রিম লিংক যোগ ও ম্যানেজ করুন</p>
           </div>
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="w-4 h-4" /> চ্যানেল যোগ করুন
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowImportDialog(true)} className="gap-2">
+              <Link className="w-4 h-4" /> M3U লিংক ইমপোর্ট
+            </Button>
+            <Button onClick={openCreate} className="gap-2">
+              <Plus className="w-4 h-4" /> চ্যানেল যোগ করুন
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -172,6 +185,145 @@ const AdminLiveTV = () => {
             <Button onClick={handleSave} disabled={createChannel.isPending || updateChannel.isPending}>
               {editing ? "আপডেট করুন" : "যোগ করুন"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* M3U Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>M3U প্লেলিস্ট ইমপোর্ট করুন</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>M3U Playlist URL</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={m3uUrl}
+                  onChange={(e) => setM3uUrl(e.target.value)}
+                  placeholder="https://example.com/playlist.m3u"
+                />
+                <Button
+                  onClick={async () => {
+                    if (!m3uUrl) return toast.error("URL দিন");
+                    setImporting(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("parse-m3u", {
+                        body: { url: m3uUrl },
+                      });
+                      if (error) throw error;
+                      if (data?.channels?.length) {
+                        setParsedChannels(data.channels);
+                        setSelectedImports(new Set(data.channels.map((_: any, i: number) => i)));
+                        toast.success(`${data.channels.length}টি চ্যানেল পাওয়া গেছে`);
+                      } else {
+                        toast.error("কোনো চ্যানেল পাওয়া যায়নি");
+                      }
+                    } catch (e: any) {
+                      toast.error(e.message || "M3U পার্স করতে সমস্যা");
+                    } finally {
+                      setImporting(false);
+                    }
+                  }}
+                  disabled={importing}
+                >
+                  {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : "ফেচ"}
+                </Button>
+              </div>
+            </div>
+
+            {parsedChannels.length > 0 && (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedImports.size}/{parsedChannels.length}টি সিলেক্ট করা হয়েছে
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (selectedImports.size === parsedChannels.length) {
+                        setSelectedImports(new Set());
+                      } else {
+                        setSelectedImports(new Set(parsedChannels.map((_, i) => i)));
+                      }
+                    }}
+                  >
+                    {selectedImports.size === parsedChannels.length ? "সব বাদ দিন" : "সব সিলেক্ট"}
+                  </Button>
+                </div>
+                <div className="space-y-1 max-h-60 overflow-y-auto border rounded-lg p-2">
+                  {parsedChannels.map((ch, i) => (
+                    <label key={i} className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedImports.has(i)}
+                        onChange={() => {
+                          const next = new Set(selectedImports);
+                          next.has(i) ? next.delete(i) : next.add(i);
+                          setSelectedImports(next);
+                        }}
+                        className="rounded"
+                      />
+                      {ch.logo_url && <img src={ch.logo_url} className="w-6 h-6 rounded object-cover" />}
+                      <span className="truncate flex-1">{ch.name}</span>
+                      <span className="text-xs text-muted-foreground">{ch.category}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowImportDialog(false); setParsedChannels([]); setM3uUrl(""); }}>
+              বাতিল
+            </Button>
+            {parsedChannels.length > 0 && (
+              <Button
+                disabled={selectedImports.size === 0 || importing}
+                onClick={async () => {
+                  setImporting(true);
+                  let added = 0;
+                  const existingNames = new Set((channels || []).map(c => c.name.toLowerCase()));
+                  for (const i of selectedImports) {
+                    const ch = parsedChannels[i];
+                    // Group duplicate names as alternate URLs
+                    if (existingNames.has(ch.name.toLowerCase())) {
+                      // Find existing and add as alternate
+                      const existing = (channels || []).find(c => c.name.toLowerCase() === ch.name.toLowerCase());
+                      if (existing && existing.stream_url !== ch.stream_url) {
+                        const alts = [...(existing.alternate_urls || [])];
+                        if (!alts.includes(ch.stream_url)) {
+                          alts.push(ch.stream_url);
+                          await updateChannel.mutateAsync({ id: existing.id, alternate_urls: alts } as any);
+                        }
+                      }
+                      continue;
+                    }
+                    try {
+                      await createChannel.mutateAsync({
+                        name: ch.name,
+                        stream_url: ch.stream_url,
+                        logo_url: ch.logo_url,
+                        category: ch.category || "general",
+                        sort_order: added,
+                      } as any);
+                      existingNames.add(ch.name.toLowerCase());
+                      added++;
+                    } catch {}
+                  }
+                  toast.success(`${added}টি নতুন চ্যানেল যোগ হয়েছে`);
+                  setShowImportDialog(false);
+                  setParsedChannels([]);
+                  setM3uUrl("");
+                  setImporting(false);
+                }}
+              >
+                {importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {selectedImports.size}টি ইমপোর্ট করুন
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
