@@ -1,32 +1,31 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const METERED_API_KEY = "47aeef9f8e8613688d21e5b9806098005d0b";
+
 /**
- * Using multiple STUN + free TURN relay servers for NAT traversal.
- * This ensures connections work on mobile networks, corporate firewalls, etc.
+ * Fetch production TURN credentials from Metered.ca REST API.
+ * Falls back to free STUN-only if the fetch fails.
  */
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    {
-      urls: "turn:openrelay.metered.ca:80",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-    {
-      urls: "turn:openrelay.metered.ca:443?transport=tcp",
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
+async function getIceServers(): Promise<RTCConfiguration> {
+  try {
+    const res = await fetch(
+      `https://callguro.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`
+    );
+    if (!res.ok) throw new Error("Metered API error");
+    const iceServers = await res.json();
+    return { iceServers, iceCandidatePoolSize: 10 };
+  } catch (e) {
+    console.warn("Failed to fetch TURN credentials, using fallback STUN:", e);
+    return {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+      ],
+      iceCandidatePoolSize: 10,
+    };
+  }
+}
 
 interface UseWebRTCOptions {
   callId: string;
