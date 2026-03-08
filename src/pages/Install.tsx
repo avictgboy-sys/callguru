@@ -54,8 +54,8 @@ const Install = () => {
 
           {isInstalled ? (
             <div className="bg-card rounded-2xl shadow-elevated p-8 border border-border space-y-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                <Check className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto">
+                <Check className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h2 className="font-heading font-bold text-xl text-foreground">
                 ইতোমধ্যে ইনস্টল হয়েছে! ✅
