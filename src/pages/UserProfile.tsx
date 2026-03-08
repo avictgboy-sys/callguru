@@ -1,7 +1,8 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUserPosts, useUserServices, useUserFollowers, useUserFollowing, useIsFollowing } from "@/hooks/useUserProfile";
 import { useFollowUser } from "@/hooks/useFeed";
+import { useStartChat } from "@/hooks/useChat";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostCard from "@/components/feed/PostCard";
