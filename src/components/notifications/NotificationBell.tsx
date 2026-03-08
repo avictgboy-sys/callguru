@@ -12,6 +12,7 @@ const typeIcons: Record<string, typeof Heart> = {
   comment: MessageCircle,
   follow: UserPlus,
   message: MessageSquare,
+  payment: CreditCard,
 };
 
 const typeLinks: Record<string, (resourceId: string | null) => string> = {
@@ -19,6 +20,7 @@ const typeLinks: Record<string, (resourceId: string | null) => string> = {
   comment: () => "/feed",
   follow: (id) => id ? `/profile/${id}` : "/feed",
   message: () => "/chat",
+  payment: () => "/wallet",
 };
 
 const NotificationBell = () => {
