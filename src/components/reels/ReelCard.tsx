@@ -215,7 +215,19 @@ const ReelCard = ({ reel, isActive, isOwner, onLike, onComment, onDelete, onView
             <AvatarFallback className="bg-primary text-primary-foreground text-sm">{initials}</AvatarFallback>
           </Avatar>
           <span className="text-white font-bold text-sm drop-shadow">{reel.profile?.full_name || "User"}</span>
-          <button className="ml-2 px-3 py-0.5 border border-white rounded text-white text-xs font-semibold">Follow</button>
+          {!isOwner && user && (
+            <button
+              onClick={() => toggleFollow.mutate({ targetUserId: reel.user_id, isFollowing: !!isFollowing })}
+              className={`ml-2 px-3 py-0.5 border rounded text-xs font-semibold transition-colors ${
+                isFollowing
+                  ? "border-white/50 text-white/70 bg-white/10"
+                  : "border-white text-white"
+              }`}
+              disabled={toggleFollow.isPending}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </button>
+          )}
         </div>
         {reel.caption && (
           <p className="text-white text-sm drop-shadow line-clamp-2">{reel.caption}</p>
