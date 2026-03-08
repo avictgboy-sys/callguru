@@ -211,8 +211,7 @@ const Feed = () => {
               </div>
             )}
 
-            {/* Live TV */}
-            <LiveTVSection />
+            {/* Live TV moved to dedicated /live-tv page */}
 
             {/* Create post */}
             {user && <CreatePostCard />}
