@@ -1,5 +1,9 @@
 import { Star, Clock, Video, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStartCall } from "@/hooks/useCalls";
+import { toast } from "sonner";
 import type { ServiceWithProvider } from "@/hooks/useServices";
 
 interface Props {
@@ -7,10 +11,47 @@ interface Props {
 }
 
 const ServiceCard = ({ service }: Props) => {
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const startCall = useStartCall();
   const providerName = service.profiles?.full_name || "Expert";
   const isVerified = service.profiles?.is_verified;
   const avatarUrl = service.profiles?.avatar_url;
   const categoryName = service.service_categories?.name || "General";
+
+  const handleBookCall = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (user.id === service.provider_id) {
+      toast.error("You can't call yourself!");
+      return;
+    }
+    const balance = profile?.wallet_balance ?? 0;
+    if (balance < service.price_per_minute) {
+      toast.error("Insufficient balance. Please top up your wallet first.");
+      navigate("/wallet");
+      return;
+    }
+    try {
+      const call = await startCall.mutateAsync({
+        provider_id: service.provider_id,
+        service_id: service.id,
+        price_per_minute: service.price_per_minute,
+      });
+      const params = new URLSearchParams({
+        id: call.id,
+        provider: providerName,
+        avatar: avatarUrl || "",
+        service: service.title,
+        rate: String(service.price_per_minute),
+      });
+      navigate(`/call?${params.toString()}`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to start call");
+    }
+  };
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
@@ -82,9 +123,19 @@ const ServiceCard = ({ service }: Props) => {
 
       {/* CTA */}
       <div className="px-5 pb-5">
-        <Button variant="hero" className="w-full" size="sm" disabled={!service.is_available}>
+        <Button
+          variant="hero"
+          className="w-full"
+          size="sm"
+          disabled={!service.is_available || startCall.isPending}
+          onClick={handleBookCall}
+        >
           <Video className="w-4 h-4 mr-1" />
-          {service.is_available ? "Book Consultation" : "Currently Unavailable"}
+          {startCall.isPending
+            ? "Starting…"
+            : service.is_available
+              ? "Book Consultation"
+              : "Currently Unavailable"}
         </Button>
       </div>
     </div>
