@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedPosts } from "@/hooks/useFeed";
+import SuggestedServices, { useSuggestedServices } from "@/components/feed/SuggestedServices";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
@@ -15,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const Feed = () => {
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
+  const { data: suggestedServices } = useSuggestedServices();
   const location = useLocation();
 
   const { data: selfAds } = useQuery({
@@ -238,7 +240,17 @@ const Feed = () => {
               posts?.map((post, index) => (
                 <div key={post.id}>
                   <PostCard post={post} />
-                  {(index + 1) % 3 === 0 && (
+                  {/* Suggested Services every 5 posts */}
+                  {(index + 1) % 5 === 0 && suggestedServices && suggestedServices.length > 0 && (
+                    <div className="mt-4">
+                      <SuggestedServices
+                        services={suggestedServices}
+                        startIndex={(Math.floor(index / 5) * 3) % suggestedServices.length}
+                      />
+                    </div>
+                  )}
+                  {/* Ads every 3 posts (skip if suggested services shown) */}
+                  {(index + 1) % 3 === 0 && (index + 1) % 5 !== 0 && (
                     <>
                       {selfAds && selfAds[Math.floor(index / 3) % (selfAds.length || 1)] ? (
                         <div className="mt-4">
