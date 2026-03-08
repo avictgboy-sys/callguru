@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import EmailOtpLogin from "./pages/EmailOtpLogin";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import CreateService from "./pages/CreateService";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/otp-login" element={<EmailOtpLogin />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/signup" element={<Signup />} />
