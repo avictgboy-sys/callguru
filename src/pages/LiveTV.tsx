@@ -121,13 +121,20 @@ const LiveTV = () => {
     };
   }, [activeChannel, activeUrlIndex]);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(() => {});
+      await containerRef.current.requestFullscreen().catch(() => {});
+      // Try to lock to landscape
+      try {
+        await (screen.orientation as any)?.lock?.("landscape");
+      } catch {}
       setIsFullscreen(true);
     } else {
       document.exitFullscreen();
+      try {
+        (screen.orientation as any)?.unlock?.();
+      } catch {}
       setIsFullscreen(false);
     }
   };
