@@ -40,6 +40,10 @@ import Pages from "./pages/Pages";
 import CreatePage from "./pages/CreatePage";
 import PageDetail from "./pages/PageDetail";
 import Discover from "./pages/Discover";
+import HomeServices from "./pages/HomeServices";
+import CreateHomeService from "./pages/CreateHomeService";
+import HomeServiceDetail from "./pages/HomeServiceDetail";
+import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
