@@ -250,15 +250,20 @@ const CallSession = () => {
           <>
             {/* Remote video (full screen) */}
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-              {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 && 
-               webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted) ? (
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : (
+              {/* Remote video — always rendered, visibility toggled */}
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+                style={{
+                  display: webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0
+                    ? "block" : "none",
+                }}
+              />
+
+              {/* Fallback avatar when no remote video */}
+              {!(webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0) && (
                 <div className="flex flex-col items-center gap-4">
                   <Avatar className="w-32 h-32 ring-4 ring-primary/20">
                     <AvatarImage src={providerAvatar || undefined} />
@@ -291,19 +296,21 @@ const CallSession = () => {
               />
             </div>
 
-            {/* Local video (picture-in-picture) */}
+            {/* Local video (picture-in-picture) — always rendered, visibility toggled */}
             {webrtc.localStream && (
               <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
-                {webrtc.isVideoEnabled ? (
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover mirror"
-                    style={{ transform: "scaleX(-1)" }}
-                  />
-                ) : (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{
+                    transform: "scaleX(-1)",
+                    display: webrtc.isVideoEnabled ? "block" : "none",
+                  }}
+                />
+                {!webrtc.isVideoEnabled && (
                   <div className="w-full h-full flex items-center justify-center">
                     <VideoOff className="w-8 h-8 text-muted-foreground" />
                   </div>
