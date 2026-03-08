@@ -22,6 +22,8 @@ const ServiceCard = ({ service }: Props) => {
   const isVerified = service.profiles?.is_verified;
   const avatarUrl = service.profiles?.avatar_url;
   const categoryName = service.service_categories?.name || "General";
+  const scheduleStatus = getScheduleStatus(service.availability_schedule);
+  const isBookable = !!service.is_available && scheduleStatus.available;
 
   const handleBookCall = async () => {
     if (!user) {
