@@ -1,10 +1,11 @@
 import { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAllLiveChannels, useCreateChannel, useUpdateChannel, useDeleteChannel, LiveChannel } from "@/hooks/useLiveChannels";
 import { Plus, Pencil, Trash2, Tv, Radio } from "lucide-react";
@@ -18,17 +19,17 @@ const AdminLiveTV = () => {
 
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<LiveChannel | null>(null);
-  const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0 });
+  const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0 });
+    setForm({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
     setShowDialog(true);
   };
 
   const openEdit = (ch: LiveChannel) => {
     setEditing(ch);
-    setForm({ name: ch.name, stream_url: ch.stream_url, logo_url: ch.logo_url || "", category: ch.category, sort_order: ch.sort_order });
+    setForm({ name: ch.name, stream_url: ch.stream_url, logo_url: ch.logo_url || "", category: ch.category, sort_order: ch.sort_order, alternate_urls: (ch.alternate_urls || []).join("\n") });
     setShowDialog(true);
   };
 
@@ -37,12 +38,14 @@ const AdminLiveTV = () => {
       toast.error("নাম এবং স্ট্রিম URL আবশ্যক");
       return;
     }
+    const altUrls = form.alternate_urls.split("\n").map(u => u.trim()).filter(Boolean);
+    const payload = { name: form.name, stream_url: form.stream_url, logo_url: form.logo_url || null, category: form.category, sort_order: form.sort_order, alternate_urls: altUrls };
     try {
       if (editing) {
-        await updateChannel.mutateAsync({ id: editing.id, ...form });
+        await updateChannel.mutateAsync({ id: editing.id, ...payload } as any);
         toast.success("চ্যানেল আপডেট হয়েছে");
       } else {
-        await createChannel.mutateAsync(form);
+        await createChannel.mutateAsync(payload as any);
         toast.success("চ্যানেল যোগ হয়েছে");
       }
       setShowDialog(false);
@@ -152,6 +155,16 @@ const AdminLiveTV = () => {
                 <Label>সর্ট অর্ডার</Label>
                 <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
               </div>
+            </div>
+            <div>
+              <Label>বিকল্প URLs (প্রতি লাইনে একটি)</Label>
+              <Textarea
+                value={form.alternate_urls}
+                onChange={(e) => setForm({ ...form, alternate_urls: e.target.value })}
+                placeholder={"https://stream2.example.com/live.m3u8\nhttps://stream3.example.com/live.m3u8"}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground mt-1">ইউজাররা যেকোনো URL বেছে নিতে পারবে</p>
             </div>
           </div>
           <DialogFooter>

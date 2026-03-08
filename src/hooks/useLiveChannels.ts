@@ -6,6 +6,7 @@ export interface LiveChannel {
   name: string;
   logo_url: string | null;
   stream_url: string;
+  alternate_urls: string[];
   category: string;
   sort_order: number;
   is_active: boolean;
