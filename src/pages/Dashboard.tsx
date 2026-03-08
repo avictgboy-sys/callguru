@@ -82,13 +82,19 @@ const Dashboard = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-card rounded-xl p-6 border border-border shadow-card">
             <p className="text-sm text-muted-foreground">Wallet Balance</p>
             <p className="font-heading text-2xl font-bold text-foreground mt-1">
-              ${profile?.wallet_balance?.toFixed(2) ?? "0.00"}
+              ৳{profile?.wallet_balance?.toFixed(2) ?? "0.00"}
             </p>
           </div>
+          <Link to="/rewards" className="bg-card rounded-xl p-6 border border-border shadow-card hover:shadow-elevated transition-shadow">
+            <p className="text-sm text-muted-foreground">Points</p>
+            <p className="font-heading text-2xl font-bold text-primary mt-1">
+              {profile?.points ?? 0} pts
+            </p>
+          </Link>
           <div className="bg-card rounded-xl p-6 border border-border shadow-card">
             <p className="text-sm text-muted-foreground">Total Sessions</p>
             <p className="font-heading text-2xl font-bold text-foreground mt-1">0</p>
