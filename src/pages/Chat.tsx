@@ -249,8 +249,12 @@ const MessageThread = ({
 }: MessageThreadProps) => {
   const { data: messages, isLoading } = useChatMessages(chatId);
   const sendMessage = useSendMessage();
+  const uploadFile = useUploadChatFile();
   const [text, setText] = useState("");
+  const [pendingFile, setPendingFile] = useState<{ url: string; isImage: boolean; fileName: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Subscribe to realtime
   useRealtimeMessages(chatId);
@@ -260,14 +264,45 @@ const MessageThread = ({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!text.trim()) return;
-    const msg = text.trim();
-    setText("");
+  const handleFileSelect = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("ফাইল সাইজ ১০MB এর বেশি হতে পারবে না");
+      return;
+    }
     try {
-      await sendMessage.mutateAsync({ chatId, content: msg });
+      const result = await uploadFile.mutateAsync({ file });
+      if (result.isImage) {
+        setPendingFile(result);
+      } else {
+        // Send file message immediately
+        await sendMessage.mutateAsync({
+          chatId,
+          content: `📎 ${result.fileName}`,
+          fileUrl: result.url,
+          fileName: result.fileName,
+        });
+      }
     } catch {
-      toast.error("Failed to send message");
+      toast.error("ফাইল আপলোড ব্যর্থ হয়েছে");
+    }
+  };
+
+  const handleSend = async () => {
+    if (!text.trim() && !pendingFile) return;
+    const msg = text.trim() || (pendingFile?.isImage ? "📷 Photo" : "");
+    setText("");
+    const file = pendingFile;
+    setPendingFile(null);
+    try {
+      await sendMessage.mutateAsync({
+        chatId,
+        content: msg,
+        imageUrl: file?.isImage ? file.url : null,
+        fileUrl: !file?.isImage ? file?.url : null,
+        fileName: !file?.isImage ? file?.fileName : null,
+      });
+    } catch {
+      toast.error("মেসেজ পাঠানো যায়নি");
       setText(msg);
     }
   };
@@ -322,16 +357,48 @@ const MessageThread = ({
               >
                 <div
                   className={cn(
-                    "max-w-[75%] rounded-2xl px-4 py-2.5",
+                    "max-w-[75%] rounded-2xl overflow-hidden",
                     isMine
                       ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-secondary text-secondary-foreground rounded-bl-md"
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  {/* Image attachment */}
+                  {msg.image_url && (
+                    <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={msg.image_url}
+                        alt="Shared image"
+                        className="max-w-full max-h-64 object-cover cursor-pointer"
+                        loading="lazy"
+                      />
+                    </a>
+                  )}
+                  {/* File attachment */}
+                  {msg.file_url && !msg.image_url && (
+                    <a
+                      href={msg.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 border-b",
+                        isMine ? "border-primary-foreground/20" : "border-border"
+                      )}
+                    >
+                      <FileText className="w-5 h-5 shrink-0" />
+                      <span className="text-xs truncate flex-1">{msg.file_name || "File"}</span>
+                      <Download className="w-4 h-4 shrink-0" />
+                    </a>
+                  )}
+                  {/* Text content */}
+                  {msg.content && msg.content !== "📷 Photo" && (
+                    <div className="px-4 py-2.5">
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  )}
                   <p
                     className={cn(
-                      "text-[10px] mt-1",
+                      "text-[10px] px-4 pb-2",
                       isMine
                         ? "text-primary-foreground/60"
                         : "text-muted-foreground"
@@ -349,9 +416,74 @@ const MessageThread = ({
         <div ref={bottomRef} />
       </div>
 
+      {/* Pending image preview */}
+      {pendingFile?.isImage && (
+        <div className="border-t border-border bg-card px-3 pt-2">
+          <div className="relative inline-block">
+            <img src={pendingFile.url} alt="Preview" className="h-20 rounded-lg object-cover" />
+            <button
+              onClick={() => setPendingFile(null)}
+              className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border bg-card p-3 shrink-0">
         <div className="flex items-center gap-2">
+          {/* Hidden file inputs */}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileSelect(file);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFileSelect(file);
+              e.target.value = "";
+            }}
+          />
+
+          {/* Image button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={() => imageInputRef.current?.click()}
+            disabled={uploadFile.isPending}
+          >
+            {uploadFile.isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            ) : (
+              <Image className="w-5 h-5 text-muted-foreground" />
+            )}
+          </Button>
+
+          {/* File button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadFile.isPending}
+          >
+            <Paperclip className="w-5 h-5 text-muted-foreground" />
+          </Button>
+
           <Input
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -363,7 +495,7 @@ const MessageThread = ({
             variant="hero"
             size="icon"
             onClick={handleSend}
-            disabled={!text.trim() || sendMessage.isPending}
+            disabled={(!text.trim() && !pendingFile) || sendMessage.isPending}
           >
             <Send className="w-4 h-4" />
           </Button>
