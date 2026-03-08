@@ -80,10 +80,22 @@ const PostCard = ({ post }: Props) => {
             </div>
           </div>
         </Link>
-        <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
-          <MoreHorizontal className="w-5 h-5" />
-        </Button>
-      </div>
+        <div className="flex items-center gap-2">
+          {!isOwnPost && user && (
+            <Button
+              variant={isFollowing ? "outline" : "default"}
+              size="sm"
+              className="h-7 text-xs rounded-full px-3"
+              onClick={() => toggleFollow.mutate({ targetUserId: post.user_id, isFollowing: !!isFollowing })}
+              disabled={toggleFollow.isPending}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8 rounded-full hover:bg-secondary">
+            <MoreHorizontal className="w-5 h-5" />
+          </Button>
+        </div>
 
       {/* Content */}
       {post.content && (
