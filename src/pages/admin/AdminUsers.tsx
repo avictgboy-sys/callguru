@@ -153,6 +153,17 @@ const AdminUsers = () => {
                           >
                             <Shield className="w-4 h-4" />
                           </Button>
+                          {isSuperAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRoleToggle(user.user_id, "super_admin", user.roles)}
+                              title={user.roles.includes("super_admin") ? "Remove Super Admin" : "Make Super Admin"}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Crown className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -15,7 +15,7 @@ interface Profile {
   points: number;
 }
 
-type AppRole = "user" | "provider" | "admin";
+type AppRole = "user" | "provider" | "admin" | "super_admin";
 
 interface AuthContextType {
   session: Session | null;
