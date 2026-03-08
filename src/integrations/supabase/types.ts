@@ -474,6 +474,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_payment_request: {
+        Args: { p_admin_note?: string; p_request_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -482,6 +486,10 @@ export type Database = {
         Returns: boolean
       }
       mark_all_notifications_read: { Args: never; Returns: undefined }
+      reject_payment_request: {
+        Args: { p_admin_note?: string; p_request_id: string }
+        Returns: undefined
+      }
       wallet_topup: { Args: { p_amount: number }; Returns: undefined }
       wallet_withdraw: { Args: { p_amount: number }; Returns: undefined }
     }
