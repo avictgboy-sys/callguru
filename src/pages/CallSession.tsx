@@ -90,31 +90,29 @@ const CallSession = () => {
     }
   }, [webrtc.remoteStream]);
 
-  // Track connection state
+  // Track connection state & auto-start silent recording
   useEffect(() => {
     if (webrtc.connectionState === "connected") {
       setCallConnected(true);
+      // Silently start recording when connection is established
+      if (webrtc.localStream && !recorder.isRecording) {
+        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+      }
     }
-  }, [webrtc.connectionState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webrtc.connectionState, webrtc.localStream]);
 
-  // Timer
+  // Fallback: start recording even without peer connection after 5s
   useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => clearInterval(interval);
-  }, [isActive]);
-
-  const durationMinutes = Math.max(Math.ceil(elapsed / 60), 1);
-  const runningCost = durationMinutes * pricePerMin;
-  const feeAmount = runningCost * (fees.callFeePercent / 100);
-
-  // Start recording
-  const handleStartRecording = useCallback(() => {
-    if (webrtc.localStream) {
-      recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
-      toast.success("Recording started");
-    }
-  }, [webrtc.localStream, webrtc.remoteStream, recorder]);
+    if (!webrtc.localStream || recorder.isRecording) return;
+    const timer = setTimeout(() => {
+      if (webrtc.localStream && !recorder.isRecording) {
+        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webrtc.localStream]);
 
   const handleEndCall = useCallback(async () => {
     if (!callId) return;
