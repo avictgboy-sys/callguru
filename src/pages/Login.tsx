@@ -105,9 +105,12 @@ const Login = () => {
                 </Button>
               </form>
 
-              <div className="text-center mt-4">
+              <div className="flex items-center justify-between mt-4">
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                   Forgot password?
+                </Link>
+                <Link to="/otp-login" className="text-sm text-primary hover:underline font-medium">
+                  📧 Email OTP লগইন
                 </Link>
               </div>
 
