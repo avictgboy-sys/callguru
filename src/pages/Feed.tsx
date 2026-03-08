@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedPosts } from "@/hooks/useFeed";
 import SuggestedServices, { useSuggestedServices } from "@/components/feed/SuggestedServices";
+import SuggestedUsers, { useSuggestedUsers } from "@/components/feed/SuggestedUsers";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
