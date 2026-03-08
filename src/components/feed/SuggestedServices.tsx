@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { Star, Video, BadgeCheck, ChevronRight } from "lucide-react";
+import { Star, Video, BadgeCheck, ChevronRight, UserPlus, UserCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsFollowing, useToggleFollow } from "@/hooks/useFollow";
 
 interface SuggestedService {
   id: string;
@@ -60,6 +62,99 @@ interface Props {
   startIndex?: number;
 }
 
+const SuggestedServiceCard = ({ service }: { service: SuggestedService }) => {
+  const { user } = useAuth();
+  const isOwnProfile = user?.id === service.provider_id;
+  const { data: isFollowing } = useIsFollowing(isOwnProfile ? undefined : service.provider_id);
+  const toggleFollow = useToggleFollow();
+
+  const name = service.profiles?.full_name || "Expert";
+  const initials = name[0].toUpperCase();
+  const category = service.service_categories?.name || "General";
+
+  const handleFollow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user || isOwnProfile) return;
+    toggleFollow.mutate({ targetUserId: service.provider_id, isFollowing: !!isFollowing });
+  };
+
+  return (
+    <Link
+      to={`/profile/${service.provider_id}`}
+      className="shrink-0 w-[160px] rounded-xl border border-border bg-secondary/30 hover:bg-secondary/60 transition-colors overflow-hidden"
+    >
+      {/* Top section */}
+      <div className="flex flex-col items-center pt-4 pb-2 px-3">
+        <Avatar className="w-14 h-14 mb-2 border-2 border-primary/20">
+          <AvatarImage src={service.profiles?.avatar_url || ""} />
+          <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-semibold text-foreground truncate max-w-[120px]">
+            {name}
+          </span>
+          {service.profiles?.is_verified && (
+            <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+          )}
+        </div>
+        <span className="text-[11px] text-muted-foreground">{category}</span>
+      </div>
+
+      {/* Follow button */}
+      {user && !isOwnProfile && (
+        <div className="px-3 pb-2">
+          <Button
+            variant={isFollowing ? "outline" : "default"}
+            size="sm"
+            className="w-full h-7 text-xs rounded-full gap-1"
+            onClick={handleFollow}
+            disabled={toggleFollow.isPending}
+          >
+            {isFollowing ? (
+              <>
+                <UserCheck className="w-3 h-3" />
+                Following
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-3 h-3" />
+                Follow
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="flex items-center justify-center gap-3 px-3 pb-2 text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-0.5">
+          <Star className="w-3 h-3" style={{ color: 'hsl(var(--star, 45 93% 47%))', fill: 'hsl(var(--star, 45 93% 47%))' }} />
+          {(service.rating ?? 0).toFixed(1)}
+        </span>
+        <span className="flex items-center gap-0.5">
+          <Video className="w-3 h-3" />
+          {service.total_sessions ?? 0}
+        </span>
+      </div>
+
+      {/* Price + CTA */}
+      <div className="border-t border-border px-3 py-2.5 text-center">
+        <span className="text-primary font-bold text-sm">৳{service.price_per_minute}</span>
+        <span className="text-[10px] text-muted-foreground">/min</span>
+        <div className="mt-1.5">
+          <Button variant="outline" size="sm" className="w-full h-7 text-xs rounded-full">
+            <Video className="w-3 h-3 mr-1" />
+            কল করুন
+          </Button>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
 const SuggestedServices = ({ services, startIndex = 0 }: Props) => {
   const items = services.slice(startIndex, startIndex + 3);
   if (items.length === 0) return null;
@@ -79,62 +174,9 @@ const SuggestedServices = ({ services, startIndex = 0 }: Props) => {
       </div>
 
       <div className="flex gap-3 px-4 pb-4 overflow-x-auto scrollbar-hide">
-        {items.map((service) => {
-          const name = service.profiles?.full_name || "Expert";
-          const initials = name[0].toUpperCase();
-          const category = service.service_categories?.name || "General";
-
-          return (
-            <Link
-              key={service.id}
-              to={`/profile/${service.provider_id}`}
-              className="shrink-0 w-[160px] rounded-xl border border-border bg-secondary/30 hover:bg-secondary/60 transition-colors overflow-hidden"
-            >
-              {/* Top section */}
-              <div className="flex flex-col items-center pt-4 pb-3 px-3">
-                <Avatar className="w-14 h-14 mb-2 border-2 border-primary/20">
-                  <AvatarImage src={service.profiles?.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-foreground truncate max-w-[120px]">
-                    {name}
-                  </span>
-                  {service.profiles?.is_verified && (
-                    <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0" />
-                  )}
-                </div>
-                <span className="text-[11px] text-muted-foreground">{category}</span>
-              </div>
-
-              {/* Stats */}
-              <div className="flex items-center justify-center gap-3 px-3 pb-2 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-0.5">
-                  <Star className="w-3 h-3" style={{ color: 'hsl(var(--star, 45 93% 47%))', fill: 'hsl(var(--star, 45 93% 47%))' }} />
-                  {(service.rating ?? 0).toFixed(1)}
-                </span>
-                <span className="flex items-center gap-0.5">
-                  <Video className="w-3 h-3" />
-                  {service.total_sessions ?? 0}
-                </span>
-              </div>
-
-              {/* Price + CTA */}
-              <div className="border-t border-border px-3 py-2.5 text-center">
-                <span className="text-primary font-bold text-sm">৳{service.price_per_minute}</span>
-                <span className="text-[10px] text-muted-foreground">/min</span>
-                <div className="mt-1.5">
-                  <Button variant="outline" size="sm" className="w-full h-7 text-xs rounded-full">
-                    <Video className="w-3 h-3 mr-1" />
-                    কল করুন
-                  </Button>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+        {items.map((service) => (
+          <SuggestedServiceCard key={service.id} service={service} />
+        ))}
       </div>
     </div>
   );
