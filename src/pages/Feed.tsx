@@ -1,13 +1,32 @@
 import { Link } from "react-router-dom";
-import { Video, Home, Compass, MessageCircle, User } from "lucide-react";
+import { Video, Home, Compass, MessageCircle, User, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useFeedPosts } from "@/hooks/useFeed";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
+import SelfServeAdCard from "@/components/ads/SelfServeAdCard";
 
 const Feed = () => {
+  const { user, profile } = useAuth();
+  const { data: posts, isLoading } = useFeedPosts();
+
+  // Fetch active self-serve ads
+  const { data: selfAds } = useQuery({
+    queryKey: ["active-self-ads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("self_ads" as any)
+        .select("*")
+        .eq("status", "active")
+        .limit(10);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
 
