@@ -342,7 +342,7 @@ const Feed = () => {
             <Link to="/marketplace" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <ShoppingBag className="w-6 h-6" />
             </Link>
-            <Link to="/feed" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
+            <Link to="/reels" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <PlayCircle className="w-6 h-6" />
             </Link>
             <Link to="/chat" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
