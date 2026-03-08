@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const MOBILE_INFO: Record<string, { merchant: string; type: string; color: string }> = {
-  bkash: { merchant: "01XXXXXXXXX", type: "Send Money", color: "text-orange-500" },
-  nagad: { merchant: "01XXXXXXXXX", type: "Send Money", color: "text-red-500" },
-  rocket: { merchant: "01XXXXXXXXXXX", type: "Send Money", color: "text-purple-500" },
+  bkash: { merchant: "01XXXXXXXXX", type: "Payment", color: "text-orange-500" },
+  nagad: { merchant: "01XXXXXXXXX", type: "Payment", color: "text-red-500" },
+  rocket: { merchant: "01XXXXXXXXXXX", type: "Payment", color: "text-purple-500" },
 };
 
 interface Props {
