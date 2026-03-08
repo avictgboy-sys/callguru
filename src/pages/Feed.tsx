@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useFeedPosts } from "@/hooks/useFeed";
 import SuggestedServices, { useSuggestedServices } from "@/components/feed/SuggestedServices";
+import SuggestedUsers, { useSuggestedUsers } from "@/components/feed/SuggestedUsers";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
 import AdBanner from "@/components/ads/AdBanner";
@@ -17,6 +18,7 @@ const Feed = () => {
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
   const { data: suggestedServices } = useSuggestedServices();
+  const { data: suggestedUsers } = useSuggestedUsers();
   const location = useLocation();
 
   const { data: selfAds } = useQuery({
@@ -249,7 +251,15 @@ const Feed = () => {
                       />
                     </div>
                   )}
-                  {/* Ads every 3 posts (skip if suggested services shown) */}
+                  {/* Suggested Users every 7 posts */}
+                  {(index + 1) % 7 === 0 && suggestedUsers && suggestedUsers.length > 0 && (
+                    <div className="mt-4">
+                      <SuggestedUsers
+                        users={suggestedUsers}
+                        startIndex={(Math.floor(index / 7) * 4) % suggestedUsers.length}
+                      />
+                    </div>
+                  )}
                   {(index + 1) % 3 === 0 && (index + 1) % 5 !== 0 && (
                     <>
                       {selfAds && selfAds[Math.floor(index / 3) % (selfAds.length || 1)] ? (
