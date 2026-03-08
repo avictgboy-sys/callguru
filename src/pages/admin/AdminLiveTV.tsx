@@ -18,11 +18,11 @@ const AdminLiveTV = () => {
 
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<LiveChannel | null>(null);
-  const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0 });
+  const [form, setForm] = useState({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0 });
+    setForm({ name: "", stream_url: "", logo_url: "", category: "general", sort_order: 0, alternate_urls: "" });
     setShowDialog(true);
   };
 
