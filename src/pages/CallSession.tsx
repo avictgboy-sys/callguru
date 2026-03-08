@@ -114,7 +114,17 @@ const CallSession = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webrtc.localStream]);
 
-  const handleEndCall = useCallback(async () => {
+  // Timer
+  useEffect(() => {
+    if (!isActive) return;
+    const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  const durationMinutes = Math.max(Math.ceil(elapsed / 60), 1);
+  const runningCost = durationMinutes * pricePerMin;
+  const feeAmount = runningCost * (fees.callFeePercent / 100);
+
     if (!callId) return;
     setIsActive(false);
     setShowEndDialog(false);
