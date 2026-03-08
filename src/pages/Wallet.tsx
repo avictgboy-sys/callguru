@@ -194,7 +194,7 @@ const Wallet = () => {
           <Card>
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground">Total Out</p>
-              <p className="font-heading text-xl font-bold text-red-500">-${totalOut.toFixed(2)}</p>
+              <p className="font-heading text-xl font-bold text-red-500">-৳{totalOut.toFixed(2)}</p>
             </CardContent>
           </Card>
         </div>
