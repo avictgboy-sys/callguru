@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw, Home, ShoppingBag, PlayCircle, MessageCircle, User, ArrowLeft } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Tv, X, Volume2, VolumeX, Maximize, Minimize, RefreshCw, Home, PlayCircle, MessageCircle, User, ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
 import Hls from "hls.js";
 import { useAuth } from "@/contexts/AuthContext";
 
