@@ -28,44 +28,16 @@ const AdBanner = ({ slotId, className = "" }: Props) => {
     pointsAwarded.current = true;
 
     try {
-      // Check daily limit
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const { count } = await supabase
-        .from("ad_views" as any)
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .gte("created_at", today.toISOString());
+      const { data } = await supabase.rpc("increment_ad_points", {
+        p_user_id: user.id,
+        p_ad_slot: slotId,
+        p_points: pointsPerView,
+        p_daily_limit: dailyLimit,
+      });
 
-      if ((count || 0) >= dailyLimit) return;
-
-      // Record view
-      await supabase.from("ad_views" as any).insert({
-        user_id: user.id,
-        ad_slot: slotId,
-      } as any);
-
-      // Award points
-      await supabase
-        .from("profiles")
-        .update({ points: undefined }) // We'll use RPC-like raw update
-        .eq("user_id", user.id);
-
-      // Actually increment points via raw approach
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("points")
-        .eq("user_id", user.id)
-        .single();
-
-      if (profile) {
-        await supabase
-          .from("profiles")
-          .update({ points: (profile.points || 0) + pointsPerView })
-          .eq("user_id", user.id);
+      if (data) {
+        toast.success(`+${pointsPerView} পয়েন্ট earned!`, { duration: 2000 });
       }
-
-      toast.success(`+${pointsPerView} পয়েন্ট earned!`, { duration: 2000 });
     } catch {
       // Silent fail for ad points
     }

@@ -1502,6 +1502,15 @@ export type Database = {
         Returns: boolean
       }
       has_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      increment_ad_points: {
+        Args: {
+          p_ad_slot: string
+          p_daily_limit: number
+          p_points: number
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       increment_reel_views: { Args: { p_reel_id: string }; Returns: undefined }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       pay_home_booking_advance: {
