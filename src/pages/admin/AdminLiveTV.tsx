@@ -28,7 +28,7 @@ const AdminLiveTV = () => {
 
   const openEdit = (ch: LiveChannel) => {
     setEditing(ch);
-    setForm({ name: ch.name, stream_url: ch.stream_url, logo_url: ch.logo_url || "", category: ch.category, sort_order: ch.sort_order });
+    setForm({ name: ch.name, stream_url: ch.stream_url, logo_url: ch.logo_url || "", category: ch.category, sort_order: ch.sort_order, alternate_urls: (ch.alternate_urls || []).join("\n") });
     setShowDialog(true);
   };
 
