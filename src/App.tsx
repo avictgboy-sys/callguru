@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import CreateService from "./pages/CreateService";
+import Feed from "./pages/Feed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
