@@ -78,13 +78,38 @@ const PostCard = ({ post }: Props) => {
 
       {/* Image */}
       {post.image_url && (
-        <div className="w-full">
-          <img
-            src={post.image_url}
-            alt="Post"
-            className="w-full object-cover max-h-[500px]"
-            loading="lazy"
-          />
+        <div className="w-full relative cursor-pointer" onClick={handleMediaClick}>
+          {!mediaRevealed && user ? (
+            <div className="w-full h-[300px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Play className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">Ad দেখে কন্টেন্ট দেখুন</p>
+            </div>
+          ) : (
+            <img
+              src={post.image_url}
+              alt="Post"
+              className="w-full object-cover max-h-[500px]"
+              loading="lazy"
+            />
+          )}
+        </div>
+      )}
+
+      {/* Video */}
+      {post.video_url && (
+        <div className="w-full relative cursor-pointer" onClick={handleMediaClick}>
+          {!mediaRevealed && user ? (
+            <div className="w-full h-[300px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Play className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">Ad দেখে ভিডিও দেখুন</p>
+            </div>
+          ) : (
+            <video src={post.video_url} controls className="w-full max-h-[500px]" />
+          )}
         </div>
       )}
 
