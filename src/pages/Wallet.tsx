@@ -62,12 +62,7 @@ const Wallet = () => {
       toast.error("Enter a valid amount");
       return;
     }
-    if (dialogType === "topup") {
-      setStep("method");
-    } else {
-      // Withdraw — direct wallet deduction for now
-      handleWithdraw(val);
-    }
+    setStep("method");
   };
 
   const handleWithdraw = async (val: number) => {
