@@ -250,7 +250,7 @@ const CallSession = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Call summary dialog */}
+      {/* Call summary dialog with rating */}
       <Dialog open={showSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -283,10 +283,79 @@ const CallSession = () => {
                   <span className="text-muted-foreground">৳{summary.net.toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Rating section */}
+              {!reviewSubmitted ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground text-center">Rate your experience</p>
+                  <div className="flex justify-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className="p-1 transition-transform hover:scale-110"
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                      >
+                        <Star
+                          className={`w-8 h-8 transition-colors ${
+                            star <= (hoverRating || rating)
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {rating > 0 && (
+                    <Textarea
+                      placeholder="Leave a comment (optional)..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      className="resize-none"
+                      rows={2}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-sm text-primary font-medium">Thanks for your review! ⭐</p>
+                </div>
+              )}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="hero" className="w-full" onClick={() => navigate("/dashboard")}>
+          <DialogFooter className="gap-2">
+            {!reviewSubmitted && rating > 0 && (
+              <Button
+                variant="default"
+                disabled={submittingReview}
+                onClick={async () => {
+                  if (!callId || !user) return;
+                  setSubmittingReview(true);
+                  try {
+                    const { error } = await supabase.from("reviews").insert({
+                      call_id: callId,
+                      reviewer_id: user.id,
+                      provider_id: providerId,
+                      service_id: serviceId,
+                      rating,
+                      comment: reviewComment.trim() || null,
+                    });
+                    if (error) throw error;
+                    setReviewSubmitted(true);
+                    toast.success("Review submitted!");
+                  } catch (e: any) {
+                    toast.error(e.message || "Failed to submit review");
+                  } finally {
+                    setSubmittingReview(false);
+                  }
+                }}
+              >
+                {submittingReview ? "Submitting…" : "Submit Review"}
+              </Button>
+            )}
+            <Button variant="hero" onClick={() => navigate("/dashboard")}>
               Back to Dashboard
             </Button>
           </DialogFooter>
