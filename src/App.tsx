@@ -51,6 +51,11 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+            <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
+            <Route path="/admin/services" element={<AdminRoute><AdminServices /></AdminRoute>} />
+            <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
