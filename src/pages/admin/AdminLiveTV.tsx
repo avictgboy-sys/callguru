@@ -163,6 +163,16 @@ const AdminLiveTV = () => {
                 <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
               </div>
             </div>
+            <div>
+              <Label>বিকল্প URLs (প্রতি লাইনে একটি)</Label>
+              <Textarea
+                value={form.alternate_urls}
+                onChange={(e) => setForm({ ...form, alternate_urls: e.target.value })}
+                placeholder={"https://stream2.example.com/live.m3u8\nhttps://stream3.example.com/live.m3u8"}
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground mt-1">ইউজাররা যেকোনো URL বেছে নিতে পারবে</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>বাতিল</Button>
