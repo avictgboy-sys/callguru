@@ -113,6 +113,7 @@ const App = () => (
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </IncomingCallProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
