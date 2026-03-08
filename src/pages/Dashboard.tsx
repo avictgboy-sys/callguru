@@ -10,7 +10,7 @@ const Dashboard = () => {
 
   const menuItems = [
     { icon: User, label: "My Profile", href: "#" },
-    { icon: Wallet, label: "Wallet", href: "#" },
+    { icon: Wallet, label: "Wallet", href: "/wallet" },
     { icon: Calendar, label: "My Sessions", href: "#" },
     { icon: MessageSquare, label: "Messages", href: "/chat" },
     { icon: Settings, label: "Settings", href: "#" },

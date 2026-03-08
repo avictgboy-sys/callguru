@@ -14,6 +14,7 @@ import Marketplace from "./pages/Marketplace";
 import CreateService from "./pages/CreateService";
 import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
+import Wallet from "./pages/Wallet";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminContent from "./pages/admin/AdminContent";
@@ -57,6 +58,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallet"
+              element={
+                <ProtectedRoute>
+                  <Wallet />
                 </ProtectedRoute>
               }
             />
