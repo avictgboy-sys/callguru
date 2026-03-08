@@ -280,9 +280,11 @@ const Wallet = () => {
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {dialogType === "topup"
-                ? step === "amount" ? "Top Up Wallet" : step === "method" ? "Choose Payment Method" : "Complete Payment"
-                : "Withdraw Funds"
+              {step === "amount"
+                ? dialogType === "topup" ? "Top Up Wallet" : "Withdraw Funds"
+                : step === "method"
+                  ? dialogType === "topup" ? "Choose Payment Method" : "Choose Withdrawal Method"
+                  : dialogType === "topup" ? "Complete Payment" : "Withdrawal Details"
               }
             </DialogTitle>
           </DialogHeader>
