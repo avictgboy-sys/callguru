@@ -393,6 +393,193 @@ export type Database = {
         }
         Relationships: []
       }
+      home_bookings: {
+        Row: {
+          address: string | null
+          advance_paid: number | null
+          completed_at: string | null
+          created_at: string
+          customer_confirmed: boolean | null
+          customer_id: string
+          final_price: number | null
+          hold_until: string | null
+          id: string
+          phone: string | null
+          platform_fee: number | null
+          preferred_date: string | null
+          preferred_time: string | null
+          pricing_type: string
+          problem_description: string | null
+          provider_earning: number | null
+          provider_id: string
+          quoted_price: number | null
+          released: boolean | null
+          remaining_paid: number | null
+          service_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          advance_paid?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_confirmed?: boolean | null
+          customer_id: string
+          final_price?: number | null
+          hold_until?: string | null
+          id?: string
+          phone?: string | null
+          platform_fee?: number | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          pricing_type?: string
+          problem_description?: string | null
+          provider_earning?: number | null
+          provider_id: string
+          quoted_price?: number | null
+          released?: boolean | null
+          remaining_paid?: number | null
+          service_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          advance_paid?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_confirmed?: boolean | null
+          customer_id?: string
+          final_price?: number | null
+          hold_until?: string | null
+          id?: string
+          phone?: string | null
+          platform_fee?: number | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          pricing_type?: string
+          problem_description?: string | null
+          provider_earning?: number | null
+          provider_id?: string
+          quoted_price?: number | null
+          released?: boolean | null
+          remaining_paid?: number | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "home_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      home_service_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          name_bn: string
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          name_bn: string
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          name_bn?: string
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      home_services: {
+        Row: {
+          area: string | null
+          category_id: string
+          created_at: string
+          description: string | null
+          fixed_price: number | null
+          id: string
+          is_active: boolean | null
+          is_available: boolean | null
+          max_price: number | null
+          min_price: number | null
+          pricing_type: string
+          provider_id: string
+          rating: number | null
+          tags: string[] | null
+          title: string
+          total_jobs: number | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          area?: string | null
+          category_id: string
+          created_at?: string
+          description?: string | null
+          fixed_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_available?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
+          pricing_type?: string
+          provider_id: string
+          rating?: number | null
+          tags?: string[] | null
+          title: string
+          total_jobs?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          area?: string | null
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          fixed_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_available?: boolean | null
+          max_price?: number | null
+          min_price?: number | null
+          pricing_type?: string
+          provider_id?: string
+          rating?: number | null
+          tags?: string[] | null
+          title?: string
+          total_jobs?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "home_service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           created_at: string
@@ -1160,6 +1347,10 @@ export type Database = {
         Args: { p_call_id: string; p_duration_minutes: number }
         Returns: undefined
       }
+      complete_home_booking: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1169,10 +1360,15 @@ export type Database = {
       }
       increment_reel_views: { Args: { p_reel_id: string }; Returns: undefined }
       mark_all_notifications_read: { Args: never; Returns: undefined }
+      pay_home_booking_advance: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
       reject_payment_request: {
         Args: { p_admin_note?: string; p_request_id: string }
         Returns: undefined
       }
+      release_home_booking_payments: { Args: never; Returns: undefined }
       wallet_topup: { Args: { p_amount: number }; Returns: undefined }
       wallet_withdraw: { Args: { p_amount: number }; Returns: undefined }
     }
