@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe } f
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleLike } from "@/hooks/useFeed";
+import { useIsFollowing, useToggleFollow } from "@/hooks/useFollow";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
 import InterstitialAd from "@/components/ads/InterstitialAd";
