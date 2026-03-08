@@ -40,6 +40,7 @@ import EditAd from "./pages/EditAd";
 import MyAds from "./pages/MyAds";
 import Rewards from "./pages/Rewards";
 import Reels from "./pages/Reels";
+import LiveTV from "./pages/LiveTV";
 import Groups from "./pages/Groups";
 import CreateGroup from "./pages/CreateGroup";
 import GroupDetail from "./pages/GroupDetail";
@@ -177,6 +178,7 @@ const App = () => (
             <Route path="/pages/:pageId" element={<PageDetail />} />
             <Route path="/create-page" element={<ProtectedRoute><CreatePage /></ProtectedRoute>} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/live-tv" element={<LiveTV />} />
             <Route path="/home-services" element={<HomeServices />} />
             <Route path="/home-service/:serviceId" element={<HomeServiceDetail />} />
             <Route path="/create-home-service" element={<ProtectedRoute><CreateHomeService /></ProtectedRoute>} />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Video, Home, Compass, MessageCircle, User, Megaphone, Bell, Search, Menu, Plus, Users, Bookmark, Settings, TrendingUp, ShoppingBag, PlayCircle, Wrench } from "lucide-react";
+import { Video, Home, Compass, MessageCircle, User, Megaphone, Bell, Search, Menu, Plus, Users, Bookmark, Settings, TrendingUp, ShoppingBag, PlayCircle, Wrench, Tv } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -367,8 +367,8 @@ const Feed = () => {
               <Home className="w-6 h-6 text-primary" />
               <div className="w-5 h-[3px] bg-primary rounded-full" />
             </Link>
-            <Link to="/marketplace" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
-              <ShoppingBag className="w-6 h-6" />
+            <Link to="/live-tv" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
+              <Tv className="w-6 h-6" />
             </Link>
             <Link to="/reels" className="flex flex-col items-center gap-0.5 py-1 text-muted-foreground">
               <PlayCircle className="w-6 h-6" />
