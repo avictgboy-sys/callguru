@@ -77,8 +77,13 @@ const Reels = () => {
               <ReelCard
                 reel={reel}
                 isActive={i === activeIndex}
+                isOwner={user?.id === reel.user_id}
                 onLike={() => toggleLike.mutate({ reelId: reel.id, isLiked: !!reel.is_liked })}
                 onComment={() => setCommentReelId(reel.id)}
+                onDelete={() => {
+                  if (confirm("এই রিলটি মুছে ফেলতে চান?")) deleteReel.mutate(reel.id);
+                }}
+                onView={() => incrementViews.mutate(reel.id)}
               />
             </div>
           ))}
