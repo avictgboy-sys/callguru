@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Star, Clock, Video, BadgeCheck } from "lucide-react";
+import { getScheduleStatus } from "@/lib/schedule";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,8 @@ const ServiceCard = ({ service }: Props) => {
   const isVerified = service.profiles?.is_verified;
   const avatarUrl = service.profiles?.avatar_url;
   const categoryName = service.service_categories?.name || "General";
+  const scheduleStatus = getScheduleStatus(service.availability_schedule);
+  const isBookable = !!service.is_available && scheduleStatus.available;
 
   const handleBookCall = async () => {
     if (!user) {
@@ -114,8 +117,13 @@ const ServiceCard = ({ service }: Props) => {
             </div>
             <span className="text-xs text-muted-foreground">{categoryName}</span>
           </div>
-          <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${service.is_available ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"}`}>
-            {service.is_available ? "Available" : "Busy"}
+          <div className="text-right">
+            <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${isBookable ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"}`}>
+              {!service.is_available ? "Offline" : scheduleStatus.available ? "Live" : "Scheduled"}
+            </div>
+            {!scheduleStatus.available && service.is_available && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">{scheduleStatus.message}</p>
+            )}
           </div>
         </div>
 
@@ -167,7 +175,7 @@ const ServiceCard = ({ service }: Props) => {
           variant="hero"
           className="w-full"
           size="sm"
-          disabled={!service.is_available || startCall.isPending || ringing}
+          disabled={!isBookable || startCall.isPending || ringing}
           onClick={handleBookCall}
         >
           <Video className="w-4 h-4 mr-1" />
@@ -175,9 +183,11 @@ const ServiceCard = ({ service }: Props) => {
             ? "Ringing…"
             : startCall.isPending
               ? "Starting…"
-              : service.is_available
+              : isBookable
                 ? "Book Consultation"
-                : "Currently Unavailable"}
+                : !service.is_available
+                  ? "Provider Offline"
+                  : "Outside Schedule"}
         </Button>
       </div>
     </div>

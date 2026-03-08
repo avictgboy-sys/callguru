@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import LiveToggle from "@/components/provider/LiveToggle";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
@@ -71,6 +72,13 @@ const Dashboard = () => {
             </Link>
           </Button>
         </div>
+
+        {/* Live Toggle for providers */}
+        {isProvider && (
+          <div className="mb-6">
+            <LiveToggle />
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
