@@ -278,6 +278,121 @@ export type Database = {
         }
         Relationships: []
       }
+      group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_posts: {
+        Row: {
+          comments_count: number
+          content: string | null
+          created_at: string
+          group_id: string
+          id: string
+          image_url: string | null
+          likes_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_posts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          member_count: number
+          name: string
+          privacy: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name: string
+          privacy?: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          member_count?: number
+          name?: string
+          privacy?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -372,6 +487,118 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      page_followers: {
+        Row: {
+          created_at: string
+          id: string
+          page_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_followers_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_posts: {
+        Row: {
+          comments_count: number
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          likes_count: number
+          page_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          page_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          page_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_posts_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pages: {
+        Row: {
+          avatar_url: string | null
+          category: string | null
+          cover_image_url: string | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          follower_count: number
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          follower_count?: number
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          follower_count?: number
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -33,6 +33,13 @@ import AdminAds from "./pages/admin/AdminAds";
 import CreateAd from "./pages/CreateAd";
 import Rewards from "./pages/Rewards";
 import Reels from "./pages/Reels";
+import Groups from "./pages/Groups";
+import CreateGroup from "./pages/CreateGroup";
+import GroupDetail from "./pages/GroupDetail";
+import Pages from "./pages/Pages";
+import CreatePage from "./pages/CreatePage";
+import PageDetail from "./pages/PageDetail";
+import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -132,6 +139,13 @@ const App = () => (
               }
             />
             <Route path="/profile/:userId" element={<UserProfile />} />
+            <Route path="/groups" element={<Groups />} />
+            <Route path="/groups/:groupId" element={<GroupDetail />} />
+            <Route path="/create-group" element={<ProtectedRoute><CreateGroup /></ProtectedRoute>} />
+            <Route path="/pages" element={<Pages />} />
+            <Route path="/pages/:pageId" element={<PageDetail />} />
+            <Route path="/create-page" element={<ProtectedRoute><CreatePage /></ProtectedRoute>} />
+            <Route path="/discover" element={<Discover />} />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
             <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
