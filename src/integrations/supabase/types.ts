@@ -38,6 +38,62 @@ export type Database = {
         }
         Relationships: []
       }
+      calls: {
+        Row: {
+          caller_id: string
+          created_at: string
+          duration_minutes: number | null
+          ended_at: string | null
+          id: string
+          platform_fee: number | null
+          price_per_minute: number
+          provider_earning: number | null
+          provider_id: string
+          service_id: string
+          started_at: string
+          status: string
+          total_cost: number | null
+        }
+        Insert: {
+          caller_id: string
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          platform_fee?: number | null
+          price_per_minute: number
+          provider_earning?: number | null
+          provider_id: string
+          service_id: string
+          started_at?: string
+          status?: string
+          total_cost?: number | null
+        }
+        Update: {
+          caller_id?: string
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          platform_fee?: number | null
+          price_per_minute?: number
+          provider_earning?: number | null
+          provider_id?: string
+          service_id?: string
+          started_at?: string
+          status?: string
+          total_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chats: {
         Row: {
           created_at: string
@@ -500,6 +556,10 @@ export type Database = {
     Functions: {
       approve_payment_request: {
         Args: { p_admin_note?: string; p_request_id: string }
+        Returns: undefined
+      }
+      complete_call: {
+        Args: { p_call_id: string; p_duration_minutes: number }
         Returns: undefined
       }
       has_role: {
