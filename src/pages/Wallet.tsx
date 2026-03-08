@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 
 const Wallet = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { data: transactions, isLoading } = useWalletTransactions();
   const { data: paymentRequests } = usePaymentRequests();
   const topUp = useTopUp();
@@ -36,6 +36,11 @@ const Wallet = () => {
   const createPayment = useCreatePaymentRequest();
   const uploadProof = useUploadProof();
   const fees = useFeeSettings();
+
+  // Refresh profile on mount to get latest wallet balance
+  useEffect(() => {
+    refreshProfile();
+  }, []);
 
   const [dialogType, setDialogType] = useState<"topup" | "withdraw" | null>(null);
   const [step, setStep] = useState<"amount" | "method" | "details">("amount");
