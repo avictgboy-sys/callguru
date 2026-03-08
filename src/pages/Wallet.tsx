@@ -329,7 +329,7 @@ const Wallet = () => {
             <div className="space-y-4 py-2">
               <div className="text-center">
                 <Badge variant="secondary" className="text-sm">
-                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ${parseFloat(amount).toFixed(2)}
+                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ৳{parseFloat(amount).toFixed(2)}
                 </Badge>
               </div>
               <PaymentMethodSelector
