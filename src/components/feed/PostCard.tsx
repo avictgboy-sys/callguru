@@ -32,7 +32,7 @@ const PostCard = ({ post }: Props) => {
     <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
-        <div className="flex items-center gap-3">
+        <Link to={`/profile/${post.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
             <span className="text-sm font-bold text-primary">
               {(post.author?.full_name || "U")[0].toUpperCase()}
