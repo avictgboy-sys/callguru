@@ -329,9 +329,6 @@ const CallSession = () => {
                 <span className="text-muted-foreground">৳{feeAmount.toFixed(2)}</span>
               </div>
             </div>
-            {recorder.isRecording && (
-              <p className="text-xs text-primary">Recording will be saved automatically.</p>
-            )}
             <p className="text-xs text-muted-foreground">
               ৳{runningCost.toFixed(2)} will be deducted from your wallet.
             </p>
