@@ -1,0 +1,21 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, roles, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) return <Navigate to="/login" replace />;
+  if (!roles.includes("admin")) return <Navigate to="/dashboard" replace />;
+
+  return <>{children}</>;
+};
+
+export default AdminRoute;

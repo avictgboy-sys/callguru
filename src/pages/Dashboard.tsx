@@ -1,11 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield } from "lucide-react";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
   const isProvider = roles.includes("provider");
+  const isAdmin = roles.includes("admin");
 
   const menuItems = [
     { icon: User, label: "My Profile", href: "#" },
@@ -36,6 +37,13 @@ const Dashboard = () => {
                 <Store className="w-4 h-4 mr-1" /> Marketplace
               </Link>
             </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/admin">
+                  <Shield className="w-4 h-4 mr-1" /> Admin
+                </Link>
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
