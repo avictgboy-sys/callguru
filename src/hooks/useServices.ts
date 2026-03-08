@@ -56,8 +56,7 @@ export const useServices = (categorySlug?: string, search?: string) =>
         .from("services")
         .select(`
           *,
-          service_categories!inner(id, name, slug, icon),
-          profiles!inner(full_name, avatar_url, is_verified)
+          service_categories!inner(id, name, slug, icon)
         `)
         .eq("is_active", true)
         .order("rating", { ascending: false });
