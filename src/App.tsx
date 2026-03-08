@@ -21,6 +21,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminServices from "./pages/admin/AdminServices";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminPayments from "./pages/admin/AdminPayments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
