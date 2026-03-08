@@ -27,8 +27,6 @@ const Feed = () => {
       return data as any[];
     },
   });
-  const { user, profile } = useAuth();
-  const { data: posts, isLoading } = useFeedPosts();
 
   return (
     <div className="min-h-screen bg-background">
