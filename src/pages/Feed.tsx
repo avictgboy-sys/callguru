@@ -251,7 +251,15 @@ const Feed = () => {
                       />
                     </div>
                   )}
-                  {/* Ads every 3 posts (skip if suggested services shown) */}
+                  {/* Suggested Users every 7 posts */}
+                  {(index + 1) % 7 === 0 && suggestedUsers && suggestedUsers.length > 0 && (
+                    <div className="mt-4">
+                      <SuggestedUsers
+                        users={suggestedUsers}
+                        startIndex={(Math.floor(index / 7) * 4) % suggestedUsers.length}
+                      />
+                    </div>
+                  )}
                   {(index + 1) % 3 === 0 && (index + 1) % 5 !== 0 && (
                     <>
                       {selfAds && selfAds[Math.floor(index / 3) % (selfAds.length || 1)] ? (
