@@ -1373,7 +1373,7 @@ export type Database = {
       wallet_withdraw: { Args: { p_amount: number }; Returns: undefined }
     }
     Enums: {
-      app_role: "user" | "provider" | "admin"
+      app_role: "user" | "provider" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1501,7 +1501,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "provider", "admin"],
+      app_role: ["user", "provider", "admin", "super_admin"],
     },
   },
 } as const
