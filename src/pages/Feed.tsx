@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPosts } from "@/hooks/useFeed";
 import CreatePostCard from "@/components/feed/CreatePostCard";
 import PostCard from "@/components/feed/PostCard";
+import AdBanner from "@/components/ads/AdBanner";
 
 const Feed = () => {
   const { user, profile } = useAuth();
