@@ -145,7 +145,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   // ── Main connect function ──
   const connect = useCallback(async () => {
     const stream = await startLocalStream();
-    const pc = setupPeerConnection(stream);
+    const pc = await setupPeerConnection(stream);
 
     // Signaling channel via Supabase Realtime broadcast
     const channel = supabase.channel(`call-signal-${callId}`, {
