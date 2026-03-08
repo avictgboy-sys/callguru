@@ -125,6 +125,7 @@ const CallSession = () => {
   const runningCost = durationMinutes * pricePerMin;
   const feeAmount = runningCost * (fees.callFeePercent / 100);
 
+  const handleEndCall = useCallback(async () => {
     if (!callId) return;
     setIsActive(false);
     setShowEndDialog(false);
