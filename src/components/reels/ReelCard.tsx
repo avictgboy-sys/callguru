@@ -1,29 +1,39 @@
 import { useRef, useEffect, useState } from "react";
-import { Heart, MessageCircle, Share2, Music, Play, Pause } from "lucide-react";
+import { Heart, MessageCircle, Share2, Music, Play, Trash2, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import type { Reel } from "@/hooks/useReels";
 
 interface ReelCardProps {
   reel: Reel;
   isActive: boolean;
+  isOwner: boolean;
   onLike: () => void;
   onComment: () => void;
+  onDelete: () => void;
+  onView: () => void;
 }
 
-const ReelCard = ({ reel, isActive, onLike, onComment }: ReelCardProps) => {
+const ReelCard = ({ reel, isActive, isOwner, onLike, onComment, onDelete, onView }: ReelCardProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
+  const viewedRef = useRef(false);
 
   useEffect(() => {
     if (!videoRef.current) return;
     if (isActive) {
       videoRef.current.play().catch(() => {});
       setPaused(false);
+      if (!viewedRef.current) {
+        viewedRef.current = true;
+        onView();
+      }
     } else {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
+      viewedRef.current = false;
     }
   }, [isActive]);
 
@@ -46,11 +56,22 @@ const ReelCard = ({ reel, isActive, onLike, onComment }: ReelCardProps) => {
     }
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/reels?id=${reel.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: reel.caption || "Check out this reel!", url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("লিংক কপি হয়েছে!");
+    }
+  };
+
   const initials = (reel.profile?.full_name || "U")[0].toUpperCase();
 
   return (
     <div className="relative w-full h-full snap-start snap-always bg-black flex items-center justify-center">
-      {/* Video */}
       <video
         ref={videoRef}
         src={reel.video_url}
@@ -107,12 +128,30 @@ const ReelCard = ({ reel, isActive, onLike, onComment }: ReelCardProps) => {
           <span className="text-white text-xs font-semibold drop-shadow">{reel.comments_count}</span>
         </button>
 
-        <button className="flex flex-col items-center gap-1">
+        <button onClick={handleShare} className="flex flex-col items-center gap-1">
           <div className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
             <Share2 className="w-6 h-6 text-white" />
           </div>
           <span className="text-white text-xs font-semibold drop-shadow">Share</span>
         </button>
+
+        {/* Views count */}
+        <div className="flex flex-col items-center gap-1">
+          <div className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+            <Eye className="w-6 h-6 text-white/70" />
+          </div>
+          <span className="text-white text-xs font-semibold drop-shadow">{reel.views_count}</span>
+        </div>
+
+        {/* Delete button for owner */}
+        {isOwner && (
+          <button onClick={onDelete} className="flex flex-col items-center gap-1">
+            <div className="w-11 h-11 rounded-full bg-red-500/20 backdrop-blur-sm flex items-center justify-center">
+              <Trash2 className="w-5 h-5 text-red-400" />
+            </div>
+            <span className="text-red-400 text-xs font-semibold drop-shadow">Delete</span>
+          </button>
+        )}
 
         <div className="w-10 h-10 rounded-lg border-2 border-white overflow-hidden mt-2 animate-spin" style={{ animationDuration: '3s' }}>
           <div className="w-full h-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">

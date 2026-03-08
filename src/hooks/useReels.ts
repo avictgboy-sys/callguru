@@ -151,3 +151,28 @@ export function useCreateReelComment() {
     onError: () => toast.error("Failed to post comment"),
   });
 }
+
+export function useDeleteReel() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reelId: string) => {
+      const { error } = await supabase.from("reels").delete().eq("id", reelId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reels"] });
+      toast.success("রিল মুছে ফেলা হয়েছে");
+    },
+    onError: () => toast.error("রিল মুছতে ব্যর্থ"),
+  });
+}
+
+export function useIncrementReelViews() {
+  return useMutation({
+    mutationFn: async (reelId: string) => {
+      const { error } = await supabase.rpc("increment_reel_views", { p_reel_id: reelId });
+      if (error) throw error;
+    },
+  });
+}
