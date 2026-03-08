@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToggleLike } from "@/hooks/useFeed";
 import type { PostWithAuthor } from "@/hooks/useFeed";
 import CommentsSection from "./CommentsSection";
+import InterstitialAd from "@/components/ads/InterstitialAd";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
