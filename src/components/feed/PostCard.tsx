@@ -17,7 +17,24 @@ interface Props {
 const PostCard = ({ post }: Props) => {
   const { user } = useAuth();
   const [showComments, setShowComments] = useState(false);
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const [mediaRevealed, setMediaRevealed] = useState(false);
   const toggleLike = useToggleLike();
+
+  const hasMedia = !!(post.video_url || post.image_url);
+
+  const handleMediaClick = () => {
+    if (mediaRevealed || !user) {
+      setMediaRevealed(true);
+      return;
+    }
+    setShowInterstitial(true);
+  };
+
+  const handleAdClose = () => {
+    setShowInterstitial(false);
+    setMediaRevealed(true);
+  };
 
   const handleLike = async () => {
     if (!user) {
