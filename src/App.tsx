@@ -15,6 +15,7 @@ import CreateService from "./pages/CreateService";
 import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
 import Wallet from "./pages/Wallet";
+import EditProfile from "./pages/EditProfile";
 import UserProfile from "./pages/UserProfile";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
