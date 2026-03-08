@@ -89,7 +89,14 @@ const Feed = () => {
                 <PostCard post={post} />
                 {/* Show ad every 3 posts */}
                 {(index + 1) % 3 === 0 && (
-                  <AdBanner slotId={`feed-inline-${index}`} className="mt-4" />
+                  <>
+                    {/* Show self-serve ad if available, otherwise Adsterra */}
+                    {selfAds && selfAds[Math.floor(index / 3) % (selfAds.length || 1)] ? (
+                      <SelfServeAdCard ad={selfAds[Math.floor(index / 3) % selfAds.length]} />
+                    ) : (
+                      <AdBanner slotId={`feed-inline-${index}`} className="mt-4" />
+                    )}
+                  </>
                 )}
               </div>
             ))
