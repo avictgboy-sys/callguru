@@ -47,7 +47,7 @@ const PostCard = ({ post }: Props) => {
             </p>
             <p className="text-xs text-muted-foreground">{timeAgo}</p>
           </div>
-        </div>
+        </Link>
         <Button variant="ghost" size="icon" className="text-muted-foreground h-8 w-8">
           <MoreHorizontal className="w-4 h-4" />
         </Button>
