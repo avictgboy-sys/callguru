@@ -648,6 +648,39 @@ export type Database = {
         }
         Relationships: []
       }
+      m3u_sources: {
+        Row: {
+          channel_count: number | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          last_imported_at: string | null
+          name: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          channel_count?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_imported_at?: string | null
+          name: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          channel_count?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_imported_at?: string | null
+          name?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_id: string
