@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
-import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tv, X, Volume2, VolumeX, Maximize, RefreshCw } from "lucide-react";
 import Hls from "hls.js";
