@@ -1,7 +1,8 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUserPosts, useUserServices, useUserFollowers, useUserFollowing, useIsFollowing } from "@/hooks/useUserProfile";
 import { useFollowUser } from "@/hooks/useFeed";
+import { useStartChat } from "@/hooks/useChat";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostCard from "@/components/feed/PostCard";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useUserProfile(userId!);
   const { data: posts } = useUserPosts(userId!);
   const { data: services } = useUserServices(userId!);
@@ -19,6 +21,7 @@ const UserProfile = () => {
   const { data: following } = useUserFollowing(userId!);
   const { data: isFollowing } = useIsFollowing(userId!);
   const followMutation = useFollowUser();
+  const startChat = useStartChat();
 
   const isOwn = user?.id === userId;
 
@@ -120,10 +123,20 @@ const UserProfile = () => {
                       <><UserPlus className="w-4 h-4 mr-1" /> Follow</>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to="/chat">
-                      <MessageSquare className="w-4 h-4 mr-1" /> Message
-                    </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={startChat.isPending}
+                    onClick={async () => {
+                      try {
+                        const chatId = await startChat.mutateAsync(userId!);
+                        navigate(`/chat?open=${chatId}`);
+                      } catch {
+                        toast.error("Failed to start chat");
+                      }
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" /> Message
                   </Button>
                 </div>
               )}
