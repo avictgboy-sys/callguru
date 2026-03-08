@@ -17,6 +17,7 @@ import Chat from "./pages/Chat";
 import Wallet from "./pages/Wallet";
 import EditProfile from "./pages/EditProfile";
 import CallSession from "./pages/CallSession";
+import CallHistory from "./pages/CallHistory";
 import UserProfile from "./pages/UserProfile";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
