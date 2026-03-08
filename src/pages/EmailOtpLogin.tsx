@@ -140,11 +140,20 @@ const EmailOtpLogin = () => {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
+                  {countdown > 0 ? (
+                    <p className="text-center text-sm font-medium text-destructive">
+                      কোড এক্সপায়ার হবে: {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, "0")}
+                    </p>
+                  ) : (
+                    <p className="text-center text-sm font-medium text-muted-foreground">
+                      কোডের মেয়াদ শেষ হয়ে গেছে। আবার কোড পাঠান।
+                    </p>
+                  )}
                   <Button
                     type="submit"
                     variant="hero"
                     className="w-full h-12 text-base font-bold"
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || otp.length !== 6 || countdown <= 0}
                   >
                     {loading ? "যাচাই হচ্ছে..." : "ভেরিফাই করুন"}
                   </Button>
@@ -154,17 +163,18 @@ const EmailOtpLogin = () => {
                     onClick={() => {
                       setStep("email");
                       setOtp("");
+                      setCountdown(0);
                     }}
                   >
                     অন্য ইমেইল ব্যবহার করুন
                   </button>
                   <button
                     type="button"
-                    className="w-full text-xs text-muted-foreground hover:text-foreground"
+                    className="w-full text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={handleSendOtp as any}
-                    disabled={loading}
+                    disabled={loading || countdown > 0}
                   >
-                    আবার কোড পাঠান
+                    {countdown > 0 ? `আবার পাঠাতে ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, "0")} অপেক্ষা করুন` : "আবার কোড পাঠান"}
                   </button>
                 </form>
               )}
