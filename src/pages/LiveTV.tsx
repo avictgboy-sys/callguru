@@ -386,6 +386,8 @@ const LiveTV = forwardRef<HTMLDivElement>((_, _ref) => {
       )}
     </div>
   );
-};
+});
+
+LiveTV.displayName = "LiveTV";
 
 export default LiveTV;
