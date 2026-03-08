@@ -141,6 +141,7 @@ const CallHistory = () => {
                     <TableHead>Net</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
