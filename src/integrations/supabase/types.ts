@@ -611,6 +611,7 @@ export type Database = {
       }
       live_channels: {
         Row: {
+          alternate_urls: string[] | null
           category: string | null
           created_at: string
           id: string
@@ -622,6 +623,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alternate_urls?: string[] | null
           category?: string | null
           created_at?: string
           id?: string
@@ -633,6 +635,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alternate_urls?: string[] | null
           category?: string | null
           created_at?: string
           id?: string
