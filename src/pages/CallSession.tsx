@@ -176,20 +176,20 @@ const CallSession = () => {
     webrtc.disconnect();
   }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc]);
 
-  // Auto-end call when WebRTC peer disconnects (other side left)
+  // Auto-end call only when WebRTC connection truly fails (not temporary disconnects)
   useEffect(() => {
     if (
       mediaReady &&
       isActive &&
-      (webrtc.connectionState === "disconnected" || webrtc.connectionState === "failed") &&
-      elapsed > 5 // Only auto-end if call was actually active for a bit
+      webrtc.connectionState === "failed" &&
+      elapsed > 10
     ) {
       const timer = setTimeout(() => {
         if (!callEndedRef.current) {
-          toast.info("অপর পক্ষ সংযোগ বিচ্ছিন্ন করেছে। কল শেষ হচ্ছে…");
+          toast.info("সংযোগ পুনরুদ্ধার করা যায়নি। কল শেষ হচ্ছে…");
           handleEndCall();
         }
-      }, 5000); // Wait 5s for possible reconnection
+      }, 15000); // Wait 15s for ICE restart to recover
       return () => clearTimeout(timer);
     }
   }, [webrtc.connectionState, mediaReady, isActive, elapsed, handleEndCall]);
