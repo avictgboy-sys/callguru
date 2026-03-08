@@ -91,8 +91,9 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
   // ── Create peer connection ──
   const setupPeerConnection = useCallback(
-    (stream: MediaStream) => {
-      const pc = new RTCPeerConnection(ICE_SERVERS);
+    async (stream: MediaStream) => {
+      const iceConfig = await getIceServers();
+      const pc = new RTCPeerConnection(iceConfig);
       pcRef.current = pc;
       hasRemoteDescRef.current = false;
       pendingCandidatesRef.current = [];
