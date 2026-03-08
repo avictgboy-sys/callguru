@@ -12,6 +12,7 @@ interface Profile {
   referral_code: string | null;
   wallet_balance: number;
   is_verified: boolean;
+  points: number;
 }
 
 type AppRole = "user" | "provider" | "admin";

@@ -67,6 +67,14 @@ const App = () => (
               }
             />
             <Route
+              path="/rewards"
+              element={
+                <ProtectedRoute>
+                  <Rewards />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/create-ad"
               element={
                 <ProtectedRoute>
