@@ -4,10 +4,14 @@ import { Link } from "react-router-dom";
 import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LiveToggle from "@/components/provider/LiveToggle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Dashboard = () => {
-  const { user, profile, roles, signOut } = useAuth();
+  const { user, profile, roles, signOut, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    refreshProfile();
+  }, []);
   const isProvider = roles.includes("provider");
   const isAdmin = roles.includes("admin");
   const [menuOpen, setMenuOpen] = useState(false);
