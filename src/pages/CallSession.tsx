@@ -88,8 +88,13 @@ const CallSession = () => {
   }, [webrtc.localStream]);
 
   useEffect(() => {
-    if (remoteVideoRef.current && webrtc.remoteStream) {
-      remoteVideoRef.current.srcObject = webrtc.remoteStream;
+    if (webrtc.remoteStream) {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = webrtc.remoteStream;
+      }
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = webrtc.remoteStream;
+      }
     }
   }, [webrtc.remoteStream]);
 
