@@ -153,6 +153,7 @@ const Feed = () => {
                 <SidebarLink icon={ShoppingBag} label="Marketplace" href="/marketplace" />
                 <SidebarLink icon={Megaphone} label="Create Ad" href="/create-ad" />
                 <SidebarLink icon={TrendingUp} label="Call History" href="/call-history" />
+                <SidebarLink icon={Wrench} label="Home Service" href="/home-services" />
                 <SidebarLink icon={Settings} label="Settings" href="/dashboard" />
 
                 <div className="border-t border-border my-3 mx-3" />
