@@ -68,7 +68,7 @@ const Wallet = () => {
   const handleWithdraw = async (val: number) => {
     try {
       await withdraw.mutateAsync(val);
-      toast.success(`$${val.toFixed(2)} withdrawn`);
+      toast.success(`৳${val.toFixed(2)} withdrawn`);
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Withdrawal failed");
