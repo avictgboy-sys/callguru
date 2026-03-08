@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface Notification {
   id: string;
@@ -79,8 +80,12 @@ export const useRealtimeNotifications = () => {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
+        (payload: any) => {
           qc.invalidateQueries({ queryKey: ["notifications"] });
+          const n = payload.new;
+          if (n?.title) {
+            toast(n.title, { description: n.body || undefined });
+          }
         }
       )
       .subscribe();
