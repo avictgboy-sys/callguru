@@ -11,6 +11,8 @@ import {
 import PaymentMethodSelector from "@/components/wallet/PaymentMethodSelector";
 import MobilePaymentForm from "@/components/wallet/MobilePaymentForm";
 import BankTransferForm from "@/components/wallet/BankTransferForm";
+import MobileWithdrawForm from "@/components/wallet/MobileWithdrawForm";
+import BankWithdrawForm from "@/components/wallet/BankWithdrawForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,12 +62,7 @@ const Wallet = () => {
       toast.error("Enter a valid amount");
       return;
     }
-    if (dialogType === "topup") {
-      setStep("method");
-    } else {
-      // Withdraw — direct wallet deduction for now
-      handleWithdraw(val);
-    }
+    setStep("method");
   };
 
   const handleWithdraw = async (val: number) => {
@@ -83,10 +80,12 @@ const Wallet = () => {
       await createPayment.mutateAsync({
         amount: parseFloat(amount),
         method: selectedMethod!,
-        type: "topup",
+        type: dialogType as "topup" | "withdraw",
         reference_id: referenceId,
       });
-      toast.success("Payment submitted! Your balance will update after verification.");
+      toast.success(dialogType === "topup"
+        ? "Payment submitted! Your balance will update after verification."
+        : "Withdrawal request submitted! You'll be paid after admin approval.");
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Submission failed");
@@ -102,15 +101,33 @@ const Wallet = () => {
       await createPayment.mutateAsync({
         amount: parseFloat(amount),
         method: "bank_transfer",
-        type: "topup",
+        type: dialogType as "topup" | "withdraw",
         bank_details: bankDetails,
         reference_id: bankDetails.referenceId,
         proof_url: proofUrl,
       });
-      toast.success("Bank transfer details submitted! Your balance will update after verification.");
+      toast.success(dialogType === "topup"
+        ? "Bank transfer details submitted! Your balance will update after verification."
+        : "Withdrawal request submitted! Funds will be transferred after approval.");
       resetDialog();
     } catch (e: any) {
       toast.error(e.message || "Submission failed");
+    }
+  };
+
+  const handleWithdrawMethodSubmit = async (details: Record<string, string>) => {
+    try {
+      await withdraw.mutateAsync(parseFloat(amount));
+      await createPayment.mutateAsync({
+        amount: parseFloat(amount),
+        method: selectedMethod!,
+        type: "withdraw",
+        bank_details: details,
+      });
+      toast.success("Withdrawal request submitted! Funds will be sent after verification.");
+      resetDialog();
+    } catch (e: any) {
+      toast.error(e.message || "Withdrawal failed");
     }
   };
 
@@ -263,9 +280,11 @@ const Wallet = () => {
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {dialogType === "topup"
-                ? step === "amount" ? "Top Up Wallet" : step === "method" ? "Choose Payment Method" : "Complete Payment"
-                : "Withdraw Funds"
+              {step === "amount"
+                ? dialogType === "topup" ? "Top Up Wallet" : "Withdraw Funds"
+                : step === "method"
+                  ? dialogType === "topup" ? "Choose Payment Method" : "Choose Withdrawal Method"
+                  : dialogType === "topup" ? "Complete Payment" : "Withdrawal Details"
               }
             </DialogTitle>
           </DialogHeader>
@@ -298,22 +317,20 @@ const Wallet = () => {
                 <Button
                   variant="hero"
                   onClick={handleAmountNext}
-                  disabled={withdraw.isPending}
                 >
-                  {dialogType === "withdraw"
-                    ? withdraw.isPending ? "Processing…" : "Withdraw"
-                    : "Next"
-                  }
+                  Next
                 </Button>
               </DialogFooter>
             </div>
           )}
 
-          {/* Step 2: Method selection (top-up only) */}
+          {/* Step 2: Method selection */}
           {step === "method" && (
             <div className="space-y-4 py-2">
               <div className="text-center">
-                <Badge variant="secondary" className="text-sm">Amount: ${parseFloat(amount).toFixed(2)}</Badge>
+                <Badge variant="secondary" className="text-sm">
+                  {dialogType === "topup" ? "Top Up" : "Withdraw"}: ${parseFloat(amount).toFixed(2)}
+                </Badge>
               </div>
               <PaymentMethodSelector
                 selected={selectedMethod}
@@ -338,21 +355,44 @@ const Wallet = () => {
                 </Badge>
               </div>
 
-              {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
-                <MobilePaymentForm
-                  method={selectedMethod}
-                  amount={parseFloat(amount)}
-                  onSubmit={handleMobileSubmit}
-                  isPending={isPending}
-                />
+              {dialogType === "topup" && (
+                <>
+                  {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
+                    <MobilePaymentForm
+                      method={selectedMethod}
+                      amount={parseFloat(amount)}
+                      onSubmit={handleMobileSubmit}
+                      isPending={isPending}
+                    />
+                  )}
+                  {selectedMethod === "bank_transfer" && (
+                    <BankTransferForm
+                      amount={parseFloat(amount)}
+                      onSubmit={handleBankSubmit}
+                      isPending={isPending}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedMethod === "bank_transfer" && (
-                <BankTransferForm
-                  amount={parseFloat(amount)}
-                  onSubmit={handleBankSubmit}
-                  isPending={isPending}
-                />
+              {dialogType === "withdraw" && (
+                <>
+                  {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
+                    <MobileWithdrawForm
+                      method={selectedMethod}
+                      amount={parseFloat(amount)}
+                      onSubmit={handleWithdrawMethodSubmit}
+                      isPending={isPending || withdraw.isPending}
+                    />
+                  )}
+                  {selectedMethod === "bank_transfer" && (
+                    <BankWithdrawForm
+                      amount={parseFloat(amount)}
+                      onSubmit={handleWithdrawMethodSubmit}
+                      isPending={isPending || withdraw.isPending}
+                    />
+                  )}
+                </>
               )}
 
               {selectedMethod === "stripe" && (
