@@ -140,6 +140,8 @@ const LiveTVSection = () => {
 
   if (isLoading || !channels?.length) return null;
 
+  const displayChannels = sortedChannels.length ? sortedChannels : channels || [];
+
   const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
 
   return (
