@@ -22,14 +22,39 @@ const checkChannelSpeed = async (url: string): Promise<number> => {
 
 const LiveTVSection = () => {
   const { data: channels, isLoading } = useLiveChannels();
+  const [sortedChannels, setSortedChannels] = useState<LiveChannel[]>([]);
   const [activeChannel, setActiveChannel] = useState<LiveChannel | null>(null);
   const [activeUrlIndex, setActiveUrlIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isSorting, setIsSorting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-sort channels by network speed
+  useEffect(() => {
+    if (!channels?.length) return;
+    
+    // Show channels immediately (unsorted)
+    setSortedChannels(channels);
+    
+    // Then speed-test in background and re-sort
+    setIsSorting(true);
+    const testChannels = async () => {
+      const speeds = await Promise.all(
+        channels.map(async (ch) => ({
+          channel: ch,
+          latency: await checkChannelSpeed(ch.stream_url),
+        }))
+      );
+      speeds.sort((a, b) => a.latency - b.latency);
+      setSortedChannels(speeds.map(s => s.channel));
+      setIsSorting(false);
+    };
+    testChannels();
+  }, [channels]);
 
   // Get all available URLs for current channel
   const getAllUrls = (ch: LiveChannel) => {
