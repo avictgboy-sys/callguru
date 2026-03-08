@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Film } from "lucide-react";
-import { useReels, useToggleReelLike } from "@/hooks/useReels";
+import { useReels, useToggleReelLike, useDeleteReel, useIncrementReelViews } from "@/hooks/useReels";
+import { useAuth } from "@/contexts/AuthContext";
 import ReelCard from "@/components/reels/ReelCard";
 import ReelComments from "@/components/reels/ReelComments";
 import CreateReelDialog from "@/components/reels/CreateReelDialog";
