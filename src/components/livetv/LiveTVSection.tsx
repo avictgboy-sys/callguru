@@ -140,7 +140,29 @@ const LiveTVSection = () => {
 
   if (isLoading || !channels?.length) return null;
 
-  const displayChannels = sortedChannels.length ? sortedChannels : channels || [];
+  const baseChannels = sortedChannels.length ? sortedChannels : channels || [];
+  
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(baseChannels.map(ch => ch.category || "general"));
+    return ["all", ...Array.from(cats)];
+  }, [baseChannels]);
+
+  const categoryLabels: Record<string, string> = {
+    all: "সব",
+    general: "সাধারণ",
+    news: "নিউজ",
+    entertainment: "এন্টারটেইনমেন্ট",
+    movies: "মুভিজ",
+    sports: "স্পোর্টস",
+    music: "মিউজিক",
+    kids: "কিডস",
+    religious: "ধর্মীয়",
+  };
+
+  const displayChannels = activeCategory === "all"
+    ? baseChannels
+    : baseChannels.filter(ch => (ch.category || "general") === activeCategory);
 
   const allUrls = activeChannel ? getAllUrls(activeChannel) : [];
 
