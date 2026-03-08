@@ -66,6 +66,13 @@ const App = () => (
               }
             />
             <Route
+              path="/create-ad"
+              element={
+                <ProtectedRoute>
+                  <CreateAd />
+                </ProtectedRoute>
+              }
+            <Route
               path="/chat"
               element={
                 <ProtectedRoute>
