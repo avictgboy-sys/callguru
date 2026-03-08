@@ -3,6 +3,8 @@ import { Heart, MessageCircle, Share2, Music, Play, Trash2, Eye, Volume2, Volume
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useIsFollowing, useToggleFollow } from "@/hooks/useFollow";
 import type { Reel } from "@/hooks/useReels";
 
 interface ReelCardProps {
