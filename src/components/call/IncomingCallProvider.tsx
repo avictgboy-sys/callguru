@@ -2,11 +2,11 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, PhoneOff, X } from "lucide-react";
+import { Phone, PhoneOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface IncomingCall {
   id: string;
@@ -28,7 +28,7 @@ const IncomingCallContext = createContext<IncomingCallContextType>({
 
 export const useIncomingCall = () => useContext(IncomingCallContext);
 
-// Simple ringtone using Web Audio API
+// Improved ringtone using Web Audio API
 const playRingtone = () => {
   const audioCtx = new AudioContext();
   let stopped = false;
@@ -72,6 +72,46 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const stopRingtoneRef = useRef<(() => void) | null>(null);
+  const notificationRef = useRef<Notification | null>(null);
+  const vibrationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { showCallNotification, vibrate, stopVibration } = usePushNotifications();
+
+  // Register custom service worker for push notifications
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/custom-sw.js", { scope: "/" }).catch(() => {
+        // Silent fail - PWA service worker from vite-plugin-pwa will handle caching
+      });
+
+      // Listen for messages from service worker (call accept/decline from notification)
+      const handler = (event: MessageEvent) => {
+        if (event.data?.type === "CALL_ACCEPTED" && incomingCall) {
+          handleAccept(incomingCall);
+        } else if (event.data?.type === "CALL_DECLINED" && incomingCall) {
+          handleDecline(incomingCall.id);
+        }
+      };
+      navigator.serviceWorker.addEventListener("message", handler);
+      return () => navigator.serviceWorker.removeEventListener("message", handler);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingCall]);
+
+  // Start repeating vibration pattern
+  const startVibration = () => {
+    vibrate([300, 200, 300, 200, 300]);
+    vibrationIntervalRef.current = setInterval(() => {
+      vibrate([300, 200, 300, 200, 300]);
+    }, 2000);
+  };
+
+  const stopAllVibration = () => {
+    stopVibration();
+    if (vibrationIntervalRef.current) {
+      clearInterval(vibrationIntervalRef.current);
+      vibrationIntervalRef.current = null;
+    }
+  };
 
   // Listen for new calls where current user is the provider
   useEffect(() => {
@@ -105,18 +145,23 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               .single(),
           ]);
 
+          const callerName = profileRes.data?.full_name || "Unknown";
+          const serviceName = serviceRes.data?.title || "Consultation";
+
           setIncomingCall({
             id: call.id,
             caller_id: call.caller_id,
             service_id: call.service_id,
             price_per_minute: call.price_per_minute,
-            callerName: profileRes.data?.full_name || "Unknown",
+            callerName,
             callerAvatar: profileRes.data?.avatar_url || "",
-            serviceName: serviceRes.data?.title || "Consultation",
+            serviceName,
           });
 
-          // Start ringtone
+          // Start ringtone + vibration + system notification
           stopRingtoneRef.current = playRingtone();
+          startVibration();
+          notificationRef.current = showCallNotification(callerName, serviceName, call.id);
 
           // Auto-dismiss after 30 seconds
           setTimeout(() => {
@@ -132,15 +177,20 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const stopRingtone = () => {
+  const stopAll = () => {
     if (stopRingtoneRef.current) {
       stopRingtoneRef.current();
       stopRingtoneRef.current = null;
     }
+    stopAllVibration();
+    if (notificationRef.current) {
+      notificationRef.current.close();
+      notificationRef.current = null;
+    }
   };
 
   const handleAccept = (call: IncomingCall) => {
-    stopRingtone();
+    stopAll();
     setIncomingCall(null);
 
     // Broadcast acceptance
@@ -168,7 +218,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleDecline = async (callId: string, isTimeout = false) => {
-    stopRingtone();
+    stopAll();
     setIncomingCall(null);
 
     // Broadcast decline
@@ -198,7 +248,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     <IncomingCallContext.Provider value={{ activeIncomingCall: incomingCall }}>
       {children}
 
-      {/* Incoming call overlay */}
+      {/* Incoming call fullscreen overlay */}
       <AnimatePresence>
         {incomingCall && (
           <motion.div
@@ -234,9 +284,13 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
-                  Incoming Call
-                </p>
+                <motion.p
+                  className="text-sm text-muted-foreground uppercase tracking-wider mb-2"
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                  📞 ইনকামিং কল
+                </motion.p>
                 <h2 className="font-heading text-3xl font-bold text-foreground">
                   {incomingCall.callerName}
                 </h2>
@@ -247,29 +301,31 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               </div>
 
               {/* Accept / Decline buttons */}
-              <div className="flex items-center justify-center gap-12">
+              <div className="flex items-center justify-center gap-16">
                 <div className="text-center">
-                  <button
+                  <motion.button
                     onClick={() => handleDecline(incomingCall.id)}
-                    className="w-18 h-18 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-all"
+                    className="rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
                     style={{ width: 72, height: 72 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <PhoneOff className="w-8 h-8" />
-                  </button>
-                  <p className="text-xs text-muted-foreground mt-2">Decline</p>
+                  </motion.button>
+                  <p className="text-xs text-muted-foreground mt-3">বাতিল</p>
                 </div>
 
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleAccept(incomingCall)}
-                    className="rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg hover:bg-accent/90 transition-all"
+                    className="rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg"
                     style={{ width: 72, height: 72 }}
-                    animate={{ scale: [1, 1.08, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     <Phone className="w-8 h-8" />
                   </motion.button>
-                  <p className="text-xs text-muted-foreground mt-2">Accept</p>
+                  <p className="text-xs text-muted-foreground mt-3">রিসিভ</p>
                 </div>
               </div>
             </motion.div>
