@@ -11,6 +11,8 @@ import {
 import PaymentMethodSelector from "@/components/wallet/PaymentMethodSelector";
 import MobilePaymentForm from "@/components/wallet/MobilePaymentForm";
 import BankTransferForm from "@/components/wallet/BankTransferForm";
+import MobileWithdrawForm from "@/components/wallet/MobileWithdrawForm";
+import BankWithdrawForm from "@/components/wallet/BankWithdrawForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
