@@ -6,6 +6,7 @@ import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, S
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
   const isProvider = roles.includes("provider");
+  const isAdmin = roles.includes("admin");
 
   const menuItems = [
     { icon: User, label: "My Profile", href: "#" },
