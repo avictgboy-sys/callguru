@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import LiveToggle from "@/components/provider/LiveToggle";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut } = useAuth();
