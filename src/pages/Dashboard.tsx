@@ -12,7 +12,7 @@ const Dashboard = () => {
     { icon: User, label: "My Profile", href: "#" },
     { icon: Wallet, label: "Wallet", href: "#" },
     { icon: Calendar, label: "My Sessions", href: "#" },
-    { icon: MessageSquare, label: "Messages", href: "#" },
+    { icon: MessageSquare, label: "Messages", href: "/chat" },
     { icon: Settings, label: "Settings", href: "#" },
   ];
 
