@@ -81,8 +81,12 @@ export const useRealtimeNotifications = () => {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
+        (payload: any) => {
           qc.invalidateQueries({ queryKey: ["notifications"] });
+          const n = payload.new;
+          if (n?.title) {
+            toast(n.title, { description: n.body || undefined });
+          }
         }
       )
       .subscribe();
