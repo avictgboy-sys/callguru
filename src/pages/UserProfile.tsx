@@ -123,10 +123,20 @@ const UserProfile = () => {
                       <><UserPlus className="w-4 h-4 mr-1" /> Follow</>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to="/chat">
-                      <MessageSquare className="w-4 h-4 mr-1" /> Message
-                    </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={startChat.isPending}
+                    onClick={async () => {
+                      try {
+                        const chatId = await startChat.mutateAsync(userId!);
+                        navigate(`/chat?open=${chatId}`);
+                      } catch {
+                        toast.error("Failed to start chat");
+                      }
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" /> Message
                   </Button>
                 </div>
               )}
