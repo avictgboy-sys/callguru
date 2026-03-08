@@ -91,9 +91,15 @@ export const useSendMessage = () => {
     mutationFn: async ({
       chatId,
       content,
+      imageUrl,
+      fileUrl,
+      fileName,
     }: {
       chatId: string;
       content: string;
+      imageUrl?: string | null;
+      fileUrl?: string | null;
+      fileName?: string | null;
     }) => {
       const {
         data: { user },
@@ -103,12 +109,45 @@ export const useSendMessage = () => {
         chat_id: chatId,
         sender_id: user.id,
         content,
-      });
+        image_url: imageUrl || null,
+        file_url: fileUrl || null,
+        file_name: fileName || null,
+      } as any);
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["chat-messages", vars.chatId] });
       qc.invalidateQueries({ queryKey: ["my-chats"] });
+    },
+  });
+};
+
+export const useUploadChatFile = () => {
+  return useMutation({
+    mutationFn: async ({ file }: { file: File }) => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("chat-attachments")
+        .upload(path, file);
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("chat-attachments")
+        .getPublicUrl(path);
+
+      const isImage = file.type.startsWith("image/");
+      return {
+        url: urlData.publicUrl,
+        isImage,
+        fileName: file.name,
+      };
     },
   });
 };
