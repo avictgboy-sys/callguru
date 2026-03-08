@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const Feed = () => {
   const { user, profile } = useAuth();
   const { data: posts, isLoading } = useFeedPosts();
+  const { data: suggestedServices } = useSuggestedServices();
   const location = useLocation();
 
   const { data: selfAds } = useQuery({
