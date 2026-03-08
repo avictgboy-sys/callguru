@@ -28,6 +28,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminRecordings from "./pages/admin/AdminRecordings";
+import AdminDisputes from "./pages/admin/AdminDisputes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
