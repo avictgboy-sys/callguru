@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { useLiveChannels, LiveChannel } from "@/hooks/useLiveChannels";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
