@@ -28,6 +28,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminRecordings from "./pages/admin/AdminRecordings";
+import AdminDisputes from "./pages/admin/AdminDisputes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ const App = () => (
             <Route path="/admin/payments" element={<AdminRoute><AdminPayments /></AdminRoute>} />
             <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
             <Route path="/admin/recordings" element={<AdminRoute><AdminRecordings /></AdminRoute>} />
+            <Route path="/admin/disputes" element={<AdminRoute><AdminDisputes /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </IncomingCallProvider>

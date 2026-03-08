@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Phone, Clock, Banknote } from "lucide-react";
+import { ArrowLeft, Phone, Clock, Banknote, AlertTriangle } from "lucide-react";
+import FileDisputeDialog from "@/components/disputes/FileDisputeDialog";
 import { format } from "date-fns";
 
 const CallHistory = () => {
@@ -140,6 +141,7 @@ const CallHistory = () => {
                     <TableHead>Net</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -166,6 +168,14 @@ const CallHistory = () => {
                         <TableCell className="text-sm font-medium">৳{call.provider_earning?.toFixed(2) ?? "—"}</TableCell>
                         <TableCell><Badge variant={statusColor(call.status)} className="text-xs capitalize">{call.status}</Badge></TableCell>
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(call.created_at), "MMM d, HH:mm")}</TableCell>
+                        <TableCell>
+                          {call.status === "completed" && (
+                            <FileDisputeDialog
+                              callId={call.id}
+                              againstId={call.caller_id === user?.id ? call.provider_id : call.caller_id}
+                            />
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
