@@ -305,9 +305,9 @@ const Wallet = () => {
               </div>
               {dialogType === "topup" && (
                 <div className="flex gap-2">
-                  {[5, 10, 25, 50].map((v) => (
+                  {[50, 100, 500, 1000].map((v) => (
                     <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
-                      ${v}
+                      ৳{v}
                     </Button>
                   ))}
                 </div>
