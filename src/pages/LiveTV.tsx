@@ -43,6 +43,7 @@ const LiveTV = () => {
   const [hasError, setHasError] = useState(false);
   const [isSorting, setIsSorting] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [videoScale, setVideoScale] = useState(100); // 50-200%
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
