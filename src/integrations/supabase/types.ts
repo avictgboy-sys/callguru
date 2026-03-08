@@ -940,6 +940,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_reel_views: { Args: { p_reel_id: string }; Returns: undefined }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       reject_payment_request: {
         Args: { p_admin_note?: string; p_request_id: string }

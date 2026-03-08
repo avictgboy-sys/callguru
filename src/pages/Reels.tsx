@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Film } from "lucide-react";
-import { useReels, useToggleReelLike } from "@/hooks/useReels";
+import { useReels, useToggleReelLike, useDeleteReel, useIncrementReelViews } from "@/hooks/useReels";
+import { useAuth } from "@/contexts/AuthContext";
 import ReelCard from "@/components/reels/ReelCard";
 import ReelComments from "@/components/reels/ReelComments";
 import CreateReelDialog from "@/components/reels/CreateReelDialog";
@@ -9,7 +10,10 @@ import { AnimatePresence } from "framer-motion";
 
 const Reels = () => {
   const { data: reels, isLoading } = useReels();
+  const { user } = useAuth();
   const toggleLike = useToggleReelLike();
+  const deleteReel = useDeleteReel();
+  const incrementViews = useIncrementReelViews();
   const [activeIndex, setActiveIndex] = useState(0);
   const [commentReelId, setCommentReelId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -73,8 +77,13 @@ const Reels = () => {
               <ReelCard
                 reel={reel}
                 isActive={i === activeIndex}
+                isOwner={user?.id === reel.user_id}
                 onLike={() => toggleLike.mutate({ reelId: reel.id, isLiked: !!reel.is_liked })}
                 onComment={() => setCommentReelId(reel.id)}
+                onDelete={() => {
+                  if (confirm("এই রিলটি মুছে ফেলতে চান?")) deleteReel.mutate(reel.id);
+                }}
+                onView={() => incrementViews.mutate(reel.id)}
               />
             </div>
           ))}
