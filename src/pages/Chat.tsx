@@ -9,6 +9,12 @@ import {
   Plus,
   User,
   CheckCircle,
+  Image,
+  Paperclip,
+  FileText,
+  X,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +26,7 @@ import {
   useStartChat,
   useRealtimeMessages,
   useSearchUsers,
+  useUploadChatFile,
 } from "@/hooks/useChat";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
