@@ -9,7 +9,7 @@ const Dashboard = () => {
   const isAdmin = roles.includes("admin");
 
   const menuItems = [
-    { icon: User, label: "My Profile", href: "#" },
+    { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
     { icon: Calendar, label: "My Sessions", href: "#" },
     { icon: MessageSquare, label: "Messages", href: "/chat" },
