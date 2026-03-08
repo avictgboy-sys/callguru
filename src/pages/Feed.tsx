@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Video, Home, Compass, MessageCircle, User, Megaphone, Bell, Search, Menu, Plus, Users, Bookmark, Settings, TrendingUp, ShoppingBag, PlayCircle } from "lucide-react";
+import { Video, Home, Compass, MessageCircle, User, Megaphone, Bell, Search, Menu, Plus, Users, Bookmark, Settings, TrendingUp, ShoppingBag, PlayCircle, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -153,6 +153,7 @@ const Feed = () => {
                 <SidebarLink icon={ShoppingBag} label="Marketplace" href="/marketplace" />
                 <SidebarLink icon={Megaphone} label="Create Ad" href="/create-ad" />
                 <SidebarLink icon={TrendingUp} label="Call History" href="/call-history" />
+                <SidebarLink icon={Wrench} label="Home Service" href="/home-services" />
                 <SidebarLink icon={Settings} label="Settings" href="/dashboard" />
 
                 <div className="border-t border-border my-3 mx-3" />
