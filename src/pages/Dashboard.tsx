@@ -1,22 +1,22 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings } from "lucide-react";
-
-const menuItems = [
-  { icon: User, label: "My Profile", href: "#" },
-  { icon: Wallet, label: "Wallet", href: "#" },
-  { icon: Calendar, label: "My Sessions", href: "#" },
-  { icon: MessageSquare, label: "Messages", href: "#" },
-  { icon: Settings, label: "Settings", href: "#" },
-];
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store } from "lucide-react";
 
 const Dashboard = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, roles, signOut } = useAuth();
+  const isProvider = roles.includes("provider");
+
+  const menuItems = [
+    { icon: User, label: "My Profile", href: "#" },
+    { icon: Wallet, label: "Wallet", href: "#" },
+    { icon: Calendar, label: "My Sessions", href: "#" },
+    { icon: MessageSquare, label: "Messages", href: "#" },
+    { icon: Settings, label: "Settings", href: "#" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top nav */}
       <nav className="border-b border-border bg-card">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <Link to="/" className="flex items-center gap-2">
@@ -25,7 +25,12 @@ const Dashboard = () => {
             </div>
             <span className="font-heading font-bold text-xl text-foreground">CallGuru</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/marketplace">
+                <Store className="w-4 h-4 mr-1" /> Marketplace
+              </Link>
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">
               {user?.email}
             </span>
@@ -37,11 +42,19 @@ const Dashboard = () => {
       </nav>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="font-heading text-3xl font-bold text-foreground">
-            Welcome back, {profile?.full_name || "User"}!
-          </h1>
-          <p className="text-muted-foreground mt-1">Here's your CallGuru dashboard</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-foreground">
+              Welcome back, {profile?.full_name || "User"}!
+            </h1>
+            <p className="text-muted-foreground mt-1">Here's your CallGuru dashboard</p>
+          </div>
+          <Button variant="hero" asChild>
+            <Link to="/create-service">
+              <Plus className="w-4 h-4 mr-1" />
+              {isProvider ? "Add New Service" : "Become a Provider"}
+            </Link>
+          </Button>
         </div>
 
         {/* Stats */}
