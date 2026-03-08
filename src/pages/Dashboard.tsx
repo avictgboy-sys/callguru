@@ -102,7 +102,7 @@ const Dashboard = () => {
             >
               <item.icon className="w-6 h-6 text-primary" />
               <span className="text-sm font-medium text-foreground">{item.label}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
