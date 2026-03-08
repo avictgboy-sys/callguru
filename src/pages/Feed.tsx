@@ -73,9 +73,9 @@ const Feed = () => {
               <Compass className="w-5 h-5" />
               <span className="text-[10px] mt-0.5">Explore</span>
             </Link>
-            <Link to="#" className="flex flex-col items-center text-muted-foreground">
-              <Bell className="w-5 h-5" />
-              <span className="text-[10px] mt-0.5">Alerts</span>
+            <Link to="/chat" className="flex flex-col items-center text-muted-foreground">
+              <MessageCircle className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">Chat</span>
             </Link>
             <Link to="/dashboard" className="flex flex-col items-center text-muted-foreground">
               <User className="w-5 h-5" />
