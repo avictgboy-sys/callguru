@@ -293,7 +293,7 @@ const Wallet = () => {
           {step === "amount" && (
             <div className="space-y-4 py-2">
               <div>
-                <label className="text-sm font-medium text-foreground">Amount ($)</label>
+                <label className="text-sm font-medium text-foreground">Amount (৳)</label>
                 <Input
                   type="number"
                   min="1"
