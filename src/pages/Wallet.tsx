@@ -1,23 +1,42 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWalletTransactions, useTopUp, useWithdraw } from "@/hooks/useWallet";
+import {
+  usePaymentRequests,
+  useCreatePaymentRequest,
+  useUploadProof,
+  PaymentMethod,
+  PAYMENT_METHODS,
+} from "@/hooks/usePayment";
+import PaymentMethodSelector from "@/components/wallet/PaymentMethodSelector";
+import MobilePaymentForm from "@/components/wallet/MobilePaymentForm";
+import BankTransferForm from "@/components/wallet/BankTransferForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Video, ArrowLeft, Plus, ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Video, ArrowLeft, Plus, ArrowDownLeft, ArrowUpRight,
+  Wallet as WalletIcon, TrendingUp, TrendingDown, Clock, CheckCircle2, XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 const Wallet = () => {
   const { profile } = useAuth();
   const { data: transactions, isLoading } = useWalletTransactions();
+  const { data: paymentRequests } = usePaymentRequests();
   const topUp = useTopUp();
   const withdraw = useWithdraw();
+  const createPayment = useCreatePaymentRequest();
+  const uploadProof = useUploadProof();
 
   const [dialogType, setDialogType] = useState<"topup" | "withdraw" | null>(null);
+  const [step, setStep] = useState<"amount" | "method" | "details">("amount");
   const [amount, setAmount] = useState("");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
 
   const balance = profile?.wallet_balance ?? 0;
 
@@ -28,24 +47,70 @@ const Wallet = () => {
     ?.filter((t) => t.type === "withdraw" || t.type === "spending")
     .reduce((s, t) => s + Number(t.amount), 0) ?? 0;
 
-  const handleSubmit = async () => {
+  const resetDialog = () => {
+    setDialogType(null);
+    setStep("amount");
+    setAmount("");
+    setSelectedMethod(null);
+  };
+
+  const handleAmountNext = () => {
     const val = parseFloat(amount);
     if (!val || val <= 0) {
       toast.error("Enter a valid amount");
       return;
     }
+    if (dialogType === "topup") {
+      setStep("method");
+    } else {
+      // Withdraw — direct wallet deduction for now
+      handleWithdraw(val);
+    }
+  };
+
+  const handleWithdraw = async (val: number) => {
     try {
-      if (dialogType === "topup") {
-        await topUp.mutateAsync(val);
-        toast.success(`$${val.toFixed(2)} added to wallet`);
-      } else {
-        await withdraw.mutateAsync(val);
-        toast.success(`$${val.toFixed(2)} withdrawn`);
-      }
-      setDialogType(null);
-      setAmount("");
+      await withdraw.mutateAsync(val);
+      toast.success(`$${val.toFixed(2)} withdrawn`);
+      resetDialog();
     } catch (e: any) {
-      toast.error(e.message || "Transaction failed");
+      toast.error(e.message || "Withdrawal failed");
+    }
+  };
+
+  const handleMobileSubmit = async (referenceId: string) => {
+    try {
+      await createPayment.mutateAsync({
+        amount: parseFloat(amount),
+        method: selectedMethod!,
+        type: "topup",
+        reference_id: referenceId,
+      });
+      toast.success("Payment submitted! Your balance will update after verification.");
+      resetDialog();
+    } catch (e: any) {
+      toast.error(e.message || "Submission failed");
+    }
+  };
+
+  const handleBankSubmit = async (bankDetails: Record<string, string>, proofFile?: File) => {
+    try {
+      let proofUrl: string | undefined;
+      if (proofFile) {
+        proofUrl = await uploadProof.mutateAsync(proofFile);
+      }
+      await createPayment.mutateAsync({
+        amount: parseFloat(amount),
+        method: "bank_transfer",
+        type: "topup",
+        bank_details: bankDetails,
+        reference_id: bankDetails.referenceId,
+        proof_url: proofUrl,
+      });
+      toast.success("Bank transfer details submitted! Your balance will update after verification.");
+      resetDialog();
+    } catch (e: any) {
+      toast.error(e.message || "Submission failed");
     }
   };
 
@@ -55,6 +120,14 @@ const Wallet = () => {
     withdraw: { icon: ArrowUpRight, color: "text-red-500", sign: "-" },
     spending: { icon: TrendingDown, color: "text-red-500", sign: "-" },
   };
+
+  const statusConfig: Record<string, { icon: typeof Clock; color: string }> = {
+    pending: { icon: Clock, color: "text-yellow-500" },
+    completed: { icon: CheckCircle2, color: "text-green-500" },
+    rejected: { icon: XCircle, color: "text-red-500" },
+  };
+
+  const isPending = createPayment.isPending || uploadProof.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,10 +156,10 @@ const Wallet = () => {
             <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
             <p className="font-heading text-4xl font-bold text-foreground">${Number(balance).toFixed(2)}</p>
             <div className="flex gap-3 justify-center mt-5">
-              <Button variant="hero" onClick={() => setDialogType("topup")}>
+              <Button variant="hero" onClick={() => { setDialogType("topup"); setStep("amount"); }}>
                 <Plus className="w-4 h-4 mr-1" /> Top Up
               </Button>
-              <Button variant="heroOutline" onClick={() => setDialogType("withdraw")}>
+              <Button variant="heroOutline" onClick={() => { setDialogType("withdraw"); setStep("amount"); }}>
                 <ArrowUpRight className="w-4 h-4 mr-1" /> Withdraw
               </Button>
             </div>
@@ -108,6 +181,39 @@ const Wallet = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Payment Requests */}
+        {paymentRequests && paymentRequests.filter((p) => p.status === "pending").length > 0 && (
+          <Card className="mb-6 border-yellow-500/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-500" /> Pending Payments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {paymentRequests.filter((p) => p.status === "pending").map((p) => {
+                  const methodInfo = PAYMENT_METHODS.find((m) => m.id === p.method);
+                  return (
+                    <div key={p.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                      <div className="flex items-center gap-2">
+                        <span>{methodInfo?.icon || "💳"}</span>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{methodInfo?.name || p.method}</p>
+                          <p className="text-xs text-muted-foreground">{format(new Date(p.created_at), "MMM d, h:mm a")}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">${Number(p.amount).toFixed(2)}</p>
+                        <Badge variant="secondary" className="text-[10px]">Pending</Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Transaction history */}
         <Card>
@@ -153,43 +259,113 @@ const Wallet = () => {
       </div>
 
       {/* Top-up / Withdraw dialog */}
-      <Dialog open={!!dialogType} onOpenChange={(o) => !o && setDialogType(null)}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!dialogType} onOpenChange={(o) => !o && resetDialog()}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{dialogType === "topup" ? "Top Up Wallet" : "Withdraw Funds"}</DialogTitle>
+            <DialogTitle>
+              {dialogType === "topup"
+                ? step === "amount" ? "Top Up Wallet" : step === "method" ? "Choose Payment Method" : "Complete Payment"
+                : "Withdraw Funds"
+              }
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="text-sm font-medium text-foreground">Amount ($)</label>
-              <Input
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            {dialogType === "topup" && (
-              <div className="flex gap-2">
-                {[5, 10, 25, 50].map((v) => (
-                  <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
-                    ${v}
-                  </Button>
-                ))}
+
+          {/* Step 1: Amount */}
+          {step === "amount" && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-sm font-medium text-foreground">Amount ($)</label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogType(null)}>Cancel</Button>
-            <Button
-              variant="hero"
-              onClick={handleSubmit}
-              disabled={topUp.isPending || withdraw.isPending}
-            >
-              {topUp.isPending || withdraw.isPending ? "Processing…" : "Confirm"}
-            </Button>
-          </DialogFooter>
+              {dialogType === "topup" && (
+                <div className="flex gap-2">
+                  {[5, 10, 25, 50].map((v) => (
+                    <Button key={v} variant="outline" size="sm" onClick={() => setAmount(String(v))}>
+                      ${v}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <DialogFooter>
+                <Button variant="ghost" onClick={resetDialog}>Cancel</Button>
+                <Button
+                  variant="hero"
+                  onClick={handleAmountNext}
+                  disabled={withdraw.isPending}
+                >
+                  {dialogType === "withdraw"
+                    ? withdraw.isPending ? "Processing…" : "Withdraw"
+                    : "Next"
+                  }
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+
+          {/* Step 2: Method selection (top-up only) */}
+          {step === "method" && (
+            <div className="space-y-4 py-2">
+              <div className="text-center">
+                <Badge variant="secondary" className="text-sm">Amount: ${parseFloat(amount).toFixed(2)}</Badge>
+              </div>
+              <PaymentMethodSelector
+                selected={selectedMethod}
+                onSelect={(m) => {
+                  setSelectedMethod(m);
+                  setStep("details");
+                }}
+              />
+              <Button variant="ghost" className="w-full" onClick={() => setStep("amount")}>
+                ← Back
+              </Button>
+            </div>
+          )}
+
+          {/* Step 3: Payment details */}
+          {step === "details" && selectedMethod && (
+            <div className="space-y-4 py-2">
+              <div className="text-center">
+                <Badge variant="secondary" className="text-sm">
+                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.icon}{" "}
+                  {PAYMENT_METHODS.find((m) => m.id === selectedMethod)?.name} — ${parseFloat(amount).toFixed(2)}
+                </Badge>
+              </div>
+
+              {(selectedMethod === "bkash" || selectedMethod === "nagad" || selectedMethod === "rocket") && (
+                <MobilePaymentForm
+                  method={selectedMethod}
+                  amount={parseFloat(amount)}
+                  onSubmit={handleMobileSubmit}
+                  isPending={isPending}
+                />
+              )}
+
+              {selectedMethod === "bank_transfer" && (
+                <BankTransferForm
+                  amount={parseFloat(amount)}
+                  onSubmit={handleBankSubmit}
+                  isPending={isPending}
+                />
+              )}
+
+              {selectedMethod === "stripe" && (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground text-sm">Card payments coming soon!</p>
+                </div>
+              )}
+
+              <Button variant="ghost" className="w-full" onClick={() => { setStep("method"); setSelectedMethod(null); }}>
+                ← Change Method
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
