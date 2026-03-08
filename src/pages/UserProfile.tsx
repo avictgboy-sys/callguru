@@ -13,6 +13,7 @@ import { toast } from "sonner";
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useUserProfile(userId!);
   const { data: posts } = useUserPosts(userId!);
   const { data: services } = useUserServices(userId!);
@@ -20,6 +21,7 @@ const UserProfile = () => {
   const { data: following } = useUserFollowing(userId!);
   const { data: isFollowing } = useIsFollowing(userId!);
   const followMutation = useFollowUser();
+  const startChat = useStartChat();
 
   const isOwn = user?.id === userId;
 
