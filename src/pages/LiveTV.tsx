@@ -388,6 +388,6 @@ const LiveTV = forwardRef<HTMLDivElement>((_, _ref) => {
   );
 });
 
-LiveTV.displayName = "LiveTV";
+LiveTV.displayName = "LiveTV"; // fixed ref warning
 
 export default LiveTV;
