@@ -61,7 +61,7 @@ const ServiceCard = ({ service }: Props) => {
       <div className="px-5 py-3 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             <span className="text-sm font-medium text-foreground">
               {(service.rating ?? 0).toFixed(1)}
             </span>
