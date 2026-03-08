@@ -10,7 +10,10 @@ import { AnimatePresence } from "framer-motion";
 
 const Reels = () => {
   const { data: reels, isLoading } = useReels();
+  const { user } = useAuth();
   const toggleLike = useToggleReelLike();
+  const deleteReel = useDeleteReel();
+  const incrementViews = useIncrementReelViews();
   const [activeIndex, setActiveIndex] = useState(0);
   const [commentReelId, setCommentReelId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
