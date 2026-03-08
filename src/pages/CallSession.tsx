@@ -243,8 +243,9 @@ const CallSession = () => {
         ) : (
           <>
             {/* Remote video (full screen) */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+              {webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 && 
+               webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted) ? (
                 <video
                   ref={remoteVideoRef}
                   autoPlay
@@ -263,11 +264,30 @@ const CallSession = () => {
                     <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
                     <p className="text-muted-foreground text-sm">{serviceName}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {callConnected ? "Connected — waiting for video" : "Connecting…"}
+                      {webrtc.connectionState === "connected" 
+                        ? "কানেক্টেড ✓ — ভিডিওর জন্য অপেক্ষা করা হচ্ছে"
+                        : webrtc.connectionState === "connecting" 
+                          ? "কানেক্ট হচ্ছে…"
+                          : webrtc.connectionState === "failed"
+                            ? "কানেকশন ব্যর্থ — পুনরায় চেষ্টা করা হচ্ছে…"
+                            : "অপর পক্ষের জন্য অপেক্ষা করা হচ্ছে…"}
                     </p>
                   </div>
                 </div>
               )}
+
+              {/* Always render remote video element (hidden when no video) for audio playback */}
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className={
+                  webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 &&
+                  webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted)
+                    ? "hidden" : "hidden"
+                }
+                style={{ position: "absolute", width: 0, height: 0 }}
+              />
             </div>
 
             {/* Local video (picture-in-picture) */}
@@ -287,6 +307,22 @@ const CallSession = () => {
                     <VideoOff className="w-8 h-8 text-muted-foreground" />
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Connection status badge */}
+            {mediaReady && webrtc.connectionState !== "connected" && (
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
+                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
+                  <motion.div
+                    className="w-2 h-2 rounded-full bg-primary"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                  />
+                  {webrtc.connectionState === "connecting" ? "কানেক্ট হচ্ছে…" : 
+                   webrtc.connectionState === "failed" ? "পুনরায় চেষ্টা হচ্ছে…" :
+                   "অপর পক্ষের জন্য অপেক্ষা…"}
+                </div>
               </div>
             )}
           </>
