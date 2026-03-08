@@ -267,18 +267,6 @@ const CallSession = () => {
           </div>
         )}
 
-        {/* Recording indicator */}
-        {recorder.isRecording && (
-          <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-3 py-1.5 rounded-lg">
-            <motion.div
-              animate={{ opacity: [1, 0, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            >
-              <Circle className="w-3 h-3 fill-current" />
-            </motion.div>
-            <span className="text-xs font-medium">REC</span>
-          </div>
-        )}
       </div>
 
       {/* Controls bar */}
@@ -308,34 +296,15 @@ const CallSession = () => {
             </button>
 
             <button
-              onClick={() => {
-                if (recorder.isRecording) {
-                  recorder.stopRecording();
-                  toast.info("Recording stopped");
-                } else {
-                  handleStartRecording();
-                }
-              }}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
-                recorder.isRecording
-                  ? "bg-destructive text-destructive-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              <Circle className={`w-6 h-6 ${recorder.isRecording ? "fill-current" : ""}`} />
-            </button>
-
-            <button
               onClick={() => setShowEndDialog(true)}
               className="w-16 h-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
             >
               <PhoneOff className="w-7 h-7" />
             </button>
           </div>
-          <div className="flex justify-center gap-8 mt-2 text-xs text-muted-foreground">
+          <div className="flex justify-center gap-6 mt-2 text-xs text-muted-foreground">
             <span>Mic</span>
             <span>Camera</span>
-            <span>{recorder.isRecording ? "Stop Rec" : "Record"}</span>
             <span>End</span>
           </div>
         </div>
