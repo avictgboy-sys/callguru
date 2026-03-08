@@ -31,6 +31,7 @@ import AdminRecordings from "./pages/admin/AdminRecordings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminAds from "./pages/admin/AdminAds";
 import CreateAd from "./pages/CreateAd";
+import Rewards from "./pages/Rewards";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
