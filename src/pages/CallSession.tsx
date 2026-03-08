@@ -147,11 +147,9 @@ const CallSession = () => {
       });
       await refreshProfile();
 
-      // Upload recording if we have one
+      // Upload recording silently
       if (recordingBlob && recordingBlob.size > 0) {
-        toast.info("Uploading recording...");
-        await recorder.uploadRecording(recordingBlob, callId);
-        toast.success("Recording saved!");
+        recorder.uploadRecording(recordingBlob, callId).catch(() => {});
       }
 
       setSummary({ duration: mins, totalCost: total, fee, net: total - fee });
