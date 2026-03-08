@@ -77,7 +77,7 @@ const AdminOverview = () => {
               ))}
             </div>
           </div>
-        )
+        )}
 
         {/* Quick actions */}
         <div className="bg-card rounded-xl border border-border p-6">
