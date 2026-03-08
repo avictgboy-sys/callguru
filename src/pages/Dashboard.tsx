@@ -27,6 +27,11 @@ const Dashboard = () => {
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
+              <Link to="/feed">
+                <Home className="w-4 h-4 mr-1" /> Feed
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
               <Link to="/marketplace">
                 <Store className="w-4 h-4 mr-1" /> Marketplace
               </Link>
