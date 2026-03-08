@@ -1,6 +1,6 @@
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminStats } from "@/hooks/useAdmin";
-import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard } from "lucide-react";
+import { Users, Video, FileText, Shield, TrendingUp, Clock, CheckCircle2, CreditCard, Phone, Banknote, Timer } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const statCards = [
@@ -15,6 +15,15 @@ const paymentStatCards = [
   { key: "pendingPayments", label: "Pending Payments", icon: Clock, color: "text-yellow-500", format: (v: number) => String(v) },
   { key: "approvedToday", label: "Approved Today", icon: CheckCircle2, color: "text-green-500", format: (v: number) => String(v) },
   { key: "totalVolume", label: "Total Volume", icon: CreditCard, color: "text-primary", format: (v: number) => `৳${v.toFixed(2)}` },
+] as const;
+
+const revenueStatCards = [
+  { key: "totalRevenue", label: "Platform Revenue", icon: Banknote, color: "text-green-500", format: (v: number) => `৳${v.toFixed(2)}` },
+  { key: "todayRevenue", label: "Revenue Today", icon: Banknote, color: "text-accent", format: (v: number) => `৳${v.toFixed(2)}` },
+  { key: "totalCallVolume", label: "Call Volume", icon: CreditCard, color: "text-primary", format: (v: number) => `৳${v.toFixed(2)}` },
+  { key: "totalCalls", label: "Total Calls", icon: Phone, color: "text-primary", format: (v: number) => String(v) },
+  { key: "todayCalls", label: "Calls Today", icon: Phone, color: "text-accent", format: (v: number) => String(v) },
+  { key: "totalMinutes", label: "Total Minutes", icon: Timer, color: "text-muted-foreground", format: (v: number) => `${v.toFixed(0)} min` },
 ] as const;
 
 const AdminOverview = () => {
@@ -33,50 +42,64 @@ const AdminOverview = () => {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {statCards.map((card) => (
-              <div
-                key={card.key}
-                className="bg-card rounded-xl border border-border p-6 shadow-card"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <card.icon className={`w-5 h-5 ${card.color}`} />
-                </div>
-                <p className="font-heading text-3xl font-bold text-foreground">
-                  {stats?.[card.key] ?? 0}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Payment Stats */}
-        {!isLoading && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-heading text-lg font-semibold text-foreground">Payment Overview</h2>
-              <Link to="/admin/payments" className="text-sm text-primary hover:underline flex items-center gap-1">
-                <CreditCard className="w-4 h-4" /> View All
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {paymentStatCards.map((card) => (
-                <div
-                  key={card.key}
-                  className="bg-card rounded-xl border border-border p-6 shadow-card"
-                >
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {statCards.map((card) => (
+                <div key={card.key} className="bg-card rounded-xl border border-border p-6 shadow-card">
                   <div className="flex items-center justify-between mb-3">
                     <card.icon className={`w-5 h-5 ${card.color}`} />
                   </div>
                   <p className="font-heading text-3xl font-bold text-foreground">
-                    {card.format((stats as any)?.[card.key] ?? 0)}
+                    {stats?.[card.key] ?? 0}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
                 </div>
               ))}
             </div>
-          </div>
+
+            {/* Revenue / Call Stats */}
+            <div>
+              <h2 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-green-500" /> Platform Revenue
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {revenueStatCards.map((card) => (
+                  <div key={card.key} className="bg-card rounded-xl border border-border p-6 shadow-card">
+                    <div className="flex items-center justify-between mb-3">
+                      <card.icon className={`w-5 h-5 ${card.color}`} />
+                    </div>
+                    <p className="font-heading text-3xl font-bold text-foreground">
+                      {card.format((stats as any)?.[card.key] ?? 0)}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Stats */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-lg font-semibold text-foreground">Payment Overview</h2>
+                <Link to="/admin/payments" className="text-sm text-primary hover:underline flex items-center gap-1">
+                  <CreditCard className="w-4 h-4" /> View All
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {paymentStatCards.map((card) => (
+                  <div key={card.key} className="bg-card rounded-xl border border-border p-6 shadow-card">
+                    <div className="flex items-center justify-between mb-3">
+                      <card.icon className={`w-5 h-5 ${card.color}`} />
+                    </div>
+                    <p className="font-heading text-3xl font-bold text-foreground">
+                      {card.format((stats as any)?.[card.key] ?? 0)}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Quick actions */}
