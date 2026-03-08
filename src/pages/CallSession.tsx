@@ -58,6 +58,7 @@ const CallSession = () => {
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLVideoElement>(null);
 
   const webrtc = useWebRTC({
     callId,
