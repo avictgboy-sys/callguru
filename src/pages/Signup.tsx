@@ -23,11 +23,15 @@ const Signup = () => {
       return;
     }
     setLoading(true);
+    const metadata: Record<string, string> = { full_name: name };
+    if (referralCode.trim()) {
+      metadata.referral_code = referralCode.trim().toUpperCase();
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: metadata,
         emailRedirectTo: window.location.origin,
       },
     });
