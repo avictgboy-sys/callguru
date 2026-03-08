@@ -35,6 +35,7 @@ const Wallet = () => {
   const withdraw = useWithdraw();
   const createPayment = useCreatePaymentRequest();
   const uploadProof = useUploadProof();
+  const fees = useFeeSettings();
 
   const [dialogType, setDialogType] = useState<"topup" | "withdraw" | null>(null);
   const [step, setStep] = useState<"amount" | "method" | "details">("amount");
