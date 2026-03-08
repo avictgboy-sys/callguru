@@ -29,45 +29,36 @@ const SelfServeAdCard = ({ ad }: { ad: any }) => {
     window.open(ad.link_url, "_blank");
   };
 
-  // Track impression on mount
-  const trackImpression = async () => {
-    try {
-      await supabase
-        .from("self_ads" as any)
-        .update({ 
-          impressions: (ad.impressions || 0) + 1,
-          spent: (ad.spent || 0) + ((ad.budget || 0) / Math.max(1, Math.floor((ad.budget / parseFloat(useSetting("ad_cost_per_1000") || "50")) * 1000)))
-        } as any)
-        .eq("id", ad.id);
+  // Track impression once using useRef + useEffect
+  const tracked = useRef(false);
+  const dailyLimit = parseInt(useSetting("ad_daily_limit") || "50", 10);
 
-      // Award points to viewer
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("points")
-          .eq("user_id", user.id)
-          .single();
-        if (profile) {
-          await supabase
-            .from("profiles")
-            .update({ points: (profile.points || 0) + pointsPerView })
-            .eq("user_id", user.id);
-        }
-
-        await supabase.from("ad_views" as any).insert({
-          user_id: user.id,
-          ad_slot: `self-ad-${ad.id}`,
-        } as any);
-      }
-    } catch {}
-  };
-
-  // Use ref for one-time tracking
-  const tracked = { current: false };
-  if (!tracked.current) {
+  useEffect(() => {
+    if (tracked.current) return;
     tracked.current = true;
+
+    const trackImpression = async () => {
+      try {
+        // Update ad impressions
+        await supabase
+          .from("self_ads")
+          .update({ impressions: (ad.impressions || 0) + 1 })
+          .eq("id", ad.id);
+
+        // Award points atomically via RPC
+        if (user) {
+          await supabase.rpc("increment_ad_points", {
+            p_user_id: user.id,
+            p_ad_slot: `self-ad-${ad.id}`,
+            p_points: pointsPerView,
+            p_daily_limit: dailyLimit,
+          });
+        }
+      } catch {}
+    };
+
     trackImpression();
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (ad.ad_type === "sponsored") {
     return (
