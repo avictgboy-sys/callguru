@@ -7,10 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Video, PhoneOff, Clock, ArrowLeft } from "lucide-react";
+import { Video, PhoneOff, Clock, Star } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -28,8 +29,10 @@ const CallSession = () => {
   const fees = useFeeSettings();
 
   const callId = params.get("id");
+  const providerId = params.get("providerId") || "";
   const providerName = params.get("provider") || "Expert";
   const providerAvatar = params.get("avatar") || "";
+  const serviceId = params.get("serviceId") || "";
   const serviceName = params.get("service") || "Consultation";
   const pricePerMin = parseFloat(params.get("rate") || "0");
 
@@ -43,6 +46,11 @@ const CallSession = () => {
     fee: number;
     net: number;
   } | null>(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   // Timer
   useEffect(() => {
@@ -242,7 +250,7 @@ const CallSession = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Call summary dialog */}
+      {/* Call summary dialog with rating */}
       <Dialog open={showSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -275,10 +283,79 @@ const CallSession = () => {
                   <span className="text-muted-foreground">৳{summary.net.toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* Rating section */}
+              {!reviewSubmitted ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground text-center">Rate your experience</p>
+                  <div className="flex justify-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className="p-1 transition-transform hover:scale-110"
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(star)}
+                      >
+                        <Star
+                          className={`w-8 h-8 transition-colors ${
+                            star <= (hoverRating || rating)
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {rating > 0 && (
+                    <Textarea
+                      placeholder="Leave a comment (optional)..."
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      className="resize-none"
+                      rows={2}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-sm text-primary font-medium">Thanks for your review! ⭐</p>
+                </div>
+              )}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="hero" className="w-full" onClick={() => navigate("/dashboard")}>
+          <DialogFooter className="gap-2">
+            {!reviewSubmitted && rating > 0 && (
+              <Button
+                variant="default"
+                disabled={submittingReview}
+                onClick={async () => {
+                  if (!callId || !user) return;
+                  setSubmittingReview(true);
+                  try {
+                    const { error } = await supabase.from("reviews").insert({
+                      call_id: callId,
+                      reviewer_id: user.id,
+                      provider_id: providerId,
+                      service_id: serviceId,
+                      rating,
+                      comment: reviewComment.trim() || null,
+                    });
+                    if (error) throw error;
+                    setReviewSubmitted(true);
+                    toast.success("Review submitted!");
+                  } catch (e: any) {
+                    toast.error(e.message || "Failed to submit review");
+                  } finally {
+                    setSubmittingReview(false);
+                  }
+                }}
+              >
+                {submittingReview ? "Submitting…" : "Submit Review"}
+              </Button>
+            )}
+            <Button variant="hero" onClick={() => navigate("/dashboard")}>
               Back to Dashboard
             </Button>
           </DialogFooter>

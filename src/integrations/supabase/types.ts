@@ -412,6 +412,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          call_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          provider_id: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+        }
+        Insert: {
+          call_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          provider_id: string
+          rating: number
+          reviewer_id: string
+          service_id: string
+        }
+        Update: {
+          call_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          provider_id?: string
+          rating?: number
+          reviewer_id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string
