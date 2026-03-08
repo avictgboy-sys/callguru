@@ -49,6 +49,7 @@ export type Database = {
           price_per_minute: number
           provider_earning: number | null
           provider_id: string
+          recording_url: string | null
           service_id: string
           started_at: string
           status: string
@@ -64,6 +65,7 @@ export type Database = {
           price_per_minute: number
           provider_earning?: number | null
           provider_id: string
+          recording_url?: string | null
           service_id: string
           started_at?: string
           status?: string
@@ -79,6 +81,7 @@ export type Database = {
           price_per_minute?: number
           provider_earning?: number | null
           provider_id?: string
+          recording_url?: string | null
           service_id?: string
           started_at?: string
           status?: string
