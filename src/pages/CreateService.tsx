@@ -156,18 +156,22 @@ const CreateService = () => {
 
             <div className="space-y-2">
               <Label>Category *</Label>
-              <Select onValueChange={(val) => setValue("category_id", val)} defaultValue="">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {categories.length > 0 ? (
+                <Select onValueChange={(val) => setValue("category_id", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-muted-foreground">Loading categories...</p>
+              )}
               {errors.category_id && <p className="text-sm text-destructive">{errors.category_id.message}</p>}
             </div>
 
