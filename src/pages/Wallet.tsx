@@ -317,12 +317,8 @@ const Wallet = () => {
                 <Button
                   variant="hero"
                   onClick={handleAmountNext}
-                  disabled={withdraw.isPending}
                 >
-                  {dialogType === "withdraw"
-                    ? withdraw.isPending ? "Processing…" : "Withdraw"
-                    : "Next"
-                  }
+                  Next
                 </Button>
               </DialogFooter>
             </div>
