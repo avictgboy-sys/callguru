@@ -145,7 +145,7 @@ const LiveTVSection = () => {
       {/* Ad between player and channel list */}
       {activeChannel && (
         <div className="my-2">
-          <AdBanner slot="live-tv" />
+          <AdBanner slotId="live-tv" />
         </div>
       )}
 
