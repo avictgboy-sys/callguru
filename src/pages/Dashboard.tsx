@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LiveToggle from "@/components/provider/LiveToggle";
 
@@ -13,6 +13,7 @@ const Dashboard = () => {
   const menuItems = [
     { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
+    { icon: Gift, label: "Rewards", href: "/rewards" },
     { icon: Calendar, label: "My Sessions", href: "/call-history" },
     { icon: MessageSquare, label: "Messages", href: "/chat" },
     { icon: Settings, label: "Edit Profile", href: "/edit-profile" },
@@ -81,13 +82,19 @@ const Dashboard = () => {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-card rounded-xl p-6 border border-border shadow-card">
             <p className="text-sm text-muted-foreground">Wallet Balance</p>
             <p className="font-heading text-2xl font-bold text-foreground mt-1">
-              ${profile?.wallet_balance?.toFixed(2) ?? "0.00"}
+              ৳{profile?.wallet_balance?.toFixed(2) ?? "0.00"}
             </p>
           </div>
+          <Link to="/rewards" className="bg-card rounded-xl p-6 border border-border shadow-card hover:shadow-elevated transition-shadow">
+            <p className="text-sm text-muted-foreground">Points</p>
+            <p className="font-heading text-2xl font-bold text-primary mt-1">
+              {profile?.points ?? 0} pts
+            </p>
+          </Link>
           <div className="bg-card rounded-xl p-6 border border-border shadow-card">
             <p className="text-sm text-muted-foreground">Total Sessions</p>
             <p className="font-heading text-2xl font-bold text-foreground mt-1">0</p>
