@@ -1,10 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X, Megaphone } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X, Megaphone, Pencil } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LiveToggle from "@/components/provider/LiveToggle";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut, refreshProfile } = useAuth();
