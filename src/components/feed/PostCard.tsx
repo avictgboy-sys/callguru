@@ -297,7 +297,7 @@ const PostCard = ({ post }: Props) => {
           {!mediaRevealed ? (
             <VideoThumbnail src={post.video_url} onClick={handleMediaClick} />
           ) : (
-            <video src={post.video_url} controls autoPlay className="w-full max-h-[500px]" />
+            <AutoPlayVideo src={post.video_url} />
           )}
         </>
       )}
