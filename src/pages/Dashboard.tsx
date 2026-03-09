@@ -18,6 +18,21 @@ const Dashboard = () => {
   const isAdmin = roles.includes("admin");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const { data: myServices = [] } = useQuery({
+    queryKey: ["my-services-list", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, title, is_available, is_active, price_per_minute")
+        .eq("provider_id", user!.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const menuItems = [
     { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
