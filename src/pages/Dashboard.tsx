@@ -151,6 +151,31 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* My Services */}
+        {myServices.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-heading text-base font-semibold text-foreground mb-3">My Services</h2>
+            <div className="space-y-2">
+              {myServices.map((s) => (
+                <div key={s.id} className="flex items-center justify-between bg-card border border-border rounded-lg p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-2 h-2 rounded-full ${s.is_available ? "bg-green-500" : "bg-muted-foreground"}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
+                      <p className="text-xs text-muted-foreground">৳{s.price_per_minute}/min</p>
+                    </div>
+                  </div>
+                  <Link to={`/edit-service/${s.id}`}>
+                    <Button variant="ghost" size="sm">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Quick links */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {menuItems.map((item) => (
