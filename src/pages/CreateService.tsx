@@ -44,10 +44,6 @@ const CreateService = () => {
     defaultValues: { title: "", description: "", category_id: "", price_per_minute: 1, tags: "" },
   });
 
-  const updateDay = (day: string, field: keyof DaySchedule, value: string | boolean) => {
-    setSchedule((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
-  };
-
   const onSubmit = async (data: ServiceForm) => {
     if (!user) return;
     setSubmitting(true);
