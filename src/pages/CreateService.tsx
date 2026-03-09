@@ -31,7 +31,6 @@ const CreateService = () => {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { data: categories = [] } = useCategories();
-  const [schedule, setSchedule] = useState<Record<string, DaySchedule>>(defaultSchedule);
   const [submitting, setSubmitting] = useState(false);
 
   const {
