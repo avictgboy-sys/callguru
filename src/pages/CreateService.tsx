@@ -7,18 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Video, ArrowLeft, Clock, Tag, Info } from "lucide-react";
+import { Video, ArrowLeft, Tag, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 const serviceSchema = z.object({
   title: z.string().trim().min(3, "Title must be at least 3 characters").max(100),
@@ -30,21 +27,10 @@ const serviceSchema = z.object({
 
 type ServiceForm = z.infer<typeof serviceSchema>;
 
-interface DaySchedule {
-  enabled: boolean;
-  start: string;
-  end: string;
-}
-
-const defaultSchedule: Record<string, DaySchedule> = Object.fromEntries(
-  DAYS.map((d) => [d, { enabled: d !== "Saturday" && d !== "Sunday", start: "09:00", end: "17:00" }])
-);
-
 const CreateService = () => {
   const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { data: categories = [] } = useCategories();
-  const [schedule, setSchedule] = useState<Record<string, DaySchedule>>(defaultSchedule);
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -57,10 +43,6 @@ const CreateService = () => {
     resolver: zodResolver(serviceSchema),
     defaultValues: { title: "", description: "", category_id: "", price_per_minute: 1, tags: "" },
   });
-
-  const updateDay = (day: string, field: keyof DaySchedule, value: string | boolean) => {
-    setSchedule((prev) => ({ ...prev, [day]: { ...prev[day], [field]: value } }));
-  };
 
   const onSubmit = async (data: ServiceForm) => {
     if (!user) return;
@@ -82,7 +64,6 @@ const CreateService = () => {
       category_id: data.category_id,
       price_per_minute: data.price_per_minute,
       tags: tagsArray,
-      availability_schedule: schedule as any,
       is_available: true,
       is_active: true,
     }]);
@@ -184,45 +165,14 @@ const CreateService = () => {
             </div>
           </section>
 
-          {/* Availability */}
-          <section className="bg-card rounded-xl border border-border p-4 sm:p-6 space-y-4">
-            <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" /> Availability
-            </h2>
-
-            <div className="space-y-2">
-              {DAYS.map((day) => (
-                <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-b border-border last:border-0">
-                  <div className="flex items-center gap-2 min-w-[100px]">
-                    <Switch
-                      checked={schedule[day].enabled}
-                      onCheckedChange={(checked) => updateDay(day, "enabled", checked)}
-                    />
-                    <span className={`text-sm font-medium ${schedule[day].enabled ? "text-foreground" : "text-muted-foreground"}`}>
-                      {day.slice(0, 3)}
-                    </span>
-                  </div>
-                  {schedule[day].enabled ? (
-                    <div className="flex items-center gap-2 ml-8 sm:ml-0">
-                      <Input
-                        type="time"
-                        className="w-[110px] text-sm"
-                        value={schedule[day].start}
-                        onChange={(e) => updateDay(day, "start", e.target.value)}
-                      />
-                      <span className="text-muted-foreground text-xs">to</span>
-                      <Input
-                        type="time"
-                        className="w-[110px] text-sm"
-                        value={schedule[day].end}
-                        onChange={(e) => updateDay(day, "end", e.target.value)}
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground ml-8 sm:ml-0">Unavailable</span>
-                  )}
-                </div>
-              ))}
+          {/* Availability info */}
+          <section className="bg-card rounded-xl border border-border p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+              <div>
+                <p className="text-sm font-medium text-foreground">Service will be Live after creation</p>
+                <p className="text-xs text-muted-foreground">You can toggle availability on/off anytime from your Dashboard</p>
+              </div>
             </div>
           </section>
 
