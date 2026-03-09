@@ -46,7 +46,7 @@ const Feed = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-secondary/50 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-secondary/50 w-full max-w-[100vw] overflow-x-hidden box-border">
       {/* ===== Facebook-style Top Navigation ===== */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card shadow-sm border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
@@ -125,8 +125,8 @@ const Feed = () => {
       </nav>
 
       {/* ===== Main Content ===== */}
-      <div className="pt-14 pb-16 md:pb-0 overflow-x-hidden">
-        <div className="max-w-[1920px] mx-auto flex overflow-x-hidden">
+      <div className="pt-14 pb-16 md:pb-0 w-full max-w-full overflow-x-hidden box-border">
+        <div className="max-w-[1920px] mx-auto flex w-full max-w-full overflow-x-hidden">
           {/* ===== Left Sidebar - Desktop ===== */}
           <aside className="hidden lg:block w-[280px] shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto py-4 px-2">
             {user && (
@@ -166,7 +166,7 @@ const Feed = () => {
           </aside>
 
           {/* ===== Center Feed ===== */}
-          <main className="flex-1 min-w-0 max-w-[680px] mx-auto px-2 sm:px-4 py-4 space-y-4 overflow-x-hidden">
+          <main className="flex-1 min-w-0 w-full max-w-[680px] mx-auto px-3 sm:px-4 py-4 space-y-4 overflow-hidden box-border">
             {/* Stories / Quick Actions Bar */}
             {user && (
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
