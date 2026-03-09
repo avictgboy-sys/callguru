@@ -120,7 +120,7 @@ const CreatePostCard = () => {
   const isPosting = createPost.isPending || uploading;
 
   return (
-    <div className="bg-card rounded-xl border border-border shadow-sm">
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
       {/* Hidden file inputs */}
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
