@@ -100,6 +100,7 @@ const App = () => (
                   <EditService />
                 </ProtectedRoute>
               }
+            />
             <Route
               path="/rewards"
               element={
