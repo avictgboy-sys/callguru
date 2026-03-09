@@ -169,7 +169,7 @@ const Feed = () => {
           <main className="flex-1 min-w-0 max-w-[680px] mx-auto px-2 sm:px-4 py-4 space-y-4 overflow-x-hidden">
             {/* Stories / Quick Actions Bar */}
             {user && (
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
                 <Link
                   to="/create-ad"
                   className="shrink-0 w-28 h-40 rounded-xl bg-card border border-border overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow"

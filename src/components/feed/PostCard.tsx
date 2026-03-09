@@ -327,7 +327,7 @@ const PostCard = ({ post }: Props) => {
           </div>
         </div>
       ) : post.content ? (
-        <p className="px-4 pb-3 text-[15px] text-foreground whitespace-pre-wrap leading-relaxed">
+        <p className="px-4 pb-3 text-[15px] text-foreground whitespace-pre-wrap leading-relaxed break-words overflow-hidden">
           {post.content}
         </p>
       ) : null}
