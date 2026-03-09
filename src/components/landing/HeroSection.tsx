@@ -15,37 +15,37 @@ const HeroSection = () => {
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium">
-              <Shield className="w-4 h-4" />
-              Trusted by thousands of professionals
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              Trusted by thousands
             </div>
 
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-foreground">
               Expert Advice,{" "}
               <span className="text-primary">One Video Call</span>{" "}
               Away
             </h1>
 
-            <p className="text-lg text-muted-foreground max-w-lg">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-lg">
               Connect with verified experts across 10+ categories for live video consultations. Pay per minute, no commitments.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="hero" size="lg" className="text-base" asChild>
+              <Button variant="hero" size="lg" className="text-sm sm:text-base w-full sm:w-auto" asChild>
                 <Link to="/signup">
                   Start Free <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>
-              <Button variant="heroOutline" size="lg" className="text-base" asChild>
+              <Button variant="heroOutline" size="lg" className="text-sm sm:text-base w-full sm:w-auto" asChild>
                 <Link to="#how-it-works">See How It Works</Link>
               </Button>
             </div>
 
-            <div className="flex items-center gap-8 pt-4">
+            <div className="grid grid-cols-3 gap-4 sm:flex sm:items-center sm:gap-8 pt-4">
               {stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="font-heading text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div key={stat.label} className="text-center sm:text-left">
+                  <p className="font-heading text-xl sm:text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
             </div>
