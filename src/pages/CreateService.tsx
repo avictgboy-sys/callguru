@@ -7,18 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCategories } from "@/hooks/useServices";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Video, ArrowLeft, Clock, Tag, Info } from "lucide-react";
+import { Video, ArrowLeft, Tag, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 const serviceSchema = z.object({
   title: z.string().trim().min(3, "Title must be at least 3 characters").max(100),
@@ -29,16 +26,6 @@ const serviceSchema = z.object({
 });
 
 type ServiceForm = z.infer<typeof serviceSchema>;
-
-interface DaySchedule {
-  enabled: boolean;
-  start: string;
-  end: string;
-}
-
-const defaultSchedule: Record<string, DaySchedule> = Object.fromEntries(
-  DAYS.map((d) => [d, { enabled: d !== "Saturday" && d !== "Sunday", start: "09:00", end: "17:00" }])
-);
 
 const CreateService = () => {
   const { user, refreshProfile } = useAuth();
