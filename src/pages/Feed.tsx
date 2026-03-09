@@ -125,8 +125,8 @@ const Feed = () => {
       </nav>
 
       {/* ===== Main Content ===== */}
-      <div className="pt-14 pb-16 md:pb-0 overflow-x-hidden">
-        <div className="max-w-[1920px] mx-auto flex overflow-x-hidden">
+      <div className="pt-14 pb-16 md:pb-0 w-full max-w-full overflow-x-hidden box-border">
+        <div className="max-w-[1920px] mx-auto flex w-full max-w-full overflow-x-hidden">
           {/* ===== Left Sidebar - Desktop ===== */}
           <aside className="hidden lg:block w-[280px] shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto py-4 px-2">
             {user && (
