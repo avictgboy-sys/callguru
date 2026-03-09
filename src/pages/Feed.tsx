@@ -46,7 +46,7 @@ const Feed = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-secondary/50">
+    <div className="min-h-screen bg-secondary/50 overflow-x-hidden w-full">
       {/* ===== Facebook-style Top Navigation ===== */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-card shadow-sm border-b border-border">
         <div className="flex items-center justify-between h-14 px-4">
