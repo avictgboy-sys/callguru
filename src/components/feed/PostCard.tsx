@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,6 +110,47 @@ const VideoThumbnail = ({ src, onClick }: { src: string; onClick: () => void }) 
         </span>
       </div>
     </div>
+  );
+};
+
+/** Auto-plays video when in viewport, pauses when out */
+const AutoPlayVideo = ({ src }: { src: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      controls
+      muted
+      playsInline
+      autoPlay
+      className="w-full max-h-[500px] object-cover"
+    />
   );
 };
 
@@ -297,7 +338,7 @@ const PostCard = ({ post }: Props) => {
           {!mediaRevealed ? (
             <VideoThumbnail src={post.video_url} onClick={handleMediaClick} />
           ) : (
-            <video src={post.video_url} controls autoPlay className="w-full max-h-[500px]" />
+            <AutoPlayVideo src={post.video_url} />
           )}
         </>
       )}
