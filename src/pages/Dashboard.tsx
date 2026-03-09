@@ -1,10 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X, Megaphone } from "lucide-react";
+import { Video, LogOut, Wallet, User, Calendar, MessageSquare, Settings, Plus, Store, Home, Shield, Gift, Menu, X, Megaphone, Pencil } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LiveToggle from "@/components/provider/LiveToggle";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const { user, profile, roles, signOut, refreshProfile } = useAuth();
@@ -15,6 +17,21 @@ const Dashboard = () => {
   const isProvider = roles.includes("provider");
   const isAdmin = roles.includes("admin");
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { data: myServices = [] } = useQuery({
+    queryKey: ["my-services-list", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, title, is_available, is_active, price_per_minute")
+        .eq("provider_id", user!.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const menuItems = [
     { icon: User, label: "My Profile", href: user ? `/profile/${user.id}` : "#" },
@@ -133,6 +150,31 @@ const Dashboard = () => {
             </p>
           </div>
         </div>
+
+        {/* My Services */}
+        {myServices.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-heading text-base font-semibold text-foreground mb-3">My Services</h2>
+            <div className="space-y-2">
+              {myServices.map((s) => (
+                <div key={s.id} className="flex items-center justify-between bg-card border border-border rounded-lg p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-2 h-2 rounded-full ${s.is_available ? "bg-green-500" : "bg-muted-foreground"}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
+                      <p className="text-xs text-muted-foreground">৳{s.price_per_minute}/min</p>
+                    </div>
+                  </div>
+                  <Link to={`/edit-service/${s.id}`}>
+                    <Button variant="ghost" size="sm">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quick links */}
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
