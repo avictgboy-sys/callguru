@@ -116,6 +116,7 @@ const VideoThumbnail = ({ src, onClick }: { src: string; onClick: () => void }) 
 /** Auto-plays video when in viewport, pauses when out */
 const AutoPlayVideo = ({ src }: { src: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -135,22 +136,42 @@ const AutoPlayVideo = ({ src }: { src: string }) => {
     );
 
     observer.observe(video);
-
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+
   return (
-    <video
-      ref={videoRef}
-      src={src}
-      controls
-      muted
-      playsInline
-      autoPlay
-      className="w-full max-h-[500px] object-cover"
-    />
+    <div className="relative w-full">
+      <video
+        ref={videoRef}
+        src={src}
+        controls
+        muted
+        playsInline
+        autoPlay
+        className="w-full max-h-[500px] object-cover"
+      />
+      <button
+        onClick={() => setMuted((m) => !m)}
+        className="absolute bottom-12 right-3 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+        aria-label={muted ? "Unmute" : "Mute"}
+      >
+        {muted ? (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        )}
+      </button>
+    </div>
   );
 };
 
