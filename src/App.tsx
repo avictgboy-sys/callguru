@@ -94,6 +94,13 @@ const App = () => (
               }
             />
             <Route
+              path="/edit-service/:serviceId"
+              element={
+                <ProtectedRoute>
+                  <EditService />
+                </ProtectedRoute>
+              }
+            <Route
               path="/rewards"
               element={
                 <ProtectedRoute>
