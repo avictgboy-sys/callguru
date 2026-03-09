@@ -1,41 +1,121 @@
-import { useState } from "react";
-import { Image, Video, Smile, Send, X, MapPin } from "lucide-react";
+import { useState, useRef } from "react";
+import { Image, Video, Smile, Send, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreatePost } from "@/hooks/useFeed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreatePostCard = () => {
   const { user, profile } = useAuth();
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [showImageInput, setShowImageInput] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const createPost = useCreatePost();
 
   if (!user) return null;
 
   const initials = (profile?.full_name || "U")[0].toUpperCase();
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Clear video if image selected
+    setVideoFile(null);
+    setVideoPreview(null);
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("video/")) {
+      toast.error("Please select a video file");
+      return;
+    }
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Video must be under 100MB");
+      return;
+    }
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+    // Clear image if video selected
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  const clearMedia = () => {
+    setImageFile(null);
+    setVideoFile(null);
+    setImagePreview(null);
+    setVideoPreview(null);
+  };
+
+  const uploadFile = async (file: File, folder: string): Promise<string> => {
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("post-media").upload(path, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from("post-media").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const handleSubmit = async () => {
-    if (!content.trim() && !imageUrl.trim()) return;
+    if (!content.trim() && !imageFile && !videoFile) return;
     try {
+      setUploading(true);
+      let image_url: string | undefined;
+      let video_url: string | undefined;
+      let post_type = "text";
+
+      if (imageFile) {
+        image_url = await uploadFile(imageFile, "images");
+        post_type = "image";
+      }
+      if (videoFile) {
+        video_url = await uploadFile(videoFile, "videos");
+        post_type = "video";
+      }
+
       await createPost.mutateAsync({
         content: content.trim(),
-        image_url: imageUrl.trim() || undefined,
-        post_type: imageUrl.trim() ? "image" : "text",
+        image_url,
+        video_url,
+        post_type,
       });
       setContent("");
-      setImageUrl("");
-      setShowImageInput(false);
+      clearMedia();
       toast.success("Post created!");
     } catch {
       toast.error("Failed to create post");
+    } finally {
+      setUploading(false);
     }
   };
 
+  const isPosting = createPost.isPending || uploading;
+
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm">
+      {/* Hidden file inputs */}
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+
       <div className="flex gap-3 p-4 pb-3">
         <Avatar className="w-10 h-10">
           <AvatarImage src={profile?.avatar_url || ""} />
@@ -44,17 +124,13 @@ const CreatePostCard = () => {
           </AvatarFallback>
         </Avatar>
         <button
-          onClick={() => {
-            const el = document.getElementById("create-post-textarea");
-            el?.focus();
-          }}
+          onClick={() => document.getElementById("create-post-textarea")?.focus()}
           className="flex-1 bg-secondary hover:bg-secondary/80 rounded-full px-4 py-2.5 text-left text-sm text-muted-foreground transition-colors"
         >
           What's on your mind, {profile?.full_name?.split(" ")[0] || "there"}?
         </button>
       </div>
 
-      {/* Expanded input */}
       <div className="px-4 pb-2">
         <textarea
           id="create-post-textarea"
@@ -65,20 +141,32 @@ const CreatePostCard = () => {
           rows={1}
           onFocus={(e) => (e.target.style.minHeight = "80px")}
           onBlur={(e) => {
-            if (!content.trim()) e.target.style.minHeight = "0px";
+            if (!content.trim() && !imageFile && !videoFile) e.target.style.minHeight = "0px";
           }}
         />
-        {showImageInput && (
-          <div className="flex items-center gap-2 mt-2 mb-2">
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="Paste image URL..."
-              className="flex-1 bg-secondary rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none border border-border focus:border-primary"
-            />
-            <button onClick={() => { setShowImageInput(false); setImageUrl(""); }}>
-              <X className="w-4 h-4 text-muted-foreground" />
+
+        {/* Image preview */}
+        {imagePreview && (
+          <div className="relative mt-2 mb-2">
+            <img src={imagePreview} alt="Preview" className="w-full max-h-[300px] object-cover rounded-lg" />
+            <button
+              onClick={clearMedia}
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Video preview */}
+        {videoPreview && (
+          <div className="relative mt-2 mb-2">
+            <video src={videoPreview} controls className="w-full max-h-[300px] rounded-lg" />
+            <button
+              onClick={clearMedia}
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -90,15 +178,17 @@ const CreatePostCard = () => {
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg text-xs gap-1.5"
-            disabled
+            onClick={() => videoInputRef.current?.click()}
+            disabled={isPosting}
           >
-            <Video className="w-5 h-5 text-red-500" /> Live Video
+            <Video className="w-5 h-5 text-red-500" /> Video
           </Button>
           <Button
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg text-xs gap-1.5"
-            onClick={() => setShowImageInput(!showImageInput)}
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isPosting}
           >
             <Image className="w-5 h-5 text-green-500" /> Photo
           </Button>
@@ -110,14 +200,16 @@ const CreatePostCard = () => {
             <Smile className="w-5 h-5 text-yellow-500" /> Feeling
           </Button>
         </div>
-        {(content.trim() || imageUrl.trim()) && (
+        {(content.trim() || imageFile || videoFile) && (
           <Button
             size="sm"
             className="rounded-full bg-primary text-primary-foreground font-semibold px-5"
             onClick={handleSubmit}
-            disabled={createPost.isPending}
+            disabled={isPosting}
           >
-            {createPost.isPending ? "Posting..." : "Post"}
+            {isPosting ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Uploading...</>
+            ) : "Post"}
           </Button>
         )}
       </div>
