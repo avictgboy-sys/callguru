@@ -112,8 +112,8 @@ const InterstitialAd = ({ open, onClose, slotId }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && canSkip) handleClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden [&>button]:hidden">
-        <div className="relative">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-auto p-0 overflow-hidden max-w-full [&>button]:hidden">
+        <div ref={contentRef} className="relative w-full max-w-full overflow-hidden">
           {/* Close / Skip */}
           <div className="absolute top-3 right-3 z-10">
             {canSkip ? (

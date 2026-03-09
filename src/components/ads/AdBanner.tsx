@@ -118,7 +118,7 @@ const AdBanner = ({ slotId, className = "" }: Props) => {
   return (
     <div
       ref={adRef}
-      className={`rounded-2xl border border-border bg-card overflow-hidden ${className}`}
+      className={`w-full max-w-full min-w-0 rounded-2xl border border-border bg-card overflow-hidden ${className}`}
     >
       {adsterraId ? (
         <div id={`ad-container-${slotId}`} className="min-h-[100px] flex items-center justify-center">

@@ -121,6 +121,20 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  img, video, iframe {
+    max-width: 100%;
+  }
+
+  iframe {
+    display: block;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
