@@ -67,6 +67,7 @@ const App = () => (
           <IncomingCallProvider>
           <Routes>
             <Route path="/" element={<Feed />} />
+            <Route path="/landing" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
