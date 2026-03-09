@@ -113,6 +113,47 @@ const VideoThumbnail = ({ src, onClick }: { src: string; onClick: () => void }) 
   );
 };
 
+/** Auto-plays video when in viewport, pauses when out */
+const AutoPlayVideo = ({ src }: { src: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      controls
+      muted
+      playsInline
+      autoPlay
+      className="w-full max-h-[500px] object-cover"
+    />
+  );
+};
+
 interface Props {
   post: PostWithAuthor;
 }
