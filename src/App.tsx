@@ -17,6 +17,7 @@ import Install from "./pages/Install";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/Marketplace";
 import CreateService from "./pages/CreateService";
+import EditService from "./pages/EditService";
 import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
 import Wallet from "./pages/Wallet";
