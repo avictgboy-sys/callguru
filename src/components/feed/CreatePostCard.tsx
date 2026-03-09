@@ -181,25 +181,25 @@ const CreatePostCard = () => {
         )}
       </div>
 
-      <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-        <div className="flex gap-0.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-2 border-t border-border">
+        <div className="flex gap-0.5 shrink-0">
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg text-xs gap-1.5"
+            className="text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg text-xs gap-1 px-2 sm:px-3 sm:gap-1.5"
             onClick={() => videoInputRef.current?.click()}
             disabled={isPosting}
           >
-            <Video className="w-5 h-5 text-red-500" /> Video
+            <Video className="w-5 h-5 text-red-500" /> <span className="hidden xs:inline sm:inline">Video</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg text-xs gap-1.5"
+            className="text-muted-foreground hover:text-green-600 hover:bg-green-50 rounded-lg text-xs gap-1 px-2 sm:px-3 sm:gap-1.5"
             onClick={() => imageInputRef.current?.click()}
             disabled={isPosting}
           >
-            <Image className="w-5 h-5 text-green-500" /> Photo
+            <Image className="w-5 h-5 text-green-500" /> <span className="hidden xs:inline sm:inline">Photo</span>
           </Button>
           <Button
             variant="ghost"
@@ -211,12 +211,12 @@ const CreatePostCard = () => {
         </div>
         <Button
           size="sm"
-          className="rounded-full bg-primary text-primary-foreground font-semibold px-5"
+          className="rounded-full bg-primary text-primary-foreground font-semibold px-4 sm:px-5 shrink-0"
           onClick={handleSubmit}
           disabled={isPosting || (!content.trim() && !imageFile && !videoFile)}
         >
           {isPosting ? (
-            <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Uploading...</>
+            <><Loader2 className="w-4 h-4 animate-spin mr-1" /> <span className="hidden sm:inline">Uploading...</span><span className="sm:hidden">...</span></>
           ) : "Post"}
         </Button>
       </div>
