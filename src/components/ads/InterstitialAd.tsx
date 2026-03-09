@@ -72,6 +72,40 @@ const InterstitialAd = ({ open, onClose, slotId }: Props) => {
     }
   }, [canSkip, open, awardPoints]);
 
+  // Prevent injected interstitial from overflowing on mobile
+  useEffect(() => {
+    if (!open) return;
+    const root = contentRef.current;
+    if (!root) return;
+
+    const fix = (el: HTMLElement) => {
+      const targets = el.matches("iframe, img, video")
+        ? [el]
+        : (Array.from(el.querySelectorAll("iframe, img, video")) as HTMLElement[]);
+
+      targets.forEach((t) => {
+        t.style.maxWidth = "100%";
+        t.style.boxSizing = "border-box";
+        if (t.tagName === "IFRAME") {
+          t.style.width = "100%";
+          t.style.display = "block";
+          t.style.border = "0";
+        }
+      });
+    };
+
+    fix(root);
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (n instanceof HTMLElement) fix(n);
+        });
+      }
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [open]);
+
   const handleClose = () => {
     onClose();
   };
