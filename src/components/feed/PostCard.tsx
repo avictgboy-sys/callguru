@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Heart, MessageCircle, Share2, MoreHorizontal, Play, ThumbsUp, Globe, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,100 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+/** Generates a thumbnail from a video URL by capturing the first frame */
+const VideoThumbnail = ({ src, onClick }: { src: string; onClick: () => void }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [duration, setDuration] = useState<string>("");
+
+  useEffect(() => {
+    const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = src;
+
+    video.onloadeddata = () => {
+      video.currentTime = 1; // seek to 1s for a better frame
+    };
+
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(video, 0, 0);
+          setThumbnail(canvas.toDataURL("image/jpeg", 0.8));
+        }
+      } catch {
+        // CORS might block this, fall back to video element
+      }
+
+      // Format duration
+      const dur = Math.round(video.duration);
+      if (dur > 0) {
+        const mins = Math.floor(dur / 60);
+        const secs = dur % 60;
+        setDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
+      }
+    };
+
+    return () => {
+      video.src = "";
+    };
+  }, [src]);
+
+  return (
+    <div
+      className="w-full relative cursor-pointer group bg-black"
+      onClick={onClick}
+    >
+      {thumbnail ? (
+        <img
+          src={thumbnail}
+          alt="Video thumbnail"
+          className="w-full max-h-[500px] object-cover"
+        />
+      ) : (
+        // Fallback: show muted video as thumbnail
+        <video
+          ref={videoRef}
+          src={src}
+          muted
+          playsInline
+          preload="metadata"
+          className="w-full max-h-[500px] object-cover"
+        />
+      )}
+
+      {/* Play button overlay */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+        <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform">
+          <Play className="w-8 h-8 text-white fill-white ml-1" />
+        </div>
+      </div>
+
+      {/* Duration badge */}
+      {duration && (
+        <div className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm rounded px-2 py-0.5">
+          <span className="text-xs font-medium text-white">{duration}</span>
+        </div>
+      )}
+
+      {/* Ad badge */}
+      <div className="absolute bottom-3 left-3 bg-primary/90 backdrop-blur-sm rounded-full px-2.5 py-1">
+        <span className="text-[10px] font-semibold text-primary-foreground">
+          🎬 Ad দেখে ভিডিও দেখুন
+        </span>
+      </div>
+    </div>
+  );
+};
 
 interface Props {
   post: PostWithAuthor;
@@ -199,18 +293,13 @@ const PostCard = ({ post }: Props) => {
 
       {/* Video */}
       {post.video_url && (
-        <div className="w-full relative cursor-pointer" onClick={handleMediaClick}>
-          {!mediaRevealed && user ? (
-            <div className="w-full h-[350px] bg-muted/50 backdrop-blur flex flex-col items-center justify-center gap-2">
-              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-                <Play className="w-7 h-7 text-primary" />
-              </div>
-              <p className="text-sm text-muted-foreground font-medium">Ad দেখে ভিডিও দেখুন</p>
-            </div>
+        <>
+          {!mediaRevealed ? (
+            <VideoThumbnail src={post.video_url} onClick={handleMediaClick} />
           ) : (
-            <video src={post.video_url} controls className="w-full max-h-[500px]" />
+            <video src={post.video_url} controls autoPlay className="w-full max-h-[500px]" />
           )}
-        </div>
+        </>
       )}
 
       {/* Reaction Stats */}
