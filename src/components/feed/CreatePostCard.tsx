@@ -68,10 +68,19 @@ const CreatePostCard = () => {
 
   const uploadFile = async (file: File, folder: string): Promise<string> => {
     const ext = file.name.split(".").pop();
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("post-media").upload(path, file);
-    if (error) throw error;
+    const path = `${user.id}/${folder}/${Date.now()}.${ext}`;
+    console.log("Uploading file:", file.name, "size:", file.size, "type:", file.type, "path:", path);
+    const { error } = await supabase.storage.from("post-media").upload(path, file, {
+      contentType: file.type,
+      cacheControl: "3600",
+      upsert: false,
+    });
+    if (error) {
+      console.error("Upload error:", error);
+      throw error;
+    }
     const { data } = supabase.storage.from("post-media").getPublicUrl(path);
+    console.log("Upload success, URL:", data.publicUrl);
     return data.publicUrl;
   };
 
