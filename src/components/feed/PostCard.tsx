@@ -242,7 +242,7 @@ const PostCard = ({ post }: Props) => {
   const authorInitial = (post.author?.full_name || "U")[0].toUpperCase();
 
   return (
-    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden max-w-full">
       {/* Header */}
       <div className="flex items-start justify-between p-4 pb-2">
         <Link
