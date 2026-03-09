@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -24,6 +24,7 @@ const InterstitialAd = ({ open, onClose, slotId }: Props) => {
   const pointsPerView = parseInt(useSetting("ad_points_per_view") || "2", 10);
   const dailyLimit = parseInt(useSetting("ad_daily_limit") || "50", 10);
   const adsterraId = useSetting("adsterra_interstitial_id");
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -71,14 +72,48 @@ const InterstitialAd = ({ open, onClose, slotId }: Props) => {
     }
   }, [canSkip, open, awardPoints]);
 
+  // Prevent injected interstitial from overflowing on mobile
+  useEffect(() => {
+    if (!open) return;
+    const root = contentRef.current;
+    if (!root) return;
+
+    const fix = (el: HTMLElement) => {
+      const targets = el.matches("iframe, img, video")
+        ? [el]
+        : (Array.from(el.querySelectorAll("iframe, img, video")) as HTMLElement[]);
+
+      targets.forEach((t) => {
+        t.style.maxWidth = "100%";
+        t.style.boxSizing = "border-box";
+        if (t.tagName === "IFRAME") {
+          t.style.width = "100%";
+          t.style.display = "block";
+          t.style.border = "0";
+        }
+      });
+    };
+
+    fix(root);
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (n instanceof HTMLElement) fix(n);
+        });
+      }
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [open]);
+
   const handleClose = () => {
     onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && canSkip) handleClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden [&>button]:hidden">
-        <div className="relative">
+      <DialogContent className="max-w-md w-[calc(100vw-2rem)] sm:w-auto p-0 overflow-hidden max-w-full [&>button]:hidden">
+        <div ref={contentRef} className="relative w-full max-w-full overflow-hidden">
           {/* Close / Skip */}
           <div className="absolute top-3 right-3 z-10">
             {canSkip ? (
