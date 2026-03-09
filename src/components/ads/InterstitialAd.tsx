@@ -24,6 +24,7 @@ const InterstitialAd = ({ open, onClose, slotId }: Props) => {
   const pointsPerView = parseInt(useSetting("ad_points_per_view") || "2", 10);
   const dailyLimit = parseInt(useSetting("ad_daily_limit") || "50", 10);
   const adsterraId = useSetting("adsterra_interstitial_id");
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
