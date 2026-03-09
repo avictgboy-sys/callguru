@@ -76,6 +76,45 @@ const AdBanner = ({ slotId, className = "" }: Props) => {
     }
   }, [adsterraId]);
 
+  // Prevent injected ad iframes from causing horizontal overflow on mobile
+  useEffect(() => {
+    const root = adRef.current;
+    if (!root) return;
+
+    const fix = (el: HTMLElement) => {
+      const targets = el.matches("iframe, img, video")
+        ? [el]
+        : (Array.from(el.querySelectorAll("iframe, img, video")) as HTMLElement[]);
+
+      targets.forEach((t) => {
+        t.style.maxWidth = "100%";
+        t.style.boxSizing = "border-box";
+        if (t.tagName === "IFRAME") {
+          t.style.width = "100%";
+          t.style.display = "block";
+          t.style.border = "0";
+        }
+        if (t.tagName === "IMG" || t.tagName === "VIDEO") {
+          t.style.height = "auto";
+          t.style.display = "block";
+        }
+      });
+    };
+
+    fix(root);
+
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (n instanceof HTMLElement) fix(n);
+        });
+      }
+    });
+
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [adsterraId, slotId]);
+
   return (
     <div
       ref={adRef}
