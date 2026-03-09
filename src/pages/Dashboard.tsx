@@ -103,11 +103,10 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {isProvider && (
-          <div className="mb-6">
-            <LiveToggle />
-          </div>
-        )}
+        {/* LiveToggle shows for any user with services - component handles empty state */}
+        <div className="mb-6">
+          <LiveToggle />
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
