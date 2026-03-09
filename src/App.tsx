@@ -53,6 +53,7 @@ import CreateHomeService from "./pages/CreateHomeService";
 import HomeServiceDetail from "./pages/HomeServiceDetail";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
