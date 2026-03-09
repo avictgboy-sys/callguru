@@ -209,18 +209,16 @@ const CreatePostCard = () => {
             <Smile className="w-5 h-5 text-yellow-500" /> Feeling
           </Button>
         </div>
-        {(content.trim() || imageFile || videoFile) && (
-          <Button
-            size="sm"
-            className="rounded-full bg-primary text-primary-foreground font-semibold px-5"
-            onClick={handleSubmit}
-            disabled={isPosting}
-          >
-            {isPosting ? (
-              <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Uploading...</>
-            ) : "Post"}
-          </Button>
-        )}
+        <Button
+          size="sm"
+          className="rounded-full bg-primary text-primary-foreground font-semibold px-5"
+          onClick={handleSubmit}
+          disabled={isPosting || (!content.trim() && !imageFile && !videoFile)}
+        >
+          {isPosting ? (
+            <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Uploading...</>
+          ) : "Post"}
+        </Button>
       </div>
     </div>
   );
