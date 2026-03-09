@@ -53,6 +53,7 @@ import CreateHomeService from "./pages/CreateHomeService";
 import HomeServiceDetail from "./pages/HomeServiceDetail";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
           <IncomingCallProvider>
           <Routes>
             <Route path="/" element={<Feed />} />
+            <Route path="/landing" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
