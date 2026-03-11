@@ -48,8 +48,8 @@ const CreatePostCard = () => {
       toast.error("Please select a video file");
       return;
     }
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error("Video must be under 100MB");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("ভিডিও ফাইল ৫০MB এর কম হতে হবে");
       return;
     }
     setVideoFile(file);
@@ -110,8 +110,9 @@ const CreatePostCard = () => {
       setContent("");
       clearMedia();
       toast.success("Post created!");
-    } catch {
-      toast.error("Failed to create post");
+    } catch (err: any) {
+      console.error("Post creation error:", err);
+      toast.error(err?.message || "পোস্ট তৈরি করতে ব্যর্থ হয়েছে");
     } finally {
       setUploading(false);
     }
