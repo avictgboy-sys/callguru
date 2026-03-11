@@ -110,8 +110,9 @@ const CreatePostCard = () => {
       setContent("");
       clearMedia();
       toast.success("Post created!");
-    } catch {
-      toast.error("Failed to create post");
+    } catch (err: any) {
+      console.error("Post creation error:", err);
+      toast.error(err?.message || "পোস্ট তৈরি করতে ব্যর্থ হয়েছে");
     } finally {
       setUploading(false);
     }
