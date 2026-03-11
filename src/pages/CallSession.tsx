@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, MonitorUp,
+  Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, MonitorUp, SwitchCamera,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -80,13 +80,14 @@ const CallSession = () => {
     }
   }, [callId, user?.id, webrtc]);
 
-  // Attach streams to video elements
+  // Attach local stream to video element
   useEffect(() => {
     if (localVideoRef.current && webrtc.localStream) {
       localVideoRef.current.srcObject = webrtc.localStream;
     }
   }, [webrtc.localStream]);
 
+  // Attach remote stream to video elements
   useEffect(() => {
     if (webrtc.remoteStream) {
       if (remoteVideoRef.current) {
@@ -102,7 +103,6 @@ const CallSession = () => {
   useEffect(() => {
     if (webrtc.connectionState === "connected") {
       setCallConnected(true);
-      // Silently start recording when connection is established
       if (webrtc.localStream && !recorder.isRecording) {
         recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
       }
@@ -133,7 +133,6 @@ const CallSession = () => {
   const runningCost = durationMinutes * pricePerMin;
   const feeAmount = runningCost * (fees.callFeePercent / 100);
 
-  // Track if call has been ended to prevent double-ending
   const callEndedRef = useRef(false);
 
   const handleEndCall = useCallback(async () => {
@@ -141,6 +140,9 @@ const CallSession = () => {
     callEndedRef.current = true;
     setIsActive(false);
     setShowEndDialog(false);
+
+    // Broadcast hangup to remote party
+    webrtc.broadcastHangup();
 
     // Stop recording if active
     let recordingBlob: Blob | null = null;
@@ -172,11 +174,20 @@ const CallSession = () => {
       setIsActive(true);
     }
 
-    // Disconnect WebRTC
     webrtc.disconnect();
   }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc]);
 
-  // Auto-end call only when WebRTC connection truly fails (not temporary disconnects)
+  // Listen for remote hangup
+  useEffect(() => {
+    webrtc.setOnRemoteHangup(() => {
+      if (!callEndedRef.current) {
+        toast.info("অপর পক্ষ কল শেষ করেছে");
+        handleEndCall();
+      }
+    });
+  }, [webrtc, handleEndCall]);
+
+  // Auto-end call only when WebRTC connection truly fails
   useEffect(() => {
     if (
       mediaReady &&
@@ -189,18 +200,17 @@ const CallSession = () => {
           toast.info("সংযোগ পুনরুদ্ধার করা যায়নি। কল শেষ হচ্ছে…");
           handleEndCall();
         }
-      }, 15000); // Wait 15s for ICE restart to recover
+      }, 15000);
       return () => clearTimeout(timer);
     }
   }, [webrtc.connectionState, mediaReady, isActive, elapsed, handleEndCall]);
 
-  // Auto-end on page close/navigate away — ensures fee is collected
+  // Auto-end on page close/navigate away
   useEffect(() => {
     if (!callId || !isActive) return;
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!callEndedRef.current && isActive) {
-        // Try to complete the call via sendBeacon for reliability
         const payload = JSON.stringify({
           p_call_id: callId,
           p_duration_minutes: Math.max(Math.ceil(elapsed / 60), 1),
@@ -240,6 +250,9 @@ const CallSession = () => {
     .toUpperCase()
     .slice(0, 2);
 
+  const hasRemoteVideo = webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 
+    && webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Minimal nav */}
@@ -273,7 +286,6 @@ const CallSession = () => {
       {/* Video area */}
       <div className="flex-1 relative bg-muted/30">
         {!mediaReady ? (
-          /* Join Call screen — getUserMedia runs on this button click */
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
             <Avatar className="w-28 h-28 ring-4 ring-primary/20">
               <AvatarImage src={providerAvatar || undefined} />
@@ -297,20 +309,18 @@ const CallSession = () => {
           <>
             {/* Remote video (full screen) */}
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-              {/* Remote video — always rendered, visibility toggled */}
               <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
                 className="w-full h-full object-cover"
                 style={{
-                  display: webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0
-                    ? "block" : "none",
+                  display: hasRemoteVideo ? "block" : "none",
                 }}
               />
 
               {/* Fallback avatar when no remote video */}
-              {!(webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0) && (
+              {!hasRemoteVideo && (
                 <div className="flex flex-col items-center gap-4">
                   <Avatar className="w-32 h-32 ring-4 ring-primary/20">
                     <AvatarImage src={providerAvatar || undefined} />
@@ -323,7 +333,7 @@ const CallSession = () => {
                     <p className="text-muted-foreground text-sm">{serviceName}</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       {webrtc.connectionState === "connected" 
-                        ? "কানেক্টেড ✓ — ভিডিওর জন্য অপেক্ষা করা হচ্ছে"
+                        ? "কানেক্টেড ✓ — অডিও কল চলছে"
                         : webrtc.connectionState === "connecting" 
                           ? "কানেক্ট হচ্ছে…"
                           : webrtc.connectionState === "failed"
@@ -334,7 +344,7 @@ const CallSession = () => {
                 </div>
               )}
 
-              {/* Hidden audio element — ensures remote audio plays even when video is hidden */}
+              {/* Hidden audio element for remote audio */}
               <video
                 ref={remoteAudioRef}
                 autoPlay
@@ -343,7 +353,7 @@ const CallSession = () => {
               />
             </div>
 
-            {/* Local video (picture-in-picture) — always rendered, visibility toggled */}
+            {/* Local video (picture-in-picture) */}
             {webrtc.localStream && (
               <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
                 <video
@@ -353,7 +363,7 @@ const CallSession = () => {
                   muted
                   className="w-full h-full object-cover"
                   style={{
-                    transform: "scaleX(-1)",
+                    transform: webrtc.facingMode === "user" ? "scaleX(-1)" : "none",
                     display: webrtc.isVideoEnabled ? "block" : "none",
                   }}
                 />
@@ -387,50 +397,59 @@ const CallSession = () => {
       {/* Controls bar */}
       {isActive && mediaReady && (
         <div className="border-t border-border bg-card p-4">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-3">
             <button
               onClick={webrtc.toggleAudio}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
                 webrtc.isAudioEnabled
                   ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   : "bg-destructive/20 text-destructive"
               }`}
             >
-              {webrtc.isAudioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+              {webrtc.isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
             </button>
 
             <button
               onClick={webrtc.toggleVideo}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
                 webrtc.isVideoEnabled
                   ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   : "bg-destructive/20 text-destructive"
               }`}
             >
-              {webrtc.isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+              {webrtc.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+            </button>
+
+            {/* Switch Camera (front/back) */}
+            <button
+              onClick={webrtc.switchCamera}
+              className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <SwitchCamera className="w-5 h-5" />
             </button>
 
             <button
               onClick={webrtc.toggleScreenShare}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
                 webrtc.isScreenSharing
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               }`}
             >
-              <MonitorUp className="w-6 h-6" />
+              <MonitorUp className="w-5 h-5" />
             </button>
 
             <button
               onClick={() => setShowEndDialog(true)}
-              className="w-16 h-16 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
+              className="w-14 h-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
             >
-              <PhoneOff className="w-7 h-7" />
+              <PhoneOff className="w-6 h-6" />
             </button>
           </div>
-          <div className="flex justify-center gap-5 mt-2 text-xs text-muted-foreground">
+          <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
             <span>Mic</span>
             <span>Camera</span>
+            <span>Flip</span>
             <span>Screen</span>
             <span>End</span>
           </div>

@@ -3,10 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const METERED_API_KEY = "47aeef9f8e8613688d21e5b9806098005d0b";
 
-/**
- * Fetch production TURN credentials from Metered.ca REST API.
- * Falls back to free STUN-only if the fetch fails.
- */
 async function getIceServers(): Promise<RTCConfiguration> {
   try {
     const res = await fetch(
@@ -40,6 +36,7 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -49,12 +46,18 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   const remoteStreamRef = useRef<MediaStream>(new MediaStream());
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   const hasRemoteDescRef = useRef(false);
+  const onRemoteHangupRef = useRef<(() => void) | null>(null);
+
+  // Expose a way for CallSession to register a hangup callback
+  const setOnRemoteHangup = useCallback((cb: () => void) => {
+    onRemoteHangupRef.current = cb;
+  }, []);
 
   // ── Get local camera + mic ──
-  const startLocalStream = useCallback(async () => {
+  const startLocalStream = useCallback(async (facing: "user" | "environment" = "user") => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: facing },
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
       localStreamRef.current = stream;
@@ -101,22 +104,18 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       // Add local tracks
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Handle remote tracks — accumulate into a single persistent MediaStream
+      // Handle remote tracks
       const remote = remoteStreamRef.current;
-      // Clear any stale tracks
       remote.getTracks().forEach((t) => remote.removeTrack(t));
 
       pc.ontrack = (event) => {
         const incomingTrack = event.track;
-        // Avoid duplicates
         const existing = remote.getTracks().find((t) => t.id === incomingTrack.id);
         if (!existing) {
           remote.addTrack(incomingTrack);
         }
-        // Trigger React re-render with a new reference
         setRemoteStream(new MediaStream(remote.getTracks()));
 
-        // Handle track ending (remote user toggled off)
         incomingTrack.onended = () => {
           remote.removeTrack(incomingTrack);
           setRemoteStream(new MediaStream(remote.getTracks()));
@@ -130,7 +129,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
       pc.oniceconnectionstatechange = () => {
         console.log("ICE connection state:", pc.iceConnectionState);
-        // Auto-restart ICE if it fails or gets temporarily disconnected
         if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
           console.log("ICE issue detected, restarting...");
           pc.restartIce();
@@ -144,10 +142,9 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
   // ── Main connect function ──
   const connect = useCallback(async () => {
-    const stream = await startLocalStream();
+    const stream = await startLocalStream(facingMode);
     const pc = await setupPeerConnection(stream);
 
-    // Signaling channel via Supabase Realtime broadcast
     const channel = supabase.channel(`call-signal-${callId}`, {
       config: { broadcast: { self: false } },
     });
@@ -175,7 +172,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
           console.warn("Error adding ICE candidate:", e);
         }
       } else {
-        // Queue candidates until remote description is set
         pendingCandidatesRef.current.push(candidate);
       }
     });
@@ -212,10 +208,9 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── "ready" handshake — ensures both sides are subscribed before offer ──
+    // ── "ready" handshake ──
     channel.on("broadcast", { event: "ready" }, async ({ payload }) => {
       if (payload.from === userId) return;
-      // The other side is ready; if we're the caller, send the offer now
       if (isCaller && pc.signalingState === "stable" && !hasRemoteDescRef.current) {
         try {
           const offer = await pc.createOffer();
@@ -231,7 +226,16 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── Renegotiation: if caller needs to resend offer (e.g. track changes) ──
+    // ── Listen for remote hangup ──
+    channel.on("broadcast", { event: "call-ended" }, ({ payload }) => {
+      if (payload.from === userId) return;
+      console.log("Remote party ended the call");
+      if (onRemoteHangupRef.current) {
+        onRemoteHangupRef.current();
+      }
+    });
+
+    // ── Renegotiation ──
     pc.onnegotiationneeded = async () => {
       if (!isCaller || pc.signalingState !== "stable") return;
       try {
@@ -249,8 +253,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
 
     await channel.subscribe();
 
-    // Announce "I'm ready" — both sides do this
-    // Small delay to ensure subscription is fully active
     setTimeout(() => {
       channel.send({
         type: "broadcast",
@@ -259,8 +261,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       });
     }, 500);
 
-    // Caller: also send offer after a longer delay as fallback
-    // (in case "ready" messages crossed)
     if (isCaller) {
       setTimeout(async () => {
         if (pc.signalingState === "stable" && !hasRemoteDescRef.current) {
@@ -278,7 +278,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
         }
       }, 3000);
 
-      // Retry offer if still not connected after 8s
       setTimeout(async () => {
         if (pc.connectionState !== "connected" && pc.signalingState === "stable") {
           console.log("Retrying offer after timeout...");
@@ -296,7 +295,18 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
         }
       }, 8000);
     }
-  }, [callId, userId, isCaller, startLocalStream, setupPeerConnection, flushCandidates]);
+  }, [callId, userId, isCaller, facingMode, startLocalStream, setupPeerConnection, flushCandidates]);
+
+  // ── Broadcast hangup to remote ──
+  const broadcastHangup = useCallback(() => {
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "call-ended",
+        payload: { from: userId },
+      });
+    }
+  }, [userId]);
 
   // ── Toggle audio ──
   const toggleAudio = useCallback(() => {
@@ -313,6 +323,44 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     });
     setIsVideoEnabled((prev) => !prev);
   }, []);
+
+  // ── Switch camera (front/back) ──
+  const switchCamera = useCallback(async () => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    const newFacing = facingMode === "user" ? "environment" : "user";
+    try {
+      // Stop current video tracks
+      localStreamRef.current?.getVideoTracks().forEach((t) => t.stop());
+
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: newFacing },
+      });
+      const newVideoTrack = newStream.getVideoTracks()[0];
+
+      // Replace in peer connection
+      const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+      if (sender) {
+        await sender.replaceTrack(newVideoTrack);
+      }
+
+      // Update local stream
+      const currentStream = localStreamRef.current;
+      if (currentStream) {
+        const oldVideoTracks = currentStream.getVideoTracks();
+        oldVideoTracks.forEach((t) => currentStream.removeTrack(t));
+        currentStream.addTrack(newVideoTrack);
+        setLocalStream(new MediaStream(currentStream.getTracks()));
+        localStreamRef.current = currentStream;
+      }
+
+      setFacingMode(newFacing);
+      originalVideoTrackRef.current = newVideoTrack;
+    } catch (err) {
+      console.error("Camera switch failed:", err);
+    }
+  }, [facingMode]);
 
   // ── Screen sharing ──
   const toggleScreenShare = useCallback(async () => {
@@ -393,10 +441,14 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     isAudioEnabled,
     isVideoEnabled,
     isScreenSharing,
+    facingMode,
     connect,
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    switchCamera,
+    broadcastHangup,
+    setOnRemoteHangup,
     disconnect,
   };
 };
