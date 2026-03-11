@@ -221,6 +221,13 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     stopAll();
     setIncomingCall(null);
 
+    // Update call status to missed/declined in database
+    const newStatus = isTimeout ? "missed" : "declined";
+    await supabase
+      .from("calls")
+      .update({ status: newStatus, ended_at: new Date().toISOString() } as any)
+      .eq("id", callId);
+
     // Broadcast decline
     const channel = supabase.channel(`call-status-${callId}`);
     channel.subscribe(() => {
