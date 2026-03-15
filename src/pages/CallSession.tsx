@@ -251,7 +251,7 @@ const CallSession = () => {
     .slice(0, 2);
 
   const hasRemoteVideo = webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 
-    && webrtc.remoteStream.getVideoTracks().some(t => t.enabled && !t.muted);
+    && webrtc.remoteStream.getVideoTracks().some(t => t.enabled);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
