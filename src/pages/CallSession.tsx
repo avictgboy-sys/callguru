@@ -99,7 +99,7 @@ const CallSession = () => {
     }
   }, [webrtc.remoteStream]);
 
-  // Track connection state & auto-start silent recording
+  // Quality monitoring
   useEffect(() => {
     if (webrtc.connectionState === "connected") {
       setCallConnected(true);
@@ -110,7 +110,6 @@ const CallSession = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webrtc.connectionState, webrtc.localStream]);
 
-  // Fallback: start recording even without peer connection after 5s
   useEffect(() => {
     if (!webrtc.localStream || recorder.isRecording) return;
     const timer = setTimeout(() => {
