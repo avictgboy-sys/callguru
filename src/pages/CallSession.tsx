@@ -257,204 +257,231 @@ const CallSession = () => {
     && webrtc.remoteStream.getVideoTracks().some(t => t.enabled);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal nav */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm z-10">
-        <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-              <Video className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-heading font-bold text-lg text-foreground">CallGuru</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="bg-card border border-border rounded-lg px-3 py-1.5 flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="font-heading font-bold text-foreground tabular-nums text-sm">
-                {formatTime(elapsed)}
-              </span>
-            </div>
-            <div className="bg-card border border-border rounded-lg px-3 py-1.5">
-              <span className="text-sm font-medium text-primary">৳{runningCost.toFixed(2)}</span>
-            </div>
-            <motion.div
-              className="w-2.5 h-2.5 rounded-full bg-accent"
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            />
-          </div>
-        </div>
-      </nav>
-
-      {/* Video area */}
-      <div className="flex-1 relative bg-muted/30">
-        {!mediaReady ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
-            <Avatar className="w-28 h-28 ring-4 ring-primary/20">
+    <div className="fixed inset-0 bg-black flex flex-col overflow-hidden select-none">
+      {/* ── Full-screen remote video ── */}
+      {!mediaReady ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Avatar className="w-32 h-32 ring-4 ring-white/20 shadow-2xl">
               <AvatarImage src={providerAvatar || undefined} />
-              <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+              <AvatarFallback className="text-4xl bg-white/10 text-white">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="text-center">
-              <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
-              <p className="text-muted-foreground text-sm">{serviceName}</p>
-            </div>
-            <Button variant="hero" size="lg" onClick={handleJoinCall} className="gap-2">
-              <Video className="w-5 h-5" />
+          </motion.div>
+          <div className="text-center">
+            <h2 className="text-white text-2xl font-bold">{providerName}</h2>
+            <p className="text-white/60 text-sm mt-1">{serviceName}</p>
+          </div>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Button
+              onClick={handleJoinCall}
+              className="bg-green-500 hover:bg-green-600 text-white rounded-full px-8 py-6 text-lg font-semibold gap-3 shadow-lg shadow-green-500/30"
+            >
+              <Video className="w-6 h-6" />
               কলে যোগ দিন
             </Button>
-            <p className="text-xs text-muted-foreground max-w-xs text-center">
-              বাটনে ক্লিক করলে আপনার ক্যামেরা ও মাইক্রোফোন চালু হবে
-            </p>
+          </motion.div>
+          <p className="text-white/40 text-xs max-w-xs text-center">
+            বাটনে ক্লিক করলে আপনার ক্যামেরা ও মাইক্রোফোন চালু হবে
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Remote video – full screen */}
+          <div className="absolute inset-0">
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ display: hasRemoteVideo ? "block" : "none" }}
+            />
+
+            {/* Fallback: no remote video */}
+            {!hasRemoteVideo && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 via-black to-gray-900">
+                <Avatar className="w-28 h-28 ring-4 ring-white/10 mb-4">
+                  <AvatarImage src={providerAvatar || undefined} />
+                  <AvatarFallback className="text-3xl bg-white/10 text-white">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <h2 className="text-white text-xl font-bold">{providerName}</h2>
+                <p className="text-white/50 text-sm mt-1">{serviceName}</p>
+                <p className="text-white/40 text-xs mt-3">
+                  {webrtc.connectionState === "connected"
+                    ? "কানেক্টেড ✓ — অডিও কল চলছে"
+                    : webrtc.connectionState === "connecting"
+                      ? "কানেক্ট হচ্ছে…"
+                      : webrtc.connectionState === "failed"
+                        ? "কানেকশন ব্যর্থ…"
+                        : "অপেক্ষা করা হচ্ছে…"}
+                </p>
+              </div>
+            )}
+
+            {/* Hidden audio element */}
+            <video
+              ref={remoteAudioRef}
+              autoPlay
+              playsInline
+              style={{ position: "absolute", width: 0, height: 0, opacity: 0 }}
+            />
           </div>
-        ) : (
-          <>
-            {/* Remote video (full screen) */}
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+
+          {/* ── Top bar overlay (IMO style) ── */}
+          <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 via-black/30 to-transparent pt-safe">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 ring-2 ring-white/20">
+                  <AvatarImage src={providerAvatar || undefined} />
+                  <AvatarFallback className="text-sm bg-white/10 text-white">{initials}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-white text-sm font-semibold leading-tight">{providerName}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <motion.div
+                      className="w-1.5 h-1.5 rounded-full bg-green-400"
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    />
+                    <span className="text-white/60 text-xs">
+                      {webrtc.connectionState === "connected" ? "কানেক্টেড" : "কানেক্ট হচ্ছে…"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-white/10 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-white/70" />
+                  <span className="text-white font-mono text-sm font-semibold tabular-nums">
+                    {formatTime(elapsed)}
+                  </span>
+                </div>
+                <div className="bg-green-500/20 backdrop-blur-md rounded-full px-3 py-1.5">
+                  <span className="text-green-400 text-sm font-semibold">৳{runningCost.toFixed(0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Local video PiP (IMO style – bottom-right, draggable look) ── */}
+          {webrtc.localStream && (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="absolute top-20 right-3 w-[110px] h-[150px] sm:w-[130px] sm:h-[180px] rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl z-20"
+            >
               <video
-                ref={remoteVideoRef}
+                ref={localVideoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-full object-cover"
                 style={{
-                  display: hasRemoteVideo ? "block" : "none",
+                  transform: webrtc.facingMode === "user" ? "scaleX(-1)" : "none",
+                  display: webrtc.isVideoEnabled ? "block" : "none",
                 }}
               />
-
-              {/* Fallback avatar when no remote video */}
-              {!hasRemoteVideo && (
-                <div className="flex flex-col items-center gap-4">
-                  <Avatar className="w-32 h-32 ring-4 ring-primary/20">
-                    <AvatarImage src={providerAvatar || undefined} />
-                    <AvatarFallback className="text-4xl bg-primary/10 text-primary">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-center">
-                    <h2 className="font-heading text-xl font-bold text-foreground">{providerName}</h2>
-                    <p className="text-muted-foreground text-sm">{serviceName}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {webrtc.connectionState === "connected" 
-                        ? "কানেক্টেড ✓ — অডিও কল চলছে"
-                        : webrtc.connectionState === "connecting" 
-                          ? "কানেক্ট হচ্ছে…"
-                          : webrtc.connectionState === "failed"
-                            ? "কানেকশন ব্যর্থ — পুনরায় চেষ্টা করা হচ্ছে…"
-                            : "অপর পক্ষের জন্য অপেক্ষা করা হচ্ছে…"}
-                    </p>
-                  </div>
+              {!webrtc.isVideoEnabled && (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <VideoOff className="w-6 h-6 text-white/40" />
                 </div>
               )}
+            </motion.div>
+          )}
 
-              {/* Hidden audio element for remote audio */}
-              <video
-                ref={remoteAudioRef}
-                autoPlay
-                playsInline
-                style={{ position: "absolute", width: 0, height: 0, opacity: 0 }}
-              />
-            </div>
-
-            {/* Local video (picture-in-picture) */}
-            {webrtc.localStream && (
-              <div className="absolute top-4 right-4 w-40 h-28 sm:w-52 sm:h-36 rounded-xl overflow-hidden border-2 border-border shadow-elevated bg-card z-10">
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                  style={{
-                    transform: webrtc.facingMode === "user" ? "scaleX(-1)" : "none",
-                    display: webrtc.isVideoEnabled ? "block" : "none",
-                  }}
+          {/* ── Connection status pill ── */}
+          {mediaReady && webrtc.connectionState !== "connected" && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-black/60 backdrop-blur-md rounded-full px-5 py-2.5 flex items-center gap-2"
+              >
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-green-400"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
                 />
-                {!webrtc.isVideoEnabled && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <VideoOff className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-            )}
+                <span className="text-white/80 text-sm">
+                  {webrtc.connectionState === "connecting" ? "কানেক্ট হচ্ছে…" :
+                    webrtc.connectionState === "failed" ? "পুনরায় চেষ্টা…" :
+                      "অপেক্ষা করা হচ্ছে…"}
+                </span>
+              </motion.div>
+            </div>
+          )}
+        </>
+      )}
 
-            {/* Connection status badge */}
-            {mediaReady && webrtc.connectionState !== "connected" && (
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
-                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
-                  <motion.div
-                    className="w-2 h-2 rounded-full bg-primary"
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                  />
-                  {webrtc.connectionState === "connecting" ? "কানেক্ট হচ্ছে…" : 
-                   webrtc.connectionState === "failed" ? "পুনরায় চেষ্টা হচ্ছে…" :
-                   "অপর পক্ষের জন্য অপেক্ষা…"}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Controls bar */}
+      {/* ── Bottom controls (IMO style – floating, rounded, translucent) ── */}
       {isActive && mediaReady && (
-        <div className="border-t border-border bg-card p-4">
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={webrtc.toggleAudio}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                webrtc.isAudioEnabled
-                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  : "bg-destructive/20 text-destructive"
-              }`}
-            >
-              {webrtc.isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-            </button>
+        <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent pb-safe">
+          <div className="px-4 pb-6 pt-10">
+            <div className="flex items-center justify-center gap-4">
+              {/* Mic */}
+              <button
+                onClick={webrtc.toggleAudio}
+                className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                  webrtc.isAudioEnabled
+                    ? "bg-white/15 text-white hover:bg-white/25"
+                    : "bg-red-500/80 text-white"
+                }`}
+              >
+                {webrtc.isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+              </button>
 
-            <button
-              onClick={webrtc.toggleVideo}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                webrtc.isVideoEnabled
-                  ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                  : "bg-destructive/20 text-destructive"
-              }`}
-            >
-              {webrtc.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
-            </button>
+              {/* Camera */}
+              <button
+                onClick={webrtc.toggleVideo}
+                className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                  webrtc.isVideoEnabled
+                    ? "bg-white/15 text-white hover:bg-white/25"
+                    : "bg-red-500/80 text-white"
+                }`}
+              >
+                {webrtc.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+              </button>
 
-            {/* Switch Camera (front/back) */}
-            <button
-              onClick={webrtc.switchCamera}
-              className="w-12 h-12 rounded-full flex items-center justify-center bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
-            >
-              <SwitchCamera className="w-5 h-5" />
-            </button>
+              {/* Flip Camera */}
+              <button
+                onClick={webrtc.switchCamera}
+                className="w-12 h-12 rounded-full flex items-center justify-center bg-white/15 text-white hover:bg-white/25 backdrop-blur-md transition-all"
+              >
+                <SwitchCamera className="w-5 h-5" />
+              </button>
 
-            <button
-              onClick={webrtc.toggleScreenShare}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                webrtc.isScreenSharing
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              }`}
-            >
-              <MonitorUp className="w-5 h-5" />
-            </button>
+              {/* Screen Share */}
+              <button
+                onClick={webrtc.toggleScreenShare}
+                className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
+                  webrtc.isScreenSharing
+                    ? "bg-blue-500/80 text-white"
+                    : "bg-white/15 text-white hover:bg-white/25"
+                }`}
+              >
+                <MonitorUp className="w-5 h-5" />
+              </button>
 
-            <button
-              onClick={() => setShowEndDialog(true)}
-              className="w-14 h-14 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg hover:bg-destructive/90 transition-colors"
-            >
-              <PhoneOff className="w-6 h-6" />
-            </button>
-          </div>
-          <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
-            <span>Mic</span>
-            <span>Camera</span>
-            <span>Flip</span>
-            <span>Screen</span>
-            <span>End</span>
+              {/* End Call */}
+              <button
+                onClick={() => setShowEndDialog(true)}
+                className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/40 hover:bg-red-600 transition-all active:scale-95"
+              >
+                <PhoneOff className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
       )}
