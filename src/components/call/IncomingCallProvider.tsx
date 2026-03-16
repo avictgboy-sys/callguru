@@ -113,10 +113,55 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Listen for new calls where current user is the provider
+  // Process a new incoming call
+  const processIncomingCall = useCallback(async (call: any) => {
+    if (call.status !== "active") return;
+    // Don't show if we already have this call
+    if (incomingCall?.id === call.id) return;
+
+    const [profileRes, serviceRes] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", call.caller_id)
+        .single(),
+      supabase
+        .from("services")
+        .select("title")
+        .eq("id", call.service_id)
+        .single(),
+    ]);
+
+    const callerName = profileRes.data?.full_name || "Unknown";
+    const serviceName = serviceRes.data?.title || "Consultation";
+
+    setIncomingCall({
+      id: call.id,
+      caller_id: call.caller_id,
+      service_id: call.service_id,
+      price_per_minute: call.price_per_minute,
+      callerName,
+      callerAvatar: profileRes.data?.avatar_url || "",
+      serviceName,
+    });
+
+    stopRingtoneRef.current = playRingtone();
+    startVibration();
+    notificationRef.current = showCallNotification(callerName, serviceName, call.id);
+
+    setTimeout(() => {
+      handleDecline(call.id, true);
+    }, 30000);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingCall?.id]);
+
+  // Listen for new calls via Realtime + Polling fallback
   useEffect(() => {
     if (!user) return;
+    let isActive = true;
+    const seenCallIds = new Set<string>();
 
+    // Primary: Realtime subscription
     const channel = supabase
       .channel("incoming-calls")
       .on(
@@ -129,53 +174,52 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
         },
         async (payload) => {
           const call = payload.new as any;
-          if (call.status !== "active") return;
-
-          // Fetch caller profile and service info
-          const [profileRes, serviceRes] = await Promise.all([
-            supabase
-              .from("profiles")
-              .select("full_name, avatar_url")
-              .eq("user_id", call.caller_id)
-              .single(),
-            supabase
-              .from("services")
-              .select("title")
-              .eq("id", call.service_id)
-              .single(),
-          ]);
-
-          const callerName = profileRes.data?.full_name || "Unknown";
-          const serviceName = serviceRes.data?.title || "Consultation";
-
-          setIncomingCall({
-            id: call.id,
-            caller_id: call.caller_id,
-            service_id: call.service_id,
-            price_per_minute: call.price_per_minute,
-            callerName,
-            callerAvatar: profileRes.data?.avatar_url || "",
-            serviceName,
-          });
-
-          // Start ringtone + vibration + system notification
-          stopRingtoneRef.current = playRingtone();
-          startVibration();
-          notificationRef.current = showCallNotification(callerName, serviceName, call.id);
-
-          // Auto-dismiss after 30 seconds
-          setTimeout(() => {
-            handleDecline(call.id, true);
-          }, 30000);
+          seenCallIds.add(call.id);
+          await processIncomingCall(call);
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Realtime channel issue:", status, err);
+        }
+      });
+
+    // Fallback: Poll every 3 seconds for active calls targeting this provider
+    const pollInterval = setInterval(async () => {
+      if (!isActive) return;
+      try {
+        const { data } = await supabase
+          .from("calls")
+          .select("*")
+          .eq("provider_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          const call = data[0];
+          // Only process if we haven't seen this call via realtime
+          if (!seenCallIds.has(call.id)) {
+            // Check if call is recent (within last 35 seconds)
+            const callAge = Date.now() - new Date(call.created_at).getTime();
+            if (callAge < 35000) {
+              seenCallIds.add(call.id);
+              await processIncomingCall(call);
+            }
+          }
+        }
+      } catch (e) {
+        // Silent fail for polling
+      }
+    }, 3000);
 
     return () => {
+      isActive = false;
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, processIncomingCall]);
 
   const stopAll = () => {
     if (stopRingtoneRef.current) {
