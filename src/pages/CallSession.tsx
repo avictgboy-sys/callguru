@@ -82,19 +82,23 @@ const CallSession = () => {
 
   // Attach local stream to video element
   useEffect(() => {
-    if (localVideoRef.current && webrtc.localStream) {
-      localVideoRef.current.srcObject = webrtc.localStream;
+    const el = localVideoRef.current;
+    if (el && webrtc.localStream) {
+      el.srcObject = webrtc.localStream;
+      el.play().catch(() => {});
     }
-  }, [webrtc.localStream]);
+  }, [webrtc.localStream, webrtc.isVideoEnabled]);
 
   // Attach remote stream to video elements
   useEffect(() => {
     if (webrtc.remoteStream) {
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = webrtc.remoteStream;
+        remoteVideoRef.current.play().catch(() => {});
       }
       if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = webrtc.remoteStream;
+        remoteAudioRef.current.play().catch(() => {});
       }
     }
   }, [webrtc.remoteStream]);
