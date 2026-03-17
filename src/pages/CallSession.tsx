@@ -149,7 +149,7 @@ const CallSession = () => {
     if (!callId || callEndedRef.current) return;
     callEndedRef.current = true;
     setIsActive(false);
-    setShowEndDialog(false);
+    
 
     // Broadcast hangup to remote party
     webrtc.broadcastHangup();
