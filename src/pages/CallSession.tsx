@@ -43,7 +43,6 @@ const CallSession = () => {
 
   const [elapsed, setElapsed] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [showEndDialog, setShowEndDialog] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState<{
     duration: number; totalCost: number; fee: number; net: number;
@@ -68,17 +67,25 @@ const CallSession = () => {
 
   const recorder = useCallRecorder();
 
-  // CRITICAL: getUserMedia must be called directly from a user click handler
-  const handleJoinCall = useCallback(async () => {
-    if (!callId || !user?.id) return;
-    try {
-      await webrtc.connect();
-      setMediaReady(true);
-    } catch (err) {
-      console.error("WebRTC connect failed:", err);
-      toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন চেক করুন।");
-    }
-  }, [callId, user?.id, webrtc]);
+  // Auto-connect when entering call page
+  useEffect(() => {
+    if (!callId || !user?.id || mediaReady) return;
+    let cancelled = false;
+    const autoConnect = async () => {
+      try {
+        await webrtc.connect();
+        if (!cancelled) setMediaReady(true);
+      } catch (err) {
+        console.error("WebRTC connect failed:", err);
+        if (!cancelled) {
+          toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি।");
+        }
+      }
+    };
+    autoConnect();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callId, user?.id]);
 
   // Attach local stream to video element
   useEffect(() => {
@@ -142,7 +149,7 @@ const CallSession = () => {
     if (!callId || callEndedRef.current) return;
     callEndedRef.current = true;
     setIsActive(false);
-    setShowEndDialog(false);
+    
 
     // Broadcast hangup to remote party
     webrtc.broadcastHangup();
@@ -276,23 +283,14 @@ const CallSession = () => {
           <div className="text-center">
             <h2 className="text-white text-2xl font-bold">{providerName}</h2>
             <p className="text-white/60 text-sm mt-1">{serviceName}</p>
-          </div>
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Button
-              onClick={handleJoinCall}
-              className="bg-green-500 hover:bg-green-600 text-white rounded-full px-8 py-6 text-lg font-semibold gap-3 shadow-lg shadow-green-500/30"
+            <motion.p
+              className="text-white/40 text-xs mt-3"
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Video className="w-6 h-6" />
-              কলে যোগ দিন
-            </Button>
-          </motion.div>
-          <p className="text-white/40 text-xs max-w-xs text-center">
-            বাটনে ক্লিক করলে আপনার ক্যামেরা ও মাইক্রোফোন চালু হবে
-          </p>
+              কানেক্ট হচ্ছে…
+            </motion.p>
+          </div>
         </div>
       ) : (
         <>
@@ -476,7 +474,8 @@ const CallSession = () => {
 
               {/* End Call */}
               <button
-                onClick={() => setShowEndDialog(true)}
+                onClick={handleEndCall}
+                disabled={completeCall.isPending}
                 className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/40 hover:bg-red-600 transition-all active:scale-95"
               >
                 <PhoneOff className="w-6 h-6" />
@@ -486,46 +485,6 @@ const CallSession = () => {
         </div>
       )}
 
-      {/* Confirm end dialog */}
-      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>End Call?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Duration</span>
-                <span className="font-medium text-foreground">{durationMinutes} min</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Cost</span>
-                <span className="font-medium text-foreground">৳{runningCost.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee ({fees.callFeePercent}%)</span>
-                <span className="text-muted-foreground">৳{feeAmount.toFixed(2)}</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              ৳{runningCost.toFixed(2)} will be deducted from your wallet.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setShowEndDialog(false)}>Continue Call</Button>
-            <Button
-              variant="destructive"
-              onClick={handleEndCall}
-              disabled={completeCall.isPending}
-            >
-              <PhoneOff className="w-4 h-4 mr-2" />
-              {completeCall.isPending ? "Ending…" : "End Call"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Call summary dialog with rating */}
       <Dialog open={showSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
