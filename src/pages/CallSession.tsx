@@ -149,16 +149,18 @@ const CallSession = () => {
     if (!callId || callEndedRef.current) return;
     callEndedRef.current = true;
     setIsActive(false);
-    
 
-    // Broadcast hangup to remote party
-    webrtc.broadcastHangup();
+    // Immediately disconnect WebRTC & broadcast hangup
+    try { webrtc.broadcastHangup(); } catch (_) {}
+    try { webrtc.disconnect(); } catch (_) {}
 
     // Stop recording if active
     let recordingBlob: Blob | null = null;
-    if (recorder.isRecording) {
-      recordingBlob = await recorder.stopRecording();
-    }
+    try {
+      if (recorder.isRecording) {
+        recordingBlob = await recorder.stopRecording();
+      }
+    } catch (_) {}
 
     const mins = Math.max(Math.ceil(elapsed / 60), 1);
     const total = mins * pricePerMin;
@@ -179,13 +181,12 @@ const CallSession = () => {
       setSummary({ duration: mins, totalCost: total, fee, net: total - fee });
       setShowSummary(true);
     } catch (e: any) {
-      toast.error(e.message || "Failed to complete call");
-      callEndedRef.current = false;
-      setIsActive(true);
+      // Even if billing fails, call is ended — navigate away
+      console.error("Complete call error:", e);
+      toast.error("কল শেষ হয়েছে। বিলিং সমস্যা হলে পরে সমাধান হবে।");
+      navigate("/dashboard");
     }
-
-    webrtc.disconnect();
-  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc]);
+  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc, navigate]);
 
   // Listen for remote hangup
   useEffect(() => {
