@@ -485,46 +485,6 @@ const CallSession = () => {
         </div>
       )}
 
-      {/* Confirm end dialog */}
-      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>End Call?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div className="rounded-lg bg-muted p-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Duration</span>
-                <span className="font-medium text-foreground">{durationMinutes} min</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Cost</span>
-                <span className="font-medium text-foreground">৳{runningCost.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Platform Fee ({fees.callFeePercent}%)</span>
-                <span className="text-muted-foreground">৳{feeAmount.toFixed(2)}</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              ৳{runningCost.toFixed(2)} will be deducted from your wallet.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setShowEndDialog(false)}>Continue Call</Button>
-            <Button
-              variant="destructive"
-              onClick={handleEndCall}
-              disabled={completeCall.isPending}
-            >
-              <PhoneOff className="w-4 h-4 mr-2" />
-              {completeCall.isPending ? "Ending…" : "End Call"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Call summary dialog with rating */}
       <Dialog open={showSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
