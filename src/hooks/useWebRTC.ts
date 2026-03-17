@@ -1,27 +1,17 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const METERED_API_KEY = "47aeef9f8e8613688d21e5b9806098005d0b";
-
-async function getIceServers(): Promise<RTCConfiguration> {
-  try {
-    const res = await fetch(
-      `https://callguro.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`
-    );
-    if (!res.ok) throw new Error("Metered API error");
-    const iceServers = await res.json();
-    return { iceServers, iceCandidatePoolSize: 10 };
-  } catch (e) {
-    console.warn("Failed to fetch TURN credentials, using fallback STUN:", e);
-    return {
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-      ],
-      iceCandidatePoolSize: 10,
-    };
-  }
-}
+// Free STUN servers only - no external API needed
+const ICE_CONFIG: RTCConfiguration = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
+  ],
+  iceCandidatePoolSize: 10,
+};
 
 interface UseWebRTCOptions {
   callId: string;
@@ -48,12 +38,10 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
   const hasRemoteDescRef = useRef(false);
   const onRemoteHangupRef = useRef<(() => void) | null>(null);
 
-  // Expose a way for CallSession to register a hangup callback
   const setOnRemoteHangup = useCallback((cb: () => void) => {
     onRemoteHangupRef.current = cb;
   }, []);
 
-  // ── Get local camera + mic ──
   const startLocalStream = useCallback(async (facing: "user" | "environment" = "user") => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -80,7 +68,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, []);
 
-  // ── Flush queued ICE candidates once remote description is set ──
   const flushCandidates = useCallback(async (pc: RTCPeerConnection) => {
     const queued = pendingCandidatesRef.current.splice(0);
     for (const c of queued) {
@@ -92,19 +79,15 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, []);
 
-  // ── Create peer connection ──
   const setupPeerConnection = useCallback(
     async (stream: MediaStream) => {
-      const iceConfig = await getIceServers();
-      const pc = new RTCPeerConnection(iceConfig);
+      const pc = new RTCPeerConnection(ICE_CONFIG);
       pcRef.current = pc;
       hasRemoteDescRef.current = false;
       pendingCandidatesRef.current = [];
 
-      // Add local tracks
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Handle remote tracks
       const remote = remoteStreamRef.current;
       remote.getTracks().forEach((t) => remote.removeTrack(t));
 
@@ -140,7 +123,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     []
   );
 
-  // ── Main connect function ──
   const connect = useCallback(async () => {
     const stream = await startLocalStream(facingMode);
     const pc = await setupPeerConnection(stream);
@@ -150,7 +132,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     });
     channelRef.current = channel;
 
-    // ── ICE candidate exchange ──
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         channel.send({
@@ -176,7 +157,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── Offer handling (receiver side) ──
     channel.on("broadcast", { event: "offer" }, async ({ payload }) => {
       if (payload.from === userId) return;
       try {
@@ -196,7 +176,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── Answer handling (caller side) ──
     channel.on("broadcast", { event: "answer" }, async ({ payload }) => {
       if (payload.from === userId) return;
       try {
@@ -208,7 +187,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── "ready" handshake ──
     channel.on("broadcast", { event: "ready" }, async ({ payload }) => {
       if (payload.from === userId) return;
       if (isCaller && pc.signalingState === "stable" && !hasRemoteDescRef.current) {
@@ -226,7 +204,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── Listen for remote hangup ──
     channel.on("broadcast", { event: "call-ended" }, ({ payload }) => {
       if (payload.from === userId) return;
       console.log("Remote party ended the call");
@@ -235,7 +212,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       }
     });
 
-    // ── Renegotiation ──
     pc.onnegotiationneeded = async () => {
       if (!isCaller || pc.signalingState !== "stable") return;
       try {
@@ -297,7 +273,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, [callId, userId, isCaller, facingMode, startLocalStream, setupPeerConnection, flushCandidates]);
 
-  // ── Broadcast hangup to remote ──
   const broadcastHangup = useCallback(() => {
     if (channelRef.current) {
       channelRef.current.send({
@@ -308,7 +283,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, [userId]);
 
-  // ── Toggle audio ──
   const toggleAudio = useCallback(() => {
     localStreamRef.current?.getAudioTracks().forEach((t) => {
       t.enabled = !t.enabled;
@@ -316,7 +290,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsAudioEnabled((prev) => !prev);
   }, []);
 
-  // ── Toggle video ──
   const toggleVideo = useCallback(() => {
     localStreamRef.current?.getVideoTracks().forEach((t) => {
       t.enabled = !t.enabled;
@@ -324,14 +297,12 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsVideoEnabled((prev) => !prev);
   }, []);
 
-  // ── Switch camera (front/back) ──
   const switchCamera = useCallback(async () => {
     const pc = pcRef.current;
     if (!pc) return;
 
     const newFacing = facingMode === "user" ? "environment" : "user";
     try {
-      // Stop current video tracks
       localStreamRef.current?.getVideoTracks().forEach((t) => t.stop());
 
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -339,13 +310,11 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
       });
       const newVideoTrack = newStream.getVideoTracks()[0];
 
-      // Replace in peer connection
       const sender = pc.getSenders().find((s) => s.track?.kind === "video");
       if (sender) {
         await sender.replaceTrack(newVideoTrack);
       }
 
-      // Update local stream
       const currentStream = localStreamRef.current;
       if (currentStream) {
         const oldVideoTracks = currentStream.getVideoTracks();
@@ -362,7 +331,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, [facingMode]);
 
-  // ── Screen sharing ──
   const toggleScreenShare = useCallback(async () => {
     const pc = pcRef.current;
     if (!pc) return;
@@ -406,7 +374,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     }
   }, [isScreenSharing]);
 
-  // ── Disconnect ──
   const disconnect = useCallback(() => {
     screenStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
@@ -422,7 +389,6 @@ export const useWebRTC = ({ callId, userId, isCaller }: UseWebRTCOptions) => {
     setIsScreenSharing(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       screenStreamRef.current?.getTracks().forEach((t) => t.stop());
