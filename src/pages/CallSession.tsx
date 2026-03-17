@@ -43,7 +43,6 @@ const CallSession = () => {
 
   const [elapsed, setElapsed] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [showEndDialog, setShowEndDialog] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState<{
     duration: number; totalCost: number; fee: number; net: number;
