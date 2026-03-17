@@ -284,23 +284,14 @@ const CallSession = () => {
           <div className="text-center">
             <h2 className="text-white text-2xl font-bold">{providerName}</h2>
             <p className="text-white/60 text-sm mt-1">{serviceName}</p>
-          </div>
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Button
-              onClick={handleJoinCall}
-              className="bg-green-500 hover:bg-green-600 text-white rounded-full px-8 py-6 text-lg font-semibold gap-3 shadow-lg shadow-green-500/30"
+            <motion.p
+              className="text-white/40 text-xs mt-3"
+              animate={{ opacity: [1, 0.4, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
             >
-              <Video className="w-6 h-6" />
-              কলে যোগ দিন
-            </Button>
-          </motion.div>
-          <p className="text-white/40 text-xs max-w-xs text-center">
-            বাটনে ক্লিক করলে আপনার ক্যামেরা ও মাইক্রোফোন চালু হবে
-          </p>
+              কানেক্ট হচ্ছে…
+            </motion.p>
+          </div>
         </div>
       ) : (
         <>
