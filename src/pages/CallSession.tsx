@@ -68,17 +68,25 @@ const CallSession = () => {
 
   const recorder = useCallRecorder();
 
-  // CRITICAL: getUserMedia must be called directly from a user click handler
-  const handleJoinCall = useCallback(async () => {
-    if (!callId || !user?.id) return;
-    try {
-      await webrtc.connect();
-      setMediaReady(true);
-    } catch (err) {
-      console.error("WebRTC connect failed:", err);
-      toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন চেক করুন।");
-    }
-  }, [callId, user?.id, webrtc]);
+  // Auto-connect when entering call page
+  useEffect(() => {
+    if (!callId || !user?.id || mediaReady) return;
+    let cancelled = false;
+    const autoConnect = async () => {
+      try {
+        await webrtc.connect();
+        if (!cancelled) setMediaReady(true);
+      } catch (err) {
+        console.error("WebRTC connect failed:", err);
+        if (!cancelled) {
+          toast.error("ক্যামেরা/মাইক্রোফোন অ্যাক্সেস করা যায়নি।");
+        }
+      }
+    };
+    autoConnect();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callId, user?.id]);
 
   // Attach local stream to video element
   useEffect(() => {
