@@ -475,7 +475,8 @@ const CallSession = () => {
 
               {/* End Call */}
               <button
-                onClick={() => setShowEndDialog(true)}
+                onClick={handleEndCall}
+                disabled={completeCall.isPending}
                 className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/40 hover:bg-red-600 transition-all active:scale-95"
               >
                 <PhoneOff className="w-6 h-6" />
