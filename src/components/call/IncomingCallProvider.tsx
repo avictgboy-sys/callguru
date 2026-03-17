@@ -299,87 +299,136 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     <IncomingCallContext.Provider value={{ activeIncomingCall: incomingCall }}>
       {children}
 
-      {/* Incoming call fullscreen overlay */}
+      {/* IMO-style incoming call fullscreen overlay */}
       <AnimatePresence>
         {incomingCall && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-between overflow-hidden"
           >
+            {/* Animated background gradient */}
             <motion.div
-              initial={{ scale: 0.8, y: 30 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 30 }}
-              className="text-center space-y-8 px-6"
-            >
-              {/* Pulsing ring around avatar */}
-              <div className="relative mx-auto w-36 h-36">
+              className="absolute inset-0"
+              style={{
+                background: "radial-gradient(ellipse at 50% 30%, rgba(34,197,94,0.15) 0%, transparent 60%), radial-gradient(ellipse at 50% 80%, rgba(239,68,68,0.08) 0%, transparent 50%)",
+              }}
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            />
+
+            {/* Top section - "Incoming Call" label */}
+            <div className="relative z-10 pt-16 text-center">
+              <motion.div
+                className="flex items-center justify-center gap-2 mb-2"
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              >
                 <motion.div
-                  className="absolute inset-0 rounded-full border-4 border-primary/30"
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                  className="w-2 h-2 rounded-full bg-green-400"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                />
+                <span className="text-green-400 text-sm font-medium uppercase tracking-widest">
+                  ইনকামিং কল
+                </span>
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-green-400"
+                  animate={{ scale: [1, 1.5, 1] }}
+                  transition={{ repeat: Infinity, duration: 1, delay: 0.5 }}
+                />
+              </motion.div>
+              <p className="text-white/40 text-xs">{incomingCall.serviceName}</p>
+            </div>
+
+            {/* Center - Avatar with ripple rings */}
+            <div className="relative z-10 flex flex-col items-center gap-6">
+              <div className="relative w-40 h-40">
+                {/* Ripple rings */}
+                {[0, 0.4, 0.8].map((delay, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute inset-0 rounded-full border-2 border-green-400/30"
+                    animate={{
+                      scale: [1, 1.8],
+                      opacity: [0.6, 0],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 2.4,
+                      delay,
+                      ease: "easeOut",
+                    }}
+                  />
+                ))}
+                {/* Glow behind avatar */}
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: "radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%)" }}
+                  animate={{ scale: [1, 1.15, 1] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
-                <motion.div
-                  className="absolute inset-0 rounded-full border-4 border-primary/20"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 2, delay: 0.3 }}
-                />
-                <Avatar className="w-36 h-36 ring-4 ring-primary/40">
+                <Avatar className="w-40 h-40 ring-4 ring-green-400/30 shadow-2xl shadow-green-500/20">
                   <AvatarImage src={incomingCall.callerAvatar || undefined} />
-                  <AvatarFallback className="text-4xl bg-primary/10 text-primary">
+                  <AvatarFallback className="text-5xl bg-white/10 text-white font-bold">
                     {callerInitials}
                   </AvatarFallback>
                 </Avatar>
               </div>
 
-              <div>
-                <motion.p
-                  className="text-sm text-muted-foreground uppercase tracking-wider mb-2"
-                  animate={{ opacity: [1, 0.4, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  📞 ইনকামিং কল
-                </motion.p>
-                <h2 className="font-heading text-3xl font-bold text-foreground">
+              <div className="text-center">
+                <h2 className="text-white text-3xl font-bold tracking-tight">
                   {incomingCall.callerName}
                 </h2>
-                <p className="text-muted-foreground mt-1">{incomingCall.serviceName}</p>
-                <p className="text-sm text-primary mt-2 font-medium">
-                  ৳{incomingCall.price_per_minute}/min
-                </p>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <span className="text-white/50 text-sm">{incomingCall.serviceName}</span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-green-400 text-sm font-semibold">
+                    ৳{incomingCall.price_per_minute}/min
+                  </span>
+                </div>
               </div>
+            </div>
 
-              {/* Accept / Decline buttons */}
-              <div className="flex items-center justify-center gap-16">
+            {/* Bottom - Accept / Decline buttons (IMO style) */}
+            <div className="relative z-10 pb-16 w-full px-8">
+              <div className="flex items-center justify-between max-w-xs mx-auto">
+                {/* Decline */}
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleDecline(incomingCall.id)}
-                    className="rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
-                    style={{ width: 72, height: 72 }}
-                    whileTap={{ scale: 0.9 }}
+                    className="w-[70px] h-[70px] rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/30"
+                    whileTap={{ scale: 0.85 }}
+                    whileHover={{ scale: 1.05 }}
                   >
-                    <PhoneOff className="w-8 h-8" />
+                    <PhoneOff className="w-7 h-7" />
                   </motion.button>
-                  <p className="text-xs text-muted-foreground mt-3">বাতিল</p>
+                  <p className="text-white/40 text-xs mt-3 font-medium">বাতিল</p>
                 </div>
 
+                {/* Accept with slide hint animation */}
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleAccept(incomingCall)}
-                    className="rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg"
-                    style={{ width: 72, height: 72 }}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
+                    className="w-[70px] h-[70px] rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/30"
+                    animate={{
+                      scale: [1, 1.12, 1],
+                      boxShadow: [
+                        "0 10px 25px -5px rgba(34,197,94,0.3)",
+                        "0 10px 40px -5px rgba(34,197,94,0.5)",
+                        "0 10px 25px -5px rgba(34,197,94,0.3)",
+                      ],
+                    }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    whileTap={{ scale: 0.85 }}
                   >
-                    <Phone className="w-8 h-8" />
+                    <Phone className="w-7 h-7" />
                   </motion.button>
-                  <p className="text-xs text-muted-foreground mt-3">রিসিভ</p>
+                  <p className="text-white/40 text-xs mt-3 font-medium">রিসিভ</p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
