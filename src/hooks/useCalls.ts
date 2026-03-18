@@ -35,6 +35,20 @@ export const useCalls = () => {
   });
 };
 
+/**
+ * Check if a user is currently in an active call.
+ * Used for busy detection before starting a new call.
+ */
+export const checkUserBusy = async (userId: string): Promise<boolean> => {
+  const { data } = await supabase
+    .from("calls")
+    .select("id")
+    .or(`caller_id.eq.${userId},provider_id.eq.${userId}`)
+    .eq("status", "active")
+    .limit(1);
+  return (data?.length ?? 0) > 0;
+};
+
 export const useStartCall = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -44,6 +58,15 @@ export const useStartCall = () => {
       service_id: string;
       price_per_minute: number;
     }) => {
+      // 1. Check if caller is already in a call
+      const callerBusy = await checkUserBusy(user!.id);
+      if (callerBusy) throw new Error("আপনি ইতিমধ্যে একটি কলে আছেন।");
+
+      // 2. Check if provider is already in a call
+      const providerBusy = await checkUserBusy(params.provider_id);
+      if (providerBusy) throw new Error("প্রোভাইডার এখন ব্যস্ত। কিছুক্ষণ পর চেষ্টা করুন।");
+
+      // 3. Create the call
       const { data, error } = await supabase
         .from("calls")
         .insert({

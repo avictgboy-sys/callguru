@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCallState } from "@/hooks/useCallState";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Phone, PhoneOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +29,7 @@ const IncomingCallContext = createContext<IncomingCallContextType>({
 
 export const useIncomingCall = () => useContext(IncomingCallContext);
 
-// Improved ringtone using Web Audio API
+// Ringtone using Web Audio API
 const playRingtone = () => {
   const audioCtx = new AudioContext();
   let stopped = false;
@@ -70,20 +71,20 @@ const playRingtone = () => {
 export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const callState = useCallState();
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const stopRingtoneRef = useRef<(() => void) | null>(null);
   const notificationRef = useRef<Notification | null>(null);
   const vibrationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoDeclineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { showCallNotification, vibrate, stopVibration } = usePushNotifications();
 
-  // Register custom service worker for push notifications
+  // Register custom service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/custom-sw.js", { scope: "/" }).catch(() => {
-        // Silent fail - PWA service worker from vite-plugin-pwa will handle caching
-      });
+      navigator.serviceWorker.register("/custom-sw.js", { scope: "/" }).catch(() => {});
 
-      // Listen for messages from service worker (call accept/decline from notification)
       const handler = (event: MessageEvent) => {
         if (event.data?.type === "CALL_ACCEPTED" && incomingCall) {
           handleAccept(incomingCall);
@@ -97,7 +98,6 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingCall]);
 
-  // Start repeating vibration pattern
   const startVibration = () => {
     vibrate([300, 200, 300, 200, 300]);
     vibrationIntervalRef.current = setInterval(() => {
@@ -105,19 +105,53 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     }, 2000);
   };
 
-  const stopAllVibration = () => {
+  const stopAllAlerts = () => {
+    if (stopRingtoneRef.current) {
+      stopRingtoneRef.current();
+      stopRingtoneRef.current = null;
+    }
     stopVibration();
     if (vibrationIntervalRef.current) {
       clearInterval(vibrationIntervalRef.current);
       vibrationIntervalRef.current = null;
     }
+    if (notificationRef.current) {
+      notificationRef.current.close();
+      notificationRef.current = null;
+    }
+    if (autoDeclineTimerRef.current) {
+      clearTimeout(autoDeclineTimerRef.current);
+      autoDeclineTimerRef.current = null;
+    }
   };
 
-  // Process a new incoming call
+  // Process incoming call
   const processIncomingCall = useCallback(async (call: any) => {
     if (call.status !== "active") return;
-    // Don't show if we already have this call
     if (incomingCall?.id === call.id) return;
+
+    // BUSY CHECK: If already in a call (ringing or connected), auto-decline
+    if (callState.isInCall()) {
+      // Auto-decline with busy reason
+      await supabase
+        .from("calls")
+        .update({ status: "declined", ended_at: new Date().toISOString() } as any)
+        .eq("id", call.id);
+
+      const busyChannel = supabase.channel(`call-status-${call.id}`);
+      busyChannel.subscribe(() => {
+        busyChannel.send({
+          type: "broadcast",
+          event: "call-declined",
+          payload: { call_id: call.id, reason: "busy" },
+        });
+        setTimeout(() => supabase.removeChannel(busyChannel), 2000);
+      });
+      return;
+    }
+
+    // Don't show incoming call if already on call page
+    if (location.pathname === "/call") return;
 
     const [profileRes, serviceRes] = await Promise.all([
       supabase
@@ -145,23 +179,24 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
       serviceName,
     });
 
+    callState.setStatus("ringing", call.id);
     stopRingtoneRef.current = playRingtone();
     startVibration();
     notificationRef.current = showCallNotification(callerName, serviceName, call.id);
 
-    setTimeout(() => {
+    // Auto-decline after 30 seconds
+    autoDeclineTimerRef.current = setTimeout(() => {
       handleDecline(call.id, true);
     }, 30000);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [incomingCall?.id]);
+  }, [incomingCall?.id, callState.status, location.pathname]);
 
-  // Listen for new calls via Realtime + Polling fallback
+  // Listen for calls via Realtime + Polling
   useEffect(() => {
     if (!user) return;
     let isActive = true;
     const seenCallIds = new Set<string>();
 
-    // Primary: Realtime subscription
     const channel = supabase
       .channel("incoming-calls")
       .on(
@@ -178,13 +213,9 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
           await processIncomingCall(call);
         }
       )
-      .subscribe((status, err) => {
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.warn("Realtime channel issue:", status, err);
-        }
-      });
+      .subscribe();
 
-    // Fallback: Poll every 3 seconds for active calls targeting this provider
+    // Polling fallback every 3s
     const pollInterval = setInterval(async () => {
       if (!isActive) return;
       try {
@@ -198,9 +229,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
 
         if (data && data.length > 0) {
           const call = data[0];
-          // Only process if we haven't seen this call via realtime
           if (!seenCallIds.has(call.id)) {
-            // Check if call is recent (within last 35 seconds)
             const callAge = Date.now() - new Date(call.created_at).getTime();
             if (callAge < 35000) {
               seenCallIds.add(call.id);
@@ -208,9 +237,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
             }
           }
         }
-      } catch (e) {
-        // Silent fail for polling
-      }
+      } catch (_) {}
     }, 3000);
 
     return () => {
@@ -221,21 +248,31 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, processIncomingCall]);
 
-  const stopAll = () => {
-    if (stopRingtoneRef.current) {
-      stopRingtoneRef.current();
-      stopRingtoneRef.current = null;
-    }
-    stopAllVibration();
-    if (notificationRef.current) {
-      notificationRef.current.close();
-      notificationRef.current = null;
-    }
-  };
+  // Also listen for caller-side cancel (caller hangs up before accept)
+  useEffect(() => {
+    if (!incomingCall) return;
+
+    const statusChannel = supabase.channel(`call-cancel-watch-${incomingCall.id}`);
+    statusChannel
+      .on("broadcast", { event: "call-ended" }, () => {
+        // Caller cancelled before we accepted
+        stopAllAlerts();
+        setIncomingCall(null);
+        callState.reset();
+        toast.info("কলার কল বাতিল করেছে");
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(statusChannel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingCall?.id]);
 
   const handleAccept = (call: IncomingCall) => {
-    stopAll();
+    stopAllAlerts();
     setIncomingCall(null);
+    callState.setStatus("connected", call.id);
 
     // Broadcast acceptance
     const channel = supabase.channel(`call-status-${call.id}`);
@@ -245,7 +282,6 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
         event: "call-accepted",
         payload: { call_id: call.id },
       });
-      // Navigate provider to call page
       const params = new URLSearchParams({
         id: call.id,
         providerId: user!.id,
@@ -262,17 +298,16 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleDecline = async (callId: string, isTimeout = false) => {
-    stopAll();
+    stopAllAlerts();
     setIncomingCall(null);
+    callState.reset();
 
-    // Update call status to missed/declined in database
     const newStatus = isTimeout ? "missed" : "declined";
     await supabase
       .from("calls")
       .update({ status: newStatus, ended_at: new Date().toISOString() } as any)
       .eq("id", callId);
 
-    // Broadcast decline
     const channel = supabase.channel(`call-status-${callId}`);
     channel.subscribe(() => {
       channel.send({
@@ -308,7 +343,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-between overflow-hidden"
           >
-            {/* Animated background gradient */}
+            {/* Animated background */}
             <motion.div
               className="absolute inset-0"
               style={{
@@ -318,7 +353,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             />
 
-            {/* Top section - "Incoming Call" label */}
+            {/* Top - "Incoming Call" */}
             <div className="relative z-10 pt-16 text-center">
               <motion.div
                 className="flex items-center justify-center gap-2 mb-2"
@@ -342,27 +377,17 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               <p className="text-white/40 text-xs">{incomingCall.serviceName}</p>
             </div>
 
-            {/* Center - Avatar with ripple rings */}
+            {/* Center - Avatar with ripple */}
             <div className="relative z-10 flex flex-col items-center gap-6">
               <div className="relative w-40 h-40">
-                {/* Ripple rings */}
                 {[0, 0.4, 0.8].map((delay, i) => (
                   <motion.div
                     key={i}
                     className="absolute inset-0 rounded-full border-2 border-green-400/30"
-                    animate={{
-                      scale: [1, 1.8],
-                      opacity: [0.6, 0],
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 2.4,
-                      delay,
-                      ease: "easeOut",
-                    }}
+                    animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.4, delay, ease: "easeOut" }}
                   />
                 ))}
-                {/* Glow behind avatar */}
                 <motion.div
                   className="absolute inset-0 rounded-full"
                   style={{ background: "radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%)" }}
@@ -391,10 +416,9 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
 
-            {/* Bottom - Accept / Decline buttons (IMO style) */}
+            {/* Bottom - Buttons */}
             <div className="relative z-10 pb-16 w-full px-8">
               <div className="flex items-center justify-between max-w-xs mx-auto">
-                {/* Decline */}
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleDecline(incomingCall.id)}
@@ -407,7 +431,6 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
                   <p className="text-white/40 text-xs mt-3 font-medium">বাতিল</p>
                 </div>
 
-                {/* Accept with slide hint animation */}
                 <div className="text-center">
                   <motion.button
                     onClick={() => handleAccept(incomingCall)}

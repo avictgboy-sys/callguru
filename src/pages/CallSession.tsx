@@ -5,6 +5,7 @@ import { useCompleteCall } from "@/hooks/useCalls";
 import { useFeeSettings } from "@/hooks/useAppSettings";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useCallRecorder } from "@/hooks/useCallRecorder";
+import { useCallState } from "@/hooks/useCallState";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Video, VideoOff, PhoneOff, Clock, Star, Mic, MicOff, MonitorUp, SwitchCamera,
+  Wifi, WifiOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -31,6 +33,7 @@ const CallSession = () => {
   const { user, refreshProfile } = useAuth();
   const completeCall = useCompleteCall();
   const fees = useFeeSettings();
+  const callState = useCallState();
 
   const callId = params.get("id") || "";
   const providerId = params.get("providerId") || "";
@@ -54,6 +57,7 @@ const CallSession = () => {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [callConnected, setCallConnected] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
+  const [connectionQuality, setConnectionQuality] = useState<"excellent" | "good" | "weak" | "poor">("good");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,6 +70,18 @@ const CallSession = () => {
   });
 
   const recorder = useCallRecorder();
+
+  // Mark call state as connected when entering
+  useEffect(() => {
+    if (callId) {
+      callState.setStatus("connected", callId);
+    }
+    return () => {
+      // Reset call state when leaving call page
+      callState.reset();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callId]);
 
   // Auto-connect when entering call page
   useEffect(() => {
@@ -87,7 +103,7 @@ const CallSession = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callId, user?.id]);
 
-  // Attach local stream to video element
+  // Attach local stream
   useEffect(() => {
     const el = localVideoRef.current;
     if (el && webrtc.localStream) {
@@ -96,7 +112,7 @@ const CallSession = () => {
     }
   }, [webrtc.localStream, webrtc.isVideoEnabled]);
 
-  // Attach remote stream to video elements
+  // Attach remote stream
   useEffect(() => {
     if (webrtc.remoteStream) {
       if (remoteVideoRef.current) {
@@ -110,7 +126,7 @@ const CallSession = () => {
     }
   }, [webrtc.remoteStream]);
 
-  // Silent auto-recording: start exactly when connected, no UI indicators
+  // Silent auto-recording: start when connected
   const recordingStartedRef = useRef(false);
   useEffect(() => {
     if (
@@ -120,7 +136,6 @@ const CallSession = () => {
     ) {
       setCallConnected(true);
       recordingStartedRef.current = true;
-      // Small delay to ensure remote stream is stable
       setTimeout(() => {
         if (!recorder.isRecording && webrtc.localStream) {
           recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
@@ -129,6 +144,46 @@ const CallSession = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webrtc.connectionState, webrtc.localStream]);
+
+  // Connection quality monitoring via WebRTC stats
+  useEffect(() => {
+    if (webrtc.connectionState !== "connected") return;
+    const pc = (webrtc as any).pcRef?.current;
+    if (!pc) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const stats = await pc.getStats();
+        let totalRtt = 0;
+        let rttCount = 0;
+        let packetsLost = 0;
+        let packetsReceived = 0;
+
+        stats.forEach((report: any) => {
+          if (report.type === "candidate-pair" && report.state === "succeeded") {
+            if (report.currentRoundTripTime) {
+              totalRtt += report.currentRoundTripTime;
+              rttCount++;
+            }
+          }
+          if (report.type === "inbound-rtp") {
+            packetsLost += report.packetsLost || 0;
+            packetsReceived += report.packetsReceived || 0;
+          }
+        });
+
+        const avgRtt = rttCount > 0 ? totalRtt / rttCount : 0;
+        const lossRate = packetsReceived > 0 ? packetsLost / (packetsReceived + packetsLost) : 0;
+
+        if (avgRtt < 0.1 && lossRate < 0.01) setConnectionQuality("excellent");
+        else if (avgRtt < 0.3 && lossRate < 0.05) setConnectionQuality("good");
+        else if (avgRtt < 0.5 && lossRate < 0.1) setConnectionQuality("weak");
+        else setConnectionQuality("poor");
+      } catch (_) {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [webrtc.connectionState]);
 
   // Timer
   useEffect(() => {
@@ -152,7 +207,10 @@ const CallSession = () => {
     try { webrtc.broadcastHangup(); } catch (_) {}
     try { webrtc.disconnect(); } catch (_) {}
 
-    // Stop recording if active
+    // Reset global call state
+    callState.setStatus("ended", callId);
+
+    // Stop recording
     let recordingBlob: Blob | null = null;
     try {
       if (recorder.isRecording) {
@@ -179,14 +237,14 @@ const CallSession = () => {
       setSummary({ duration: mins, totalCost: total, fee, net: total - fee });
       setShowSummary(true);
     } catch (e: any) {
-      // Even if billing fails, call is ended — navigate away
       console.error("Complete call error:", e);
       toast.error("কল শেষ হয়েছে। বিলিং সমস্যা হলে পরে সমাধান হবে।");
+      callState.reset();
       navigate("/dashboard");
     }
-  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc, navigate]);
+  }, [callId, elapsed, pricePerMin, fees.callFeePercent, completeCall, refreshProfile, recorder, webrtc, navigate, callState]);
 
-  // Listen for remote hangup
+  // Listen for remote hangup — force sync end
   useEffect(() => {
     webrtc.setOnRemoteHangup(() => {
       if (!callEndedRef.current) {
@@ -196,7 +254,7 @@ const CallSession = () => {
     });
   }, [webrtc, handleEndCall]);
 
-  // Auto-end call only when WebRTC connection truly fails
+  // Auto-end when WebRTC fails
   useEffect(() => {
     if (
       mediaReady &&
@@ -214,7 +272,7 @@ const CallSession = () => {
     }
   }, [webrtc.connectionState, mediaReady, isActive, elapsed, handleEndCall]);
 
-  // Auto-end on page close/navigate away
+  // Auto-end on page close
   useEffect(() => {
     if (!callId || !isActive) return;
 
@@ -259,12 +317,20 @@ const CallSession = () => {
     .toUpperCase()
     .slice(0, 2);
 
-  const hasRemoteVideo = webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0 
+  const hasRemoteVideo = webrtc.remoteStream && webrtc.remoteStream.getVideoTracks().length > 0
     && webrtc.remoteStream.getVideoTracks().some(t => t.enabled);
+
+  const qualityColor = connectionQuality === "excellent" ? "text-green-400" :
+    connectionQuality === "good" ? "text-green-300" :
+    connectionQuality === "weak" ? "text-yellow-400" : "text-red-400";
+
+  const qualityLabel = connectionQuality === "excellent" ? "স্ট্যাবল" :
+    connectionQuality === "good" ? "ভালো" :
+    connectionQuality === "weak" ? "দুর্বল" : "খুব দুর্বল";
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col overflow-hidden select-none">
-      {/* ── Full-screen remote video ── */}
+      {/* Full-screen remote video */}
       {!mediaReady ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
           <motion.div
@@ -293,7 +359,7 @@ const CallSession = () => {
         </div>
       ) : (
         <>
-          {/* Remote video – full screen */}
+          {/* Remote video */}
           <div className="absolute inset-0">
             <video
               ref={remoteVideoRef}
@@ -303,7 +369,6 @@ const CallSession = () => {
               style={{ display: hasRemoteVideo ? "block" : "none" }}
             />
 
-            {/* Fallback: no remote video */}
             {!hasRemoteVideo && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 via-black to-gray-900">
                 <Avatar className="w-28 h-28 ring-4 ring-white/10 mb-4">
@@ -326,7 +391,6 @@ const CallSession = () => {
               </div>
             )}
 
-            {/* Hidden audio element */}
             <video
               ref={remoteAudioRef}
               autoPlay
@@ -335,7 +399,7 @@ const CallSession = () => {
             />
           </div>
 
-          {/* ── Top bar overlay (IMO style) ── */}
+          {/* Top bar overlay */}
           <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 via-black/30 to-transparent pt-safe">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
@@ -346,14 +410,21 @@ const CallSession = () => {
                 <div>
                   <p className="text-white text-sm font-semibold leading-tight">{providerName}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <motion.div
-                      className="w-1.5 h-1.5 rounded-full bg-green-400"
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                    />
-                    <span className="text-white/60 text-xs">
-                      {webrtc.connectionState === "connected" ? "কানেক্টেড" : "কানেক্ট হচ্ছে…"}
-                    </span>
+                    {webrtc.connectionState === "connected" ? (
+                      <>
+                        <Wifi className={`w-3 h-3 ${qualityColor}`} />
+                        <span className={`text-xs ${qualityColor}`}>{qualityLabel}</span>
+                      </>
+                    ) : (
+                      <>
+                        <motion.div
+                          className="w-1.5 h-1.5 rounded-full bg-yellow-400"
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ repeat: Infinity, duration: 1 }}
+                        />
+                        <span className="text-white/60 text-xs">কানেক্ট হচ্ছে…</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -371,7 +442,7 @@ const CallSession = () => {
             </div>
           </div>
 
-          {/* ── Local video PiP (IMO style – bottom-right, draggable look) ── */}
+          {/* Local video PiP */}
           {webrtc.localStream && (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -398,7 +469,7 @@ const CallSession = () => {
             </motion.div>
           )}
 
-          {/* ── Connection status pill ── */}
+          {/* Connection status pill */}
           {mediaReady && webrtc.connectionState !== "connected" && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
               <motion.div
@@ -419,15 +490,28 @@ const CallSession = () => {
               </motion.div>
             </div>
           )}
+
+          {/* Weak connection warning */}
+          {callConnected && connectionQuality === "poor" && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-red-500/20 backdrop-blur-md rounded-xl px-5 py-3 flex items-center gap-2 border border-red-500/30"
+              >
+                <WifiOff className="w-4 h-4 text-red-400" />
+                <span className="text-red-300 text-sm">নেটওয়ার্ক দুর্বল</span>
+              </motion.div>
+            </div>
+          )}
         </>
       )}
 
-      {/* ── Bottom controls (IMO style – floating, rounded, translucent) ── */}
+      {/* Bottom controls */}
       {isActive && mediaReady && (
         <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent pb-safe">
           <div className="px-4 pb-6 pt-10">
             <div className="flex items-center justify-center gap-4">
-              {/* Mic */}
               <button
                 onClick={webrtc.toggleAudio}
                 className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
@@ -439,7 +523,6 @@ const CallSession = () => {
                 {webrtc.isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
               </button>
 
-              {/* Camera */}
               <button
                 onClick={webrtc.toggleVideo}
                 className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
@@ -451,7 +534,6 @@ const CallSession = () => {
                 {webrtc.isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
               </button>
 
-              {/* Flip Camera */}
               <button
                 onClick={webrtc.switchCamera}
                 className="w-12 h-12 rounded-full flex items-center justify-center bg-white/15 text-white hover:bg-white/25 backdrop-blur-md transition-all"
@@ -459,7 +541,6 @@ const CallSession = () => {
                 <SwitchCamera className="w-5 h-5" />
               </button>
 
-              {/* Screen Share */}
               <button
                 onClick={webrtc.toggleScreenShare}
                 className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
@@ -471,7 +552,6 @@ const CallSession = () => {
                 <MonitorUp className="w-5 h-5" />
               </button>
 
-              {/* End Call */}
               <button
                 onClick={handleEndCall}
                 className="w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/40 hover:bg-red-600 transition-all active:scale-95"
@@ -483,6 +563,7 @@ const CallSession = () => {
         </div>
       )}
 
+      {/* Call Summary Dialog */}
       <Dialog open={showSummary} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -587,7 +668,10 @@ const CallSession = () => {
                 {submittingReview ? "Submitting…" : "Submit Review"}
               </Button>
             )}
-            <Button variant="hero" onClick={() => navigate("/dashboard")}>
+            <Button variant="hero" onClick={() => {
+              callState.reset();
+              navigate("/dashboard");
+            }}>
               Back to Dashboard
             </Button>
           </DialogFooter>
