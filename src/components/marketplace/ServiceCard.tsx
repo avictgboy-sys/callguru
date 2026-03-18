@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStartCall } from "@/hooks/useCalls";
+import { useCallState } from "@/hooks/useCallState";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ServiceWithProvider } from "@/hooks/useServices";
@@ -17,6 +18,7 @@ const ServiceCard = ({ service }: Props) => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const startCall = useStartCall();
+  const callState = useCallState();
   const [ringing, setRinging] = useState(false);
   const providerName = service.profiles?.full_name || "Expert";
   const isVerified = service.profiles?.is_verified;
@@ -34,6 +36,13 @@ const ServiceCard = ({ service }: Props) => {
       toast.error("You can't call yourself!");
       return;
     }
+
+    // Block if already in a call
+    if (callState.isInCall()) {
+      toast.error("আপনি ইতিমধ্যে একটি কলে আছেন।");
+      return;
+    }
+
     const balance = profile?.wallet_balance ?? 0;
     if (balance < service.price_per_minute) {
       toast.error("Insufficient balance. Please top up your wallet first.");
@@ -48,6 +57,7 @@ const ServiceCard = ({ service }: Props) => {
       });
 
       setRinging(true);
+      callState.setStatus("ringing", call.id);
       toast.info("Ringing provider...");
 
       // Listen for provider's response
@@ -58,6 +68,7 @@ const ServiceCard = ({ service }: Props) => {
         .on("broadcast", { event: "call-accepted" }, () => {
           responded = true;
           setRinging(false);
+          callState.setStatus("connected", call.id);
           supabase.removeChannel(statusChannel);
           const params = new URLSearchParams({
             id: call.id,
@@ -73,25 +84,37 @@ const ServiceCard = ({ service }: Props) => {
         .on("broadcast", { event: "call-declined" }, ({ payload }) => {
           responded = true;
           setRinging(false);
+          callState.reset();
           supabase.removeChannel(statusChannel);
-          toast.error(
-            payload?.reason === "timeout"
-              ? "Provider didn't answer. Try again later."
-              : "Provider declined the call."
-          );
+
+          if (payload?.reason === "busy") {
+            toast.error("প্রোভাইডার এখন ব্যস্ত। কিছুক্ষণ পর চেষ্টা করুন।");
+          } else if (payload?.reason === "timeout") {
+            toast.error("Provider didn't answer. Try again later.");
+          } else {
+            toast.error("Provider declined the call.");
+          }
         })
         .subscribe();
 
-      // Timeout after 35s if no response
+      // Timeout after 35s
       setTimeout(() => {
         if (!responded) {
           setRinging(false);
+          callState.reset();
           supabase.removeChannel(statusChannel);
+          // Cancel the call in DB
+          supabase
+            .from("calls")
+            .update({ status: "missed", ended_at: new Date().toISOString() } as any)
+            .eq("id", call.id)
+            .then(() => {});
           toast.error("No response from provider. Try again later.");
         }
       }, 35000);
     } catch (e: any) {
       setRinging(false);
+      callState.reset();
       toast.error(e.message || "Failed to start call");
     }
   };
@@ -175,19 +198,21 @@ const ServiceCard = ({ service }: Props) => {
           variant="hero"
           className="w-full"
           size="sm"
-          disabled={!isBookable || startCall.isPending || ringing}
+          disabled={!isBookable || startCall.isPending || ringing || callState.isInCall()}
           onClick={handleBookCall}
         >
           <Video className="w-4 h-4 mr-1" />
-          {ringing
-            ? "Ringing…"
-            : startCall.isPending
-              ? "Starting…"
-              : isBookable
-                ? "Book Consultation"
-                : !service.is_available
-                  ? "Provider Offline"
-                  : "Outside Schedule"}
+          {callState.isInCall() && !ringing
+            ? "কলে আছেন"
+            : ringing
+              ? "Ringing…"
+              : startCall.isPending
+                ? "Starting…"
+                : isBookable
+                  ? "Book Consultation"
+                  : !service.is_available
+                    ? "Provider Offline"
+                    : "Outside Schedule"}
         </Button>
       </div>
     </div>
