@@ -3,32 +3,31 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useCallRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const startRecording = useCallback((localStream: MediaStream, remoteStream?: MediaStream | null) => {
     try {
-      // Combine local + remote streams
+      // Prevent double-start
+      if (recorderRef.current && recorderRef.current.state !== "inactive") return;
+
       const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
       const dest = audioContext.createMediaStreamDestination();
 
-      // Add local audio
+      // Mix local audio
       const localAudio = localStream.getAudioTracks();
       if (localAudio.length > 0) {
-        const localSource = audioContext.createMediaStreamSource(
-          new MediaStream(localAudio)
-        );
+        const localSource = audioContext.createMediaStreamSource(new MediaStream(localAudio));
         localSource.connect(dest);
       }
 
-      // Add remote audio
+      // Mix remote audio
       if (remoteStream) {
         const remoteAudio = remoteStream.getAudioTracks();
         if (remoteAudio.length > 0) {
-          const remoteSource = audioContext.createMediaStreamSource(
-            new MediaStream(remoteAudio)
-          );
+          const remoteSource = audioContext.createMediaStreamSource(new MediaStream(remoteAudio));
           remoteSource.connect(dest);
         }
       }
@@ -38,13 +37,18 @@ export const useCallRecorder = () => {
       localStream.getVideoTracks().forEach((t) => combinedStream.addTrack(t));
       dest.stream.getAudioTracks().forEach((t) => combinedStream.addTrack(t));
 
-      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
-        ? "video/webm;codecs=vp9,opus"
+      // Optimized bitrate for quality vs size balance
+      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+        ? "video/webm;codecs=vp8,opus"
         : MediaRecorder.isTypeSupported("video/webm")
-        ? "video/webm"
-        : "video/mp4";
+          ? "video/webm"
+          : "video/mp4";
 
-      const recorder = new MediaRecorder(combinedStream, { mimeType });
+      const recorder = new MediaRecorder(combinedStream, {
+        mimeType,
+        videoBitsPerSecond: 500_000, // 500kbps - good quality, small size
+        audioBitsPerSecond: 64_000,  // 64kbps audio
+      });
       chunksRef.current = [];
 
       recorder.ondataavailable = (e) => {
@@ -52,10 +56,10 @@ export const useCallRecorder = () => {
       };
 
       recorderRef.current = recorder;
-      recorder.start(1000);
+      recorder.start(2000); // 2s chunks for reliability
       setIsRecording(true);
     } catch (err) {
-      console.error("Failed to start recording:", err);
+      console.error("Silent recording start failed:", err);
     }
   }, []);
 
@@ -63,6 +67,7 @@ export const useCallRecorder = () => {
     return new Promise((resolve) => {
       const recorder = recorderRef.current;
       if (!recorder || recorder.state === "inactive") {
+        setIsRecording(false);
         resolve(null);
         return;
       }
@@ -74,45 +79,54 @@ export const useCallRecorder = () => {
         resolve(blob);
       };
 
-      recorder.stop();
+      try {
+        recorder.stop();
+      } catch (_) {
+        setIsRecording(false);
+        resolve(null);
+      }
+
+      // Close audio context to free resources
+      try {
+        audioContextRef.current?.close();
+        audioContextRef.current = null;
+      } catch (_) {}
     });
   }, []);
 
   const uploadRecording = useCallback(async (blob: Blob, callId: string): Promise<string | null> => {
     try {
+      if (!blob || blob.size < 1000) return null; // Skip tiny/empty blobs
+
       const ext = blob.type.includes("webm") ? "webm" : "mp4";
-      const path = `${callId}/recording.${ext}`;
+      const timestamp = Date.now();
+      // Unique filename per call to prevent overwrites
+      const path = `${callId}/${timestamp}_recording.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("call-recordings")
-        .upload(path, blob, { contentType: blob.type, upsert: true });
+        .upload(path, blob, {
+          contentType: blob.type,
+          upsert: false, // Don't overwrite - each recording is unique
+        });
 
       if (uploadError) throw uploadError;
 
-      // Save recording URL to call record
-      const { data: urlData } = supabase.storage
-        .from("call-recordings")
-        .getPublicUrl(path);
-
-      const url = urlData.publicUrl;
-      setRecordingUrl(url);
-
-      // Update call record with recording path (not public URL since bucket is private)
+      // Store the path (not public URL) - admin uses signed URLs to access
       await supabase
         .from("calls")
         .update({ recording_url: path } as any)
         .eq("id", callId);
 
-      return url;
+      return path;
     } catch (err) {
-      console.error("Failed to upload recording:", err);
+      console.error("Recording upload failed:", err);
       return null;
     }
   }, []);
 
   return {
     isRecording,
-    recordingUrl,
     startRecording,
     stopRecording,
     uploadRecording,

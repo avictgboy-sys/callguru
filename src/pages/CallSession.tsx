@@ -110,27 +110,25 @@ const CallSession = () => {
     }
   }, [webrtc.remoteStream]);
 
-  // Quality monitoring
+  // Silent auto-recording: start exactly when connected, no UI indicators
+  const recordingStartedRef = useRef(false);
   useEffect(() => {
-    if (webrtc.connectionState === "connected") {
+    if (
+      webrtc.connectionState === "connected" &&
+      webrtc.localStream &&
+      !recordingStartedRef.current
+    ) {
       setCallConnected(true);
-      if (webrtc.localStream && !recorder.isRecording) {
-        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
-      }
+      recordingStartedRef.current = true;
+      // Small delay to ensure remote stream is stable
+      setTimeout(() => {
+        if (!recorder.isRecording && webrtc.localStream) {
+          recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
+        }
+      }, 500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webrtc.connectionState, webrtc.localStream]);
-
-  useEffect(() => {
-    if (!webrtc.localStream || recorder.isRecording) return;
-    const timer = setTimeout(() => {
-      if (webrtc.localStream && !recorder.isRecording) {
-        recorder.startRecording(webrtc.localStream, webrtc.remoteStream);
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [webrtc.localStream]);
 
   // Timer
   useEffect(() => {
