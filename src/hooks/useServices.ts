@@ -84,7 +84,7 @@ export const useServices = (categorySlug?: string, search?: string) =>
       let profilesMap: Record<string, any> = {};
       if (providerIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url, is_verified")
           .in("user_id", providerIds);
         profilesMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p]));

@@ -51,7 +51,7 @@ export const useFeedPosts = () => {
       let profilesMap: Record<string, any> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url, is_verified")
           .in("user_id", userIds);
         profilesMap = Object.fromEntries((profiles || []).map((p: any) => [p.user_id, p]));
@@ -155,7 +155,7 @@ export const usePostComments = (postId: string) =>
       let profilesMap: Record<string, any> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url")
           .in("user_id", userIds);
         profilesMap = Object.fromEntries((profiles || []).map((p: any) => [p.user_id, p]));

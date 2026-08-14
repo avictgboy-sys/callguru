@@ -8,7 +8,7 @@ export const useUserProfile = (userId: string) => {
     enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("*")
         .eq("user_id", userId)
         .single();
@@ -42,7 +42,7 @@ export const useUserPosts = (userId: string) => {
       }
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified")
         .eq("user_id", userId)
         .single();
@@ -70,7 +70,7 @@ export const useUserServices = (userId: string) => {
       if (error) throw error;
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified")
         .eq("user_id", userId)
         .single();
@@ -97,7 +97,7 @@ export const useUserFollowers = (userId: string) => {
 
       const ids = data.map((f: any) => f.follower_id);
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified")
         .in("user_id", ids);
       return profiles || [];
@@ -119,7 +119,7 @@ export const useUserFollowing = (userId: string) => {
 
       const ids = data.map((f: any) => f.following_id);
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified")
         .in("user_id", ids);
       return profiles || [];

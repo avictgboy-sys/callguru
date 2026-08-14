@@ -155,7 +155,7 @@ export const IncomingCallProvider = ({ children }: { children: ReactNode }) => {
 
     const [profileRes, serviceRes] = await Promise.all([
       supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("full_name, avatar_url")
         .eq("user_id", call.caller_id)
         .single(),

@@ -31,7 +31,7 @@ export const useSuggestedUsers = () => {
       followingIds.add(user!.id); // exclude self
 
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified, bio, followers_count")
         .order("followers_count", { ascending: false })
         .limit(30);

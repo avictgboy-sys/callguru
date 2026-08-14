@@ -35,7 +35,7 @@ const HomeServiceDetail = () => {
         .single();
       if (error) throw error;
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("full_name, avatar_url, is_verified")
         .eq("user_id", data.provider_id)
         .single();

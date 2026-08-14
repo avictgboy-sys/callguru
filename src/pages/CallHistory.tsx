@@ -24,7 +24,7 @@ const CallHistory = () => {
     enabled: userIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);
       if (error) throw error;

@@ -46,7 +46,7 @@ export const usePagePosts = (pageId: string | undefined) =>
       let profileMap: Record<string, any> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url")
           .in("user_id", userIds);
         profileMap = Object.fromEntries(
