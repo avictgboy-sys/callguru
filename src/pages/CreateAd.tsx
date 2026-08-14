@@ -99,29 +99,13 @@ const CreateAd = () => {
         videoUrl = urlData.publicUrl;
       }
 
-      // Deduct from wallet
-      const { data: currentProfile } = await supabase
-        .from("profiles")
-        .select("wallet_balance")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!currentProfile || (currentProfile.wallet_balance || 0) < budgetNum) {
-        throw new Error("Insufficient balance");
-      }
-
-      await supabase
-        .from("profiles")
-        .update({ wallet_balance: (currentProfile.wallet_balance || 0) - budgetNum })
-        .eq("user_id", user.id);
-
-      // Record transaction
-      await supabase.from("wallet_transactions").insert({
-        user_id: user.id,
-        type: "spending",
-        amount: budgetNum,
-        description: `Ad campaign: ${title}`,
+      // Atomic wallet deduction + transaction log (prevents double-spending)
+      const { error: spendError } = await supabase.rpc("spend_wallet_for_ad", {
+        p_amount: budgetNum,
+        p_description: `Ad campaign: ${title}`,
       });
+      if (spendError) throw spendError;
+
 
       // Create ad
       const { error: adError } = await supabase.from("self_ads" as any).insert({

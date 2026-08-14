@@ -78,34 +78,13 @@ const Rewards = () => {
   // Convert points to wallet
   const convertMutation = useMutation({
     mutationFn: async (points: number) => {
-      const takaValue = points / pointsToTakaRate;
-
-      // Deduct points
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ 
-          points: (myPoints - points),
-          wallet_balance: (profile?.wallet_balance || 0) + takaValue,
-        })
-        .eq("user_id", user!.id);
-      if (profileError) throw profileError;
-
-      // Log redemption
-      await supabase.from("points_redemptions").insert({
-        user_id: user!.id,
-        type: "wallet_convert",
-        points_spent: points,
-        value: takaValue,
-        description: `Converted ${points} points to ৳${takaValue.toFixed(2)}`,
+      // Atomic server-side conversion (points deduction, wallet credit,
+      // redemption log and transaction log all happen in one transaction)
+      const { error } = await supabase.rpc("convert_points_to_wallet", {
+        p_points: points,
+        p_rate: pointsToTakaRate,
       });
-
-      // Log wallet transaction
-      await supabase.from("wallet_transactions").insert({
-        user_id: user!.id,
-        type: "topup",
-        amount: takaValue,
-        description: `Points conversion: ${points} pts → ৳${takaValue.toFixed(2)}`,
-      });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["redemption-history"] });
