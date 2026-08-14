@@ -55,6 +55,7 @@ import HomeServiceDetail from "./pages/HomeServiceDetail";
 import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/" element={<Feed />} />
             <Route path="/landing" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/otp-login" element={<EmailOtpLogin />} />

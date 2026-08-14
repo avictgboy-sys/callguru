@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Video, Mail, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
+const safeNext = (value: string | null) => {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+};
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = safeNext(params.get("next"));
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +29,8 @@ const Login = () => {
     setLoading(false);
     if (error) {
       toast.error(error.message);
+    } else if (next) {
+      window.location.href = next;
     } else {
       navigate("/");
     }
@@ -28,12 +38,13 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: next ? `${window.location.origin}${next}` : window.location.origin,
     });
     if (error) {
       toast.error("Google sign-in failed");
     }
   };
+
 
   return (
     <div className="min-h-screen bg-secondary/30 flex flex-col">
