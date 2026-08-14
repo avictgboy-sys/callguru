@@ -50,7 +50,7 @@ export function useReels() {
 
       const [profilesRes, likesRes] = await Promise.all([
         userIds.length > 0
-          ? supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds)
+          ? supabase.from("profiles_public").select("user_id, full_name, avatar_url").in("user_id", userIds)
           : { data: [] },
         user && reelIds.length > 0
           ? supabase.from("reel_likes").select("reel_id").eq("user_id", user.id).in("reel_id", reelIds)
@@ -120,7 +120,7 @@ export function useReelComments(reelId: string | null) {
 
       const userIds = [...new Set((data || []).map((c: any) => c.user_id))];
       const { data: profiles } = userIds.length > 0
-        ? await supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", userIds)
+        ? await supabase.from("profiles_public").select("user_id, full_name, avatar_url").in("user_id", userIds)
         : { data: [] };
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));

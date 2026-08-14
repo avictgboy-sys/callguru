@@ -7,19 +7,40 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { provider_id, caller_name, service_name, call_id } = await req.json();
+    // --- Authentication: require a valid user JWT ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return json({ error: "Unauthorized" }, 401);
+    }
 
-    if (!provider_id || !call_id) {
-      return new Response(
-        JSON.stringify({ error: "provider_id and call_id required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const supabaseUser = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: userData, error: userError } = await supabaseUser.auth.getUser();
+    const user = userData?.user;
+    if (userError || !user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+
+    const { call_id } = await req.json();
+
+    if (!call_id) {
+      return json({ error: "call_id required" }, 400);
     }
 
     const supabase = createClient(
@@ -27,46 +48,55 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get provider's push subscriptions
-    const { data: subscriptions, error } = await supabase
-      .from("push_subscriptions")
-      .select("*")
-      .eq("user_id", provider_id);
+    // --- Authorization: the caller of the referenced call must be the requester ---
+    const { data: call, error: callError } = await supabase
+      .from("calls")
+      .select("id, caller_id, provider_id, service_id")
+      .eq("id", call_id)
+      .maybeSingle();
 
-    if (error || !subscriptions?.length) {
-      return new Response(
-        JSON.stringify({ message: "No push subscriptions found", sent: 0 }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (callError || !call) {
+      return json({ error: "Call not found" }, 404);
     }
 
-    // For now, log subscription count - full Web Push with VAPID encryption 
-    // will be added when VAPID keys are configured
-    console.log(`Found ${subscriptions.length} subscriptions for provider ${provider_id}`);
+    if (call.caller_id !== user.id) {
+      return json({ error: "Forbidden" }, 403);
+    }
+
+    const providerId = call.provider_id;
+
+    // Derive display values server-side instead of trusting the request body
+    const [{ data: callerProfile }, { data: service }] = await Promise.all([
+      supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle(),
+      supabase.from("services").select("title").eq("id", call.service_id).maybeSingle(),
+    ]);
+
+    const { data: subscriptions } = await supabase
+      .from("push_subscriptions")
+      .select("*")
+      .eq("user_id", providerId);
+
+    console.log(
+      `Found ${subscriptions?.length ?? 0} subscriptions for provider of call ${call_id}`
+    );
 
     // Store notification in notifications table as fallback
     await supabase.from("notifications").insert({
-      user_id: provider_id,
+      user_id: providerId,
       type: "incoming_call",
-      title: `📞 ${caller_name || "Someone"} কল করছেন`,
-      body: service_name || "Consultation",
+      title: `📞 ${callerProfile?.full_name || "Someone"} কল করছেন`,
+      body: service?.title || "Consultation",
       resource_id: call_id,
-      actor_id: provider_id,
+      actor_id: user.id,
     });
 
-    return new Response(
-      JSON.stringify({ 
-        message: "Notification sent", 
-        sent: subscriptions.length,
-        fallback_notification: true 
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({
+      message: "Notification sent",
+      sent: subscriptions?.length ?? 0,
+      fallback_notification: true,
+    });
   } catch (err) {
-    console.error("Error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("send-call-push error:", err);
+    return json({ error: "Internal server error" }, 500);
   }
 });

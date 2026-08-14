@@ -52,7 +52,7 @@ export const useMyChats = (userId: string | undefined) =>
       let profilesMap: Record<string, any> = {};
       if (otherIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url, is_verified")
           .in("user_id", otherIds);
         profilesMap = Object.fromEntries(
@@ -228,7 +228,7 @@ export const useSearchUsers = (query: string) =>
     enabled: query.length >= 2,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${query}%`)
         .limit(10);

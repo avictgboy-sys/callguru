@@ -46,7 +46,7 @@ export const useGroupMembers = (groupId: string | undefined) =>
       if (userIds.length === 0) return [];
 
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);
 
@@ -77,7 +77,7 @@ export const useGroupPosts = (groupId: string | undefined) =>
       let profileMap: Record<string, any> = {};
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("user_id, full_name, avatar_url")
           .in("user_id", userIds);
         profileMap = Object.fromEntries(
@@ -211,7 +211,7 @@ export const usePendingMembers = (groupId: string | undefined) =>
       if (userIds.length === 0) return [];
 
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);
 
