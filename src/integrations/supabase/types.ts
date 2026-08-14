@@ -1494,6 +1494,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: undefined
       }
+      convert_points_to_wallet: {
+        Args: { p_points: number; p_rate: number }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1522,6 +1526,10 @@ export type Database = {
         Returns: undefined
       }
       release_home_booking_payments: { Args: never; Returns: undefined }
+      spend_wallet_for_ad: {
+        Args: { p_amount: number; p_description: string }
+        Returns: undefined
+      }
       wallet_topup: { Args: { p_amount: number }; Returns: undefined }
       wallet_withdraw: { Args: { p_amount: number }; Returns: undefined }
     }
